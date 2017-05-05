@@ -48,9 +48,6 @@
     <Reference Include="RhinoCommon, Version=5.1.30000.16, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
       <HintPath>packages\RhinoCommon.5.12.50810.13095\lib\net35\RhinoCommon.dll</HintPath>
     </Reference>
-    <Reference Include="SpeckleCommon, Version=0.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Speckle.SpeckleCommon.0.0.1-rc5\lib\net45\SpeckleCommon.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
