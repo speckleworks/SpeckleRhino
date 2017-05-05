@@ -108,6 +108,16 @@
   <ItemGroup>
     <None Include="Resources\sender_2.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpeckleCommon\SpeckleCommon.csproj">
+      <Project>{d38d3139-5861-4704-9aa5-950253d96d73}</Project>
+      <Name>SpeckleCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleGhRhConverter.csproj">
+      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
+      <Name>SpeckleGhRhConverter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
