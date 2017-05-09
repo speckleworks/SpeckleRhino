@@ -82,6 +82,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SpeckleConverterDebug.cs" />
     <Compile Include="GhReceiverClientExtended.cs" />
     <Compile Include="GhReceiverClient.cs" />
     <Compile Include="GhSenderClient.cs" />

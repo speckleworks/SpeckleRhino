@@ -15,7 +15,7 @@ namespace SpeckleGrasshopper
         public ExtenededReceiver()
         {
             this.Category = "Speckle";
-            this.SubCategory = "Extended Speckle";
+            this.SubCategory = "Debug";
             this.Name = "Extended Receiver";
             this.NickName = "Extended Receiver";
         }
