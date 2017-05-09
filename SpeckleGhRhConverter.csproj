@@ -69,6 +69,12 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpeckleCommon\SpeckleCommon.csproj">
+      <Project>{d38d3139-5861-4704-9aa5-950253d96d73}</Project>
+      <Name>SpeckleCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).dll" "%25AppData%25\Grasshopper\Libraries\SpeckleSendReceive\$(ProjectName).dll"</PostBuildEvent>
