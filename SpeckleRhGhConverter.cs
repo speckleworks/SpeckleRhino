@@ -3,6 +3,7 @@ using Rhino.Collections;
 using Rhino.Geometry;
 using Rhino.Runtime;
 using SpeckleCommon;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -115,7 +116,18 @@ namespace SpeckleGhRhConverter
                 case "Rectangle":
                     encodedObject = ((SpeckleRectangle)obj).ToRhino();
                     break;
-
+                case "Polyline":
+                    encodedObject = ((SpecklePolyline)obj).ToRhino();
+                    break;
+                case "Curve":
+                    encodedObject = ((SpeckleCurve)obj).ToRhino();
+                    break;
+                case "Mesh":
+                    encodedObject = ((SpeckleMesh)obj).ToRhino();
+                    break;
+                case "Brep":
+                    encodedObject = ((SpeckleBrep)obj).ToRhino();
+                    break;
                 default:
                     encodedObject = obj.type;
                     break;
@@ -124,47 +136,66 @@ namespace SpeckleGhRhConverter
             return encodedObject;
         }
         
+        // encodes dynamics
         public override object encodeObject(dynamic obj, dynamic objectProperties = null)
         {
             string type = (string)obj.type;
+
             object encodedObject = null;
+
+            string serialised = JsonConvert.SerializeObject(obj);
+
 
             switch (type)
             {
                 case "Number":
-                    encodedObject = toNumber(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleNumber>(serialised).value;
+                    break;
                 case "Boolean":
-                    encodedObject = toBoolean(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleBoolean>(serialised).value;
+                    break;
                 case "Interval":
-                    encodedObject = toInterval(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleInterval>(serialised).ToRhino();
+                    break;
                 case "Interval2d":
-                    encodedObject = toInterval2d(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleInterval2d>(serialised).ToRhino();
+                    break;
                 case "String":
-                    encodedObject = toString(obj); break;
+                    encodedObject = (string) obj.value;
+                    break;
                 case "Point":
-                    encodedObject = toPoint(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpecklePoint>(serialised).ToRhino();
+                    break;
                 case "Vector":
-                    encodedObject = toVector(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleVector>(serialised).ToRhino();
+                    break;
                 case "Plane":
-                    encodedObject = toPlane(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpecklePlane>(serialised).ToRhino();
+                    break;
                 case "Line":
-                    encodedObject = toLine(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleLine>(serialised).ToRhino();
+                    break;
                 //case "Arc":
                 //    encodedObject = toArc(obj); break;
                 //case "Circle":
                 //    encodedObject = toCircle(obj); break;
                 case "Rectangle":
-                    encodedObject = toRectangle(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleRectangle>(serialised).ToRhino();
+                    break;
                 //case "Box":
                 //    encodedObject = toBox(obj); break;
                 case "Polyline":
-                    encodedObject = toPolyline(obj); break;
-                //case "Curve":
-                //    encodedObject = toCurve(obj); break;
-                //case "Brep":
-                //    encodedObject = toBrep(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpecklePolyline>(serialised).ToRhino();
+                    break;
+                case "Curve":
+                    JsonConvert.DeserializeObject<SpeckleCurve>(serialised).ToRhino();
+                    break;
+                case "Brep":
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleBrep>(serialised).ToRhino();
+                    break;
                 case "Mesh":
-                    encodedObject = toMesh(obj); break;
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleMesh>(serialised).ToRhino();
+                    break;
                 default:
                     encodedObject = obj;
                     break;
@@ -238,19 +269,6 @@ namespace SpeckleGhRhConverter
         /// <returns></returns>
         public static SpeckleObject fromGhRhObject(object o)
         {
-            GH_Interval int1d = o as GH_Interval;
-            if (int1d != null)
-                return GhRhConveter.fromInterval(int1d.Value);
-            if (o is Interval)
-                return GhRhConveter.fromInterval((Interval)o);
-
-            GH_Interval2D int2d = o as GH_Interval2D;
-            if (int2d != null)
-                return GhRhConveter.fromInterval2d(int2d.Value);
-            if (o is UVInterval)
-                return GhRhConveter.fromInterval2d((UVInterval)o);
-
-            // basic stuff
             GH_Number num = o as GH_Number;
             if (num != null)
                 return SpeckleConverter.fromNumber(num.Value);
@@ -269,7 +287,18 @@ namespace SpeckleGhRhConverter
             if (o is string)
                 return SpeckleConverter.fromString((string)o);
 
-            // simple geometry
+            GH_Interval int1d = o as GH_Interval;
+            if (int1d != null)
+                return int1d.Value.ToSpeckle();
+            if (o is Interval)
+                return ((Interval)o).ToSpeckle();
+
+            GH_Interval2D int2d = o as GH_Interval2D;
+            if (int2d != null)
+                return int2d.Value.ToSpeckle();
+            if (o is UVInterval)
+                return ((UVInterval)o).ToSpeckle();
+
             GH_Point point = o as GH_Point;
             if (point != null)
                 return point.Value.ToSpeckle();
@@ -320,239 +349,41 @@ namespace SpeckleGhRhConverter
             //if (o is Box)
             //    return GhRhConveter.fromBox((Box)o);
 
-            // getting complex 
             GH_Curve curve = o as GH_Curve;
             if (curve != null)
             {
                 Polyline poly;
                 if (curve.Value.TryGetPolyline(out poly))
-                    return GhRhConveter.fromPolyline(poly);
-                //return GhRhConveter.fromCurve(curve.Value);
+                    return poly.ToSpeckle();
+                return curve.Value.ToSpeckle();
             }
 
             if (o is Polyline)
-                return GhRhConveter.fromPolyline((Polyline)o);
-            //if (o is Curve)
-            //    return GhRhConveter.fromCurve((Curve)o);
+                return ((Polyline)o).ToSpeckle();
+            if (o is Curve)
+                return ((Curve)o).ToSpeckle();
 
-            //GH_Surface surface = o as GH_Surface;
-            //if (surface != null)
-            //    return GhRhConveter.fromBrep(surface.Value);
+            GH_Surface surface = o as GH_Surface;
+            if (surface != null)
+                return surface.Value.ToSpeckle();
 
-            //GH_Brep brep = o as GH_Brep;
-            //if (brep != null)
-            //    return GhRhConveter.fromBrep(brep.Value);
-            //if (o is Brep)
-            //    return GhRhConveter.fromBrep((Brep)o);
+            GH_Brep brep = o as GH_Brep;
+            if (brep != null)
+                return brep.Value.ToSpeckle();
+            if (o is Brep)
+                return((Brep)o).ToSpeckle();
 
             GH_Mesh mesh = o as GH_Mesh;
             if (mesh != null)
-                return GhRhConveter.fromMesh(mesh.Value);
+                return mesh.Value.ToSpeckle();
             if (o is Mesh)
-                return GhRhConveter.fromMesh((Mesh)o);
+                return ((Mesh)o).ToSpeckle();
 
-            return new SpeckleObject() { type = "Undefined" };
+            return new SpeckleObject() { type = "Undefined. Converter pass fail." };
         }
 
-        #region Rhino Geometry Converters
+        #region Rhino Geometry Converter
 
-        public static SpeckleInterval fromInterval(Interval u)
-        {
-            return new SpeckleInterval(u.Min, u.Max);
-        }
-
-        public static Interval toInterval(dynamic obj)
-        {
-            return new Interval(obj.value[0], obj.value[1]);
-        }
-
-        public static SpeckleInterval2d fromInterval2d(UVInterval i)
-        {
-            return new SpeckleInterval2d(i.U.ToSpeckle(), i.V.ToSpeckle());
-        }
-
-        public static UVInterval toInterval2d(dynamic obj)
-        {
-            return new UVInterval(new Interval(obj.value[0], obj.value[1]), new Interval(obj.value[2], obj.value[3]));
-        }
-
-        public static SpecklePoint fromPoint(Point3d o)
-        {
-            return new SpecklePoint(o.X, o.Y, o.Z);
-        }
-
-        public static Point3d toPoint(dynamic o)
-        {
-            return new Point3d(o.value[0], o.value[1], o.value[2]);
-        }
-
-        public static SpeckleVector fromVector(Vector3d o)
-        {
-            return new SpeckleVector(o.X, o.Y, o.Z);
-        }
-
-        public static Vector3d toVector(dynamic o)
-        {
-            return new Vector3d(o.value[0], o.value[1], o.value[2]);
-        }
-
-        public static SpecklePlane fromPlane(Plane p)
-        {
-            return new SpecklePlane(fromPoint(p.Origin), fromVector(p.Normal), fromVector(p.XAxis), fromVector(p.YAxis));
-        }
-
-        public static Plane toPlane(dynamic o)
-        {
-            return new Plane(toPoint(o.value.origin), toVector(o.value.xdir), toVector(o.value.ydir));
-        }
-
-        public static SpeckleLine fromLine(Line o)
-        {
-            return new SpeckleLine(fromPoint(o.From), fromPoint(o.To));
-        }
-
-        public static Line toLine(dynamic o)
-        {
-            return new Line(fromPoint(o.value.start), fromPoint(o.value.end));
-        }
-
-        //public static SpeckleRectangle fromRectangle(Rectangle3d rect)
-        //{
-
-        //    //return new SpeckleRectangle(fromPoint(rect.Corner(0)), fromPoint(rect.Corner(1)),
-        //        fromPoint(rect.Corner(2)), fromPoint(rect.Corner(3)));
-        //}
-
-        public static Rectangle3d toRectangle(dynamic o)
-        {
-            return new Rectangle3d(new Plane(toPoint(o.value.a), toPoint(o.value.b), toPoint(o.value.c)), toPoint(o.value.a), toPoint(o.value.b));
-        }
-
-        public static SpeckleObject fromPolyline(Polyline poly)
-        {
-            var arr = new List<double>();
-            foreach (var pt in poly)
-                arr.AddRange(pt.ToArray());
-
-            return new SpecklePolyline(arr.ToArray());
-        }
-
-        public static Polyline toPolyline(dynamic o)
-        {
-            var pts = new List<Point3d>();
-
-            for(int i = 0; i < o.value.Count; i+=3)
-                pts.Add(new Point3d(o.value[i], o.value[i + 1], o.value[i + 2]));
-
-            return new Polyline(pts);
-        }
-
-        //public static SpeckleObject fromCurve(Curve o, bool getEncoded, bool getAbstract)
-        //{
-        //    var encodedObj = "RH:" + SpeckleConverter.getBase64(o);
-
-        //    var polyCurve = o.ToPolyline(0, 1, 0, 0, 0, 0.1, 0, 0, true);
-        //    Polyline poly; polyCurve.TryGetPolyline(out poly);
-
-        //    SpeckleObject obj = new SpeckleObject();
-        //    obj.value = new ExpandoObject();
-        //    obj.properties = new ExpandoObject();
-
-        //    obj.type = "Curve";
-        //    obj.hash = "Curve." + SpeckleConverter.getHash(encodedObj);
-        //    obj.value = fromPolyline(poly);
-        //    obj.encodedValue = getEncoded ? encodedObj : "";
-
-        //    return obj;
-        //}
-
-        //public static Curve toCurve(dynamic o)
-        //{
-        //    var base64Arr = o.encodedValue.Split(':');
-        //    if (base64Arr[0] != "RH") throw new Exception("Conversion Error: Can't convert from " + base64Arr[0] + " to RH. Object hash: " + o.hash);
-        //    return getObjFromString(base64Arr[1]) as Curve;
-        //}
-
-        public static SpeckleObject fromMesh(Mesh o)
-        {
-            var encodedObj = "RH:" + SpeckleConverter.getBase64(o);
-
-            SpeckleObject obj = new SpeckleObject();
-
-            var vertices = o.Vertices.Select(pt => ((Point3d)pt).ToArray()).SelectMany(d => d).ToArray() ;
-
-
-            return new SpeckleMesh(vertices, new double[] { 0, 2 }, new int[] { 1 });
-            //obj.value = new ExpandoObject();
-            //obj.properties = new ExpandoObject();
-
-
-            //obj.type = "Mesh";
-            //obj.hash = "Mesh." + SpeckleConverter.getHash(encodedObj);
-
-            //obj.value.vertices = o.Vertices.Select(pt => fromPoint(pt));
-            //obj.value.faces = o.Faces;
-            //obj.value.colors = o.VertexColors.Select(c => c.ToArgb());
-
-            //return obj;
-        }
-
-        public static dynamic toMesh(dynamic o)
-        {
-            return o;
-        }
-
-        //public static Mesh toMesh(dynamic o)
-        //{
-        //    Mesh mesh = new Mesh();
-        //    foreach (var pt in o.value.vertices) mesh.Vertices.Add(toPoint(pt));
-        //    foreach (var cl in o.value.colors) mesh.VertexColors.Add(Color.FromArgb((int)cl));
-        //    foreach (var fa in o.value.faces)
-        //        if (fa.C == fa.D) mesh.Faces.AddFace(new MeshFace((int)fa.A, (int)fa.B, (int)fa.C));
-        //        else mesh.Faces.AddFace(new MeshFace((int)fa.A, (int)fa.B, (int)fa.C, (int)fa.D));
-
-        //    return mesh;
-        //}
-
-        //public static SpeckleObject fromBrep(Brep o, bool getEncoded, bool getAbstract)
-        //{
-        //    var encodedObj = "RH:" + SpeckleConverter.getBase64(o);
-        //    var ms = getMeshFromBrep(o);
-
-        //    SpeckleObject obj = new SpeckleObject();
-        //    obj.value = new ExpandoObject();
-        //    obj.properties = new ExpandoObject();
-
-        //    obj.type = "Brep";
-        //    obj.hash = "Brep." + SpeckleConverter.getHash(encodedObj);
-        //    obj.encodedValue = getEncoded ? encodedObj : "";
-        //    obj.value.vertices = ms.Vertices;
-        //    obj.value.faces = ms.Faces;
-        //    obj.value.colors = ms.VertexColors;
-
-        //    return obj;
-        //}
-
-        //public static Brep toBrep(dynamic o)
-        //{
-        //    var base64Arr = o.encodedValue.Split(':');
-        //    if (base64Arr[0] != "RH") throw new Exception("Conversion Error: Can't convert from " + base64Arr[0] + " to RH. Object hash: " + o.hash);
-
-        //    return getObjFromString(base64Arr[1]) as Brep;
-        //}
-
-        ///// <summary>
-        ///// Little utility function
-        ///// </summary>
-        ///// <param name="b"></param>
-        ///// <returns>A joined mesh of all the brep's faces</returns>
-        //private static Mesh getMeshFromBrep(Brep b)
-        //{
-        //    Mesh[] meshes = Mesh.CreateFromBrep(b);
-        //    Mesh joinedMesh = new Mesh();
-        //    foreach (Mesh m in meshes) joinedMesh.Append(m);
-        //    return joinedMesh;
-        //}
 
         //public static SpeckleObject fromArc(Arc arc)
         //{
@@ -638,6 +469,10 @@ namespace SpeckleGhRhConverter
     }
 
 
+    /// <summary>
+    /// These methods extend both the SpeckleObject types with a .ToRhino() method as well as 
+    /// the base RhinoCommon types with a .ToSpeckle() method for easier conversion logic.
+    /// </summary>
     public static class SpeckleTypesExtensions
     {
         // Convenience methods point:
@@ -678,8 +513,6 @@ namespace SpeckleGhRhConverter
         {
             return new Vector3d(arr[0], arr[1], arr[2]);
         }
-
-
 
         // The real deals below: 
 
@@ -764,5 +597,83 @@ namespace SpeckleGhRhConverter
         {
             return new SpecklePolyline(poly.ToFlatArray());
         }
+
+        public static Polyline ToRhino(this SpecklePolyline poly)
+        {
+            return new Polyline(poly.value.ToPoints());
+        }
+
+        // Curve
+        public static SpeckleCurve ToSpeckle( this Curve curve )
+        {
+            Polyline poly;
+            curve.ToPolyline(0, 1, 0, 0, 0, 0.1, 0, 0, true).TryGetPolyline(out poly);
+
+            return new SpeckleCurve(poly.ToSpeckle(), SpeckleConverter.getBase64(curve), "ON");
+        }
+
+        public static Curve ToRhino(this SpeckleCurve curve)
+        {
+            if (curve.provenance == "ON")
+                return (Curve)SpeckleConverter.getObjFromString(curve.base64);
+            else
+                throw new Exception("Unknown curve provenance: " + curve.provenance + ". Don't know how to convert from one to the other.");
+        }
+
+        // Meshes
+        public static SpeckleMesh ToSpeckle( this Mesh mesh)
+        {
+            var verts = mesh.Vertices.Select(pt => (Point3d)pt).ToFlatArray();
+
+            var faces = mesh.Faces.SelectMany(face => {
+                if (face.IsQuad) return new int[] { 1, face.A, face.B, face.C, face.D };
+                return new int[] { 0, face.A, face.B, face.C };
+            }).ToArray();
+
+            var colors = mesh.VertexColors.Select(cl => cl.ToArgb()).ToArray();
+            return new SpeckleMesh(verts, faces, colors);
+        }
+
+        public static Mesh ToRhino(this SpeckleMesh mesh)
+        {
+            Mesh m = new Mesh();
+            m.Vertices.AddVertices(mesh.vertices.ToPoints());
+
+            int i = 0;
+
+            while(i < mesh.faces.Length)
+            {
+                if(mesh.faces[i] == 0)
+                { // triangle
+                    m.Faces.AddFace(new MeshFace(mesh.faces[i+1], mesh.faces[i+2], mesh.faces[i+3]));
+                    i += 4;
+                }else
+                { // quad
+                    m.Faces.AddFace(new MeshFace(mesh.faces[i + 1], mesh.faces[i + 2], mesh.faces[i + 3], mesh.faces[i+4]));
+                    i += 5;
+                }
+            }
+
+            m.VertexColors.AppendColors(mesh.colors.Select(c => Color.FromArgb(c) ).ToArray());
+            return m;
+        }
+
+        // Breps
+        public static SpeckleBrep ToSpeckle(this Brep brep)
+        {
+            var joinedMesh = new Mesh();
+            Mesh.CreateFromBrep(brep).All(meshPart => { joinedMesh.Append(meshPart); return true; });
+
+            return new SpeckleBrep(joinedMesh.ToSpeckle(), SpeckleConverter.getBase64(brep), "ON");
+        }
+
+        public static Brep ToRhino(this SpeckleBrep brep)
+        {
+            if (brep.provenance == "ON")
+                return (Brep)SpeckleConverter.getObjFromString(brep.base64);
+            else
+                throw new Exception("Unknown brep provenance: " + brep.provenance + ". Don't know how to convert from one to the other.");
+        }
+
     }
 }
