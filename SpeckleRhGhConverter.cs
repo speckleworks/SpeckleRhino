@@ -78,7 +78,7 @@ namespace SpeckleGhRhConverter
             return propertiesList;
         }
 
-        // encodes object
+        // debug purposes
         public static object encodeObjectFromSpeckle(SpeckleObject obj, dynamic objectProperties = null)
         {
             object encodedObject = null;
@@ -136,7 +136,7 @@ namespace SpeckleGhRhConverter
             return encodedObject;
         }
         
-        // encodes dynamics
+        // encodes
         public override object encodeObject(dynamic obj, dynamic objectProperties = null)
         {
             string type = (string)obj.type;
@@ -144,7 +144,6 @@ namespace SpeckleGhRhConverter
             object encodedObject = null;
 
             string serialised = JsonConvert.SerializeObject(obj);
-
 
             switch (type)
             {
@@ -175,10 +174,9 @@ namespace SpeckleGhRhConverter
                 case "Line":
                     encodedObject = JsonConvert.DeserializeObject<SpeckleLine>(serialised).ToRhino();
                     break;
-                //case "Arc":
-                //    encodedObject = toArc(obj); break;
-                //case "Circle":
-                //    encodedObject = toCircle(obj); break;
+                case "Circle":
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleCircle>(serialised).ToRhino();
+                        break;
                 case "Rectangle":
                     encodedObject = JsonConvert.DeserializeObject<SpeckleRectangle>(serialised).ToRhino();
                     break;
@@ -188,7 +186,7 @@ namespace SpeckleGhRhConverter
                     encodedObject = JsonConvert.DeserializeObject<SpecklePolyline>(serialised).ToRhino();
                     break;
                 case "Curve":
-                    JsonConvert.DeserializeObject<SpeckleCurve>(serialised).ToRhino();
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleCurve>(serialised).ToRhino();
                     break;
                 case "Brep":
                     encodedObject = JsonConvert.DeserializeObject<SpeckleBrep>(serialised).ToRhino();
@@ -325,17 +323,11 @@ namespace SpeckleGhRhConverter
             if (o is Line)
                 return ((Line)o).ToSpeckle();
 
-            //GH_Arc arc = o as GH_Arc;
-            //if (arc != null)
-            //    return GhRhConveter.fromArc(arc.Value);
-            //if (o is Arc)
-            //    return GhRhConveter.fromArc((Arc)o);
-
-            //GH_Circle circle = o as GH_Circle;
-            //if (circle != null)
-            //    return GhRhConveter.fromCircle(circle.Value);
-            //if (o is Circle)
-            //    return GhRhConveter.fromCircle((Circle)o);
+            GH_Circle circle = o as GH_Circle;
+            if (circle != null)
+                return circle.Value.ToSpeckle();
+            if (o is Circle)
+                return ((Circle)o).ToSpeckle();
 
             GH_Rectangle rectangle = o as GH_Rectangle;
             if (rectangle != null)
@@ -384,52 +376,6 @@ namespace SpeckleGhRhConverter
 
         #region Rhino Geometry Converter
 
-
-        //public static SpeckleObject fromArc(Arc arc)
-        //{
-        //    SpeckleObject obj = new SpeckleObject();
-        //    obj.value = new ExpandoObject();
-        //    obj.properties = new ExpandoObject();
-
-        //    obj.type = "Arc";
-        //    obj.hash = "Arc." + SpeckleConverter.getHash("RH:" + SpeckleConverter.getBase64(arc));
-        //    obj.value.center = fromPoint(arc.Center);
-        //    obj.value.plane = fromPlane(arc.Plane);
-        //    obj.value.startAngle = arc.StartAngle;
-        //    obj.value.endAngle = arc.EndAngle;
-        //    obj.value.startPoint = fromPoint(arc.StartPoint);
-        //    obj.value.midPoint = fromPoint(arc.MidPoint);
-        //    obj.value.endPoint = fromPoint(arc.EndPoint);
-
-        //    return obj;
-        //}
-
-        //public static Arc toArc(dynamic o)
-        //{
-        //    return new Arc(toPoint(o.value.startPoint), toPoint(o.value.midPoint), toPoint(o.value.endPoint));
-        //}
-
-        //public static SpeckleObject fromCircle(Circle circle)
-        //{
-        //    SpeckleObject obj = new SpeckleObject();
-        //    obj.value = new ExpandoObject();
-
-        //    obj.type = "Circle";
-        //    obj.hash = "Circle." + SpeckleConverter.getHash("RH:" + SpeckleConverter.getBase64(circle));
-
-        //    obj.value.plane = fromPlane(circle.Plane);
-        //    obj.value.center = fromPoint(circle.Center);
-        //    obj.value.normal = fromVector(circle.Plane.Normal);
-        //    obj.value.radius = circle.Radius;
-
-        //    return obj;
-        //}
-
-        //public static Circle toCircle(dynamic o)
-        //{
-        //    return new Circle(toPlane(o.value.plane), o.value.radius);
-        //}
-
         //public static SpeckleObject fromBox(Box box)
         //{
         //    SpeckleObject obj = new SpeckleObject();
@@ -451,7 +397,6 @@ namespace SpeckleGhRhConverter
         //{
         //    return new Box(toPlane(o.value.plane), toInterval(o.value.X), toInterval(o.value.Y), toInterval(o.value.Z));
         //}
-
 
         #endregion
 
@@ -590,6 +535,17 @@ namespace SpeckleGhRhConverter
         {
             var myPlane = new Plane(rect.a.ToRhino(), rect.b.ToRhino(), rect.c.ToRhino());
             return new Rectangle3d(myPlane, rect.a.ToRhino(), rect.c.ToRhino());
+        }
+
+        // Circle
+        public static SpeckleCircle ToSpeckle(this Circle circ)
+        {
+            return new SpeckleCircle(circ.Center.ToSpeckle(), circ.Normal.ToSpeckle(), circ.Radius);
+        }
+
+        public static Circle ToRhino(this SpeckleCircle circ)
+        {
+            return new Circle(new Plane(circ.center.ToRhino(), circ.normal.ToRhino()), circ.radius);
         }
 
         // Polyline
