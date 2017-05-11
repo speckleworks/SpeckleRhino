@@ -371,7 +371,7 @@ namespace SpeckleGhRhConverter
             if (o is Mesh)
                 return ((Mesh)o).ToSpeckle();
 
-            return new SpeckleObject() { type = "Undefined. Converter pass fail." };
+            return new SpeckleObject() { type = "Undefined object. Speckle failed to convert it." };
         }
 
         #region Rhino Geometry Converter
