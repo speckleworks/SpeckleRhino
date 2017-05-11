@@ -63,12 +63,6 @@
     <Reference Include="RhinoCommon, Version=5.1.30000.16, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
       <HintPath>packages\RhinoCommon.5.12.50810.13095\lib\net35\RhinoCommon.dll</HintPath>
     </Reference>
-    <Reference Include="SpeckleCommon, Version=0.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Speckle.SpeckleCommon.0.0.1-rc5\lib\net45\SpeckleCommon.dll</HintPath>
-    </Reference>
-    <Reference Include="SpeckleGhRhConverter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Speckle.RhinoConverter.0.0.1-rc1\lib\net45\SpeckleGhRhConverter.dll</HintPath>
-    </Reference>
     <Reference Include="SpecklePopup, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Speckle.AccountManagerPopup.0.0.1-rc1\lib\net45\SpecklePopup.dll</HintPath>
     </Reference>
@@ -88,6 +82,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SpeckleConverterDebug.cs" />
     <Compile Include="GhReceiverClientExtended.cs" />
     <Compile Include="GhReceiverClient.cs" />
     <Compile Include="GhSenderClient.cs" />
@@ -113,6 +108,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\sender_2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpeckleCommon\SpeckleCommon.csproj">
+      <Project>{d38d3139-5861-4704-9aa5-950253d96d73}</Project>
+      <Name>SpeckleCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleGhRhConverter.csproj">
+      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
+      <Name>SpeckleGhRhConverter</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -64,7 +64,7 @@ namespace SpeckleGrasshopper
 
             if (serialisedReceiver != null)
             {
-                myReceiver = new SpeckleReceiver(serialisedReceiver, new GhRhConveter(true, true));
+                myReceiver = new SpeckleReceiver(serialisedReceiver, new GhRhConveter());
                 streamId = myReceiver.getStreamId();
                 apiUrl = myReceiver.getServer();
                 token = myReceiver.getToken();
@@ -137,7 +137,7 @@ namespace SpeckleGrasshopper
                 streamId = inputId;
                 if (myReceiver != null) myReceiver.Dispose();
 
-                myReceiver = new SpeckleReceiver(apiUrl, token, streamId, new GhRhConveter(true, true));
+                myReceiver = new SpeckleReceiver(apiUrl, token, streamId, new GhRhConveter());
 
                 registermyReceiverEvents();
                 Message = "";

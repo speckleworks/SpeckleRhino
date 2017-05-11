@@ -19,7 +19,6 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 
-using SpecklePopup;
 using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper
@@ -62,7 +61,7 @@ namespace SpeckleGrasshopper
             ready = false;
 
             if (serialisedSender != null)
-                mySender = new SpeckleSender(serialisedSender, new GhRhConveter(true, true));
+                mySender = new SpeckleSender(serialisedSender, new GhRhConveter());
             else
             {
 
@@ -74,7 +73,7 @@ namespace SpeckleGrasshopper
                 myForm.ShowDialog();
 
                 if (myForm.restApi != null && myForm.apitoken != null)
-                    mySender = new SpeckleSender(myForm.restApi, myForm.apitoken, new GhRhConveter(true, true));
+                    mySender = new SpeckleSender(myForm.restApi, myForm.apitoken, new GhRhConveter());
             }
 
             if (mySender == null) return;
