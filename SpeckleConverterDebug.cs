@@ -100,8 +100,8 @@ namespace SpeckleGrasshopper
         {
             object myObj = new object();
             DA.GetData(0, ref myObj);
-            
-            var result = GhRhConveter.encodeObjectFromSpeckle(((Grasshopper.Kernel.Types.GH_ObjectWrapper)myObj).Value as SpeckleObject);
+
+            var result = c.encodeObject(((Grasshopper.Kernel.Types.GH_ObjectWrapper)myObj).Value as dynamic);
             DA.SetData(0, result);
         }
 
