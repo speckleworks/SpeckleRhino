@@ -77,64 +77,6 @@ namespace SpeckleGhRhConverter
             }
             return propertiesList;
         }
-
-        // debug purposes
-        public static object encodeObjectFromSpeckle(SpeckleObject obj, dynamic objectProperties = null)
-        {
-            object encodedObject = null;
-            if (obj == null)
-                return "Null Object";
-            switch (obj.type)
-            {
-                case "Boolean":
-                    encodedObject = ((SpeckleBoolean)obj).value;
-                    break;
-                case "Number":
-                    encodedObject = ((SpeckleNumber)obj).value;
-                    break;
-                case "String":
-                    encodedObject = ((SpeckleString)obj).value;
-                    break;
-                case "Interval":
-                    encodedObject = ((SpeckleInterval)obj).ToRhino();
-                    break;
-                case "Interval2d":
-                    encodedObject = ((SpeckleInterval2d)obj).ToRhino();
-                    break;
-                case "Point":
-                    encodedObject = ((SpecklePoint)obj).ToRhino();
-                    break;
-                case "Vector":
-                    encodedObject = ((SpeckleVector)obj).ToRhino();
-                    break;
-                case "Plane":
-                    encodedObject = ((SpecklePlane)obj).ToRhino();
-                    break;
-                case "Line":
-                    encodedObject = ((SpeckleLine)obj).ToRhino();
-                    break;
-                case "Rectangle":
-                    encodedObject = ((SpeckleRectangle)obj).ToRhino();
-                    break;
-                case "Polyline":
-                    encodedObject = ((SpecklePolyline)obj).ToRhino();
-                    break;
-                case "Curve":
-                    encodedObject = ((SpeckleCurve)obj).ToRhino();
-                    break;
-                case "Mesh":
-                    encodedObject = ((SpeckleMesh)obj).ToRhino();
-                    break;
-                case "Brep":
-                    encodedObject = ((SpeckleBrep)obj).ToRhino();
-                    break;
-                default:
-                    encodedObject = obj.type;
-                    break;
-            }
-
-            return encodedObject;
-        }
         
         // encodes
         public override object encodeObject(dynamic obj, dynamic objectProperties = null)
@@ -180,8 +122,9 @@ namespace SpeckleGhRhConverter
                 case "Rectangle":
                     encodedObject = JsonConvert.DeserializeObject<SpeckleRectangle>(serialised).ToRhino();
                     break;
-                //case "Box":
-                //    encodedObject = toBox(obj); break;
+                case "Box":
+                    encodedObject = JsonConvert.DeserializeObject<SpeckleBox>(serialised).ToRhino();
+                    break;
                 case "Polyline":
                     encodedObject = JsonConvert.DeserializeObject<SpecklePolyline>(serialised).ToRhino();
                     break;
@@ -335,11 +278,11 @@ namespace SpeckleGhRhConverter
             if (o is Rectangle3d)
                 return ((Rectangle3d)o).ToSpeckle();
 
-            //GH_Box box = o as GH_Box;
-            //if (box != null)
-            //    return GhRhConveter.fromBox(box.Value);
-            //if (o is Box)
-            //    return GhRhConveter.fromBox((Box)o);
+            GH_Box box = o as GH_Box;
+            if (box != null)
+                return box.Value.ToSpeckle();
+            if (o is Box)
+                return ((Box)o).ToSpeckle();
 
             GH_Curve curve = o as GH_Curve;
             if (curve != null)
@@ -374,39 +317,13 @@ namespace SpeckleGhRhConverter
             return new SpeckleObject() { type = "Undefined object. Speckle failed to convert it." };
         }
 
-        #region Rhino Geometry Converter
-
-        //public static SpeckleObject fromBox(Box box)
-        //{
-        //    SpeckleObject obj = new SpeckleObject();
-        //    obj.value = new ExpandoObject();
-
-        //    obj.type = "Box";
-        //    obj.hash = "Box." + SpeckleConverter.getHash("RH:" + SpeckleConverter.getBase64(box));
-        //    obj.value.center = fromPoint(box.Center);
-        //    obj.value.normal = fromVector(box.Plane.Normal); // use fromVector
-        //    obj.value.plane = fromPlane(box.Plane); // to use fromPlane
-        //    obj.value.X = fromInterval(box.X);
-        //    obj.value.Y = fromInterval(box.Y);
-        //    obj.value.Z = fromInterval(box.Z);
-
-        //    return obj;
-        //}
-
-        //public static Box toBox(dynamic o)
-        //{
-        //    return new Box(toPlane(o.value.plane), toInterval(o.value.X), toInterval(o.value.Y), toInterval(o.value.Z));
-        //}
-
-        #endregion
-
         #region last things
 
         public override dynamic description()
         {
             return new
             {
-                type = "grasshopper"
+                type = "RhGhConverter"
             };
         }
 
@@ -548,6 +465,17 @@ namespace SpeckleGhRhConverter
             return new Circle(new Plane(circ.center.ToRhino(), circ.normal.ToRhino()), circ.radius);
         }
 
+        // Box
+        public static SpeckleBox ToSpeckle(this Box box)
+        {
+            return new SpeckleBox(box.Plane.ToSpeckle(), box.X.ToSpeckle(), box.Y.ToSpeckle(), box.Z.ToSpeckle());
+        }
+
+        public static Box ToRhino(this SpeckleBox box)
+        {
+            return new Box(box.basePlane.ToRhino(), box.xSize.ToRhino(), box.ySize.ToRhino(), box.zSize.ToRhino());
+        }
+
         // Polyline
         public static SpecklePolyline ToSpeckle(this Polyline poly)
         {
@@ -630,6 +558,5 @@ namespace SpeckleGhRhConverter
             else
                 throw new Exception("Unknown brep provenance: " + brep.provenance + ". Don't know how to convert from one to the other.");
         }
-
     }
 }
