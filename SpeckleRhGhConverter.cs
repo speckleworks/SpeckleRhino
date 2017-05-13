@@ -89,6 +89,9 @@ namespace SpeckleGhRhConverter
 
             switch (type)
             {
+                case "invalid_object":
+                    encodedObject = "Invalid object. Source geometry or data could not be converted.";
+                    break;
                 case "Number":
                     encodedObject = JsonConvert.DeserializeObject<SpeckleNumber>(serialised).value;
                     break;
