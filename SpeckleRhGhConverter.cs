@@ -71,13 +71,31 @@ namespace SpeckleGhRhConverter
 
                 if (myObj != null)
                     if (myObj.UserDictionary.Keys.Length > 0)
-                        propertiesList.Add(new SpeckleObjectProperties(k, myObj.UserDictionary));
+                        propertiesList.Add(new SpeckleObjectProperties(k, encodeDictionary( myObj.UserDictionary )));
 
                 k++;
             }
             return propertiesList;
         }
         
+        // little recursive devil: makes sure we've converted geoms in props into spk objects
+        public Dictionary<string, object> encodeDictionary(ArchivableDictionary dict)
+        {
+            Dictionary<string, object> myDictionary = new Dictionary<string, object>();
+
+            foreach(var key in dict.Keys)
+            {
+                if (dict[key] is ArchivableDictionary)
+                    myDictionary.Add(key, encodeDictionary(dict[key] as ArchivableDictionary));
+                else if (dict[key] is GeometryBase)
+                    myDictionary.Add(key, GhRhConveter.fromGhRhObject(dict[key]));
+                else
+                    myDictionary.Add(key, dict[key]);
+            }
+
+            return myDictionary;
+        }
+
         // encodes
         public override object encodeObject(dynamic obj, dynamic objectProperties = null)
         {
@@ -248,7 +266,7 @@ namespace SpeckleGhRhConverter
                 return point.Value.ToSpeckle();
             if (o is Point3d)
                 return ((Point3d)o).ToSpeckle();
-            if (o is Rhino.Geometry.Point) //wtf???
+            if (o is Rhino.Geometry.Point)
                 return (((Rhino.Geometry.Point)o).Location).ToSpeckle();
 
             GH_Vector vector = o as GH_Vector;
