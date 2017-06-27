@@ -4,10 +4,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "SpeckleGrasshopper.csproj", "{82EC14D9-01C7-46C7-8600-DB75F871740D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{46948630-9BB9-4624-8BF9-C866F2B52674} = {46948630-9BB9-4624-8BF9-C866F2B52674}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleCommon", "..\SpeckleCommon\SpeckleCommon.csproj", "{D38D3139-5861-4704-9AA5-950253D96D73}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGhRhConverter", "..\SpeckleRhinoConverter\SpeckleGhRhConverter.csproj", "{E967A1E1-37FF-4394-B793-6987A7958016}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserDataUtils", "..\SpeckleUserDataUtils\UserDataUtils.csproj", "{46948630-9BB9-4624-8BF9-C866F2B52674}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E967A1E1-37FF-4394-B793-6987A7958016} = {E967A1E1-37FF-4394-B793-6987A7958016}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +49,14 @@ Global
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Debug64|Any CPU.Build.0 = Debug|Any CPU
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug|Any CPU.ActiveCfg = Debug64|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug|Any CPU.Build.0 = Debug64|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug32|Any CPU.ActiveCfg = Debug32|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug32|Any CPU.Build.0 = Debug32|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug64|Any CPU.ActiveCfg = Debug64|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Debug64|Any CPU.Build.0 = Debug64|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46948630-9BB9-4624-8BF9-C866F2B52674}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
