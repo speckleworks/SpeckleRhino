@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Grasshopper.Kernel;
-using Rhino.Geometry;
 
 using GH_IO.Serialization;
 using System.Diagnostics;
@@ -11,7 +10,6 @@ using Grasshopper.Kernel.Parameters;
 
 using SpeckleCommon;
 using SpeckleGhRhConverter;
-using SpecklePopup;
 
 
 using Grasshopper;
@@ -21,17 +19,17 @@ namespace SpeckleGrasshopper
 {
     public class GhReceiverClient : GH_Component, IGH_VariableParameterComponent
     {
-        string apiUrl;
-        string token;
-        string streamId;
-        string serialisedReceiver;
-        List<string> senderGuids;
+        string ApiUrl;
+        string Token;
+        string StreamId;
+        string SerialisedReceiver;
+        List<string> SenderGuids;
 
-        SpeckleReceiver myReceiver;
-        List<SpeckleLayer> layers;
-        List<object> objects;
+        SpeckleReceiver Receiver;
+        List<SpeckleLayer> Layers;
+        List<object> Objects;
 
-        Action expireComponentAction;
+        Action ExpireComponentAction;
 
         /// <summary>
         /// Initializes a new instance of the MyComponent1 class.
@@ -45,14 +43,14 @@ namespace SpeckleGrasshopper
 
         public override bool Write(GH_IWriter writer)
         {
-            if (myReceiver != null)
-                writer.SetString("serialisedReceiver", myReceiver.ToString());
+            if (Receiver != null)
+                writer.SetString("serialisedReceiver", Receiver.ToString());
             return base.Write(writer);
         }
 
         public override bool Read(GH_IReader reader)
         {
-            reader.TryGetString("serialisedReceiver", ref serialisedReceiver);
+            reader.TryGetString("serialisedReceiver", ref SerialisedReceiver);
             return base.Read(reader);
         }
 
@@ -60,39 +58,40 @@ namespace SpeckleGrasshopper
         {
             base.AddedToDocument(document);
 
-            senderGuids = new List<string>();
+            SenderGuids = new List<string>();
 
-            if (serialisedReceiver != null)
+            if (SerialisedReceiver != null)
             {
-                myReceiver = new SpeckleReceiver(serialisedReceiver, new GhRhConveter());
-                streamId = myReceiver.getStreamId();
-                apiUrl = myReceiver.getServer();
-                token = myReceiver.getToken();
+                Receiver = new SpeckleReceiver(SerialisedReceiver, new GhRhConveter());
+                StreamId = Receiver.GetStreamId();
+                ApiUrl = Receiver.GetServer();
+                Token = Receiver.GetToken();
 
-                registermyReceiverEvents();
+                RegistermyReceiverEvents();
             } else
             {
                 var myForm = new SpecklePopup.MainWindow();
 
-                var some = new System.Windows.Interop.WindowInteropHelper(myForm);
-                some.Owner = Rhino.RhinoApp.MainWindowHandle();
-
-               myForm.ShowDialog();
+                var some = new System.Windows.Interop.WindowInteropHelper(myForm)
+                {
+                    Owner = Rhino.RhinoApp.MainWindowHandle()
+                };
+                myForm.ShowDialog();
 
                 if (myForm.restApi != null && myForm.apitoken != null)
                 {
-                    apiUrl = myForm.restApi;
-                    token = myForm.apitoken;
+                    ApiUrl = myForm.restApi;
+                    Token = myForm.apitoken;
                 }
             }
 
-            expireComponentAction = () => this.ExpireSolution(true);
+            ExpireComponentAction = () => this.ExpireSolution(true);
         }
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            if (myReceiver != null)
-                myReceiver.Dispose();
+            if (Receiver != null)
+                Receiver.Dispose();
             base.RemovedFromDocument(document);
         }
 
@@ -100,7 +99,7 @@ namespace SpeckleGrasshopper
         {
             if (context == GH_DocumentContext.Close)
             {
-                myReceiver.Dispose();
+                Receiver.Dispose();
             }
             base.DocumentContextChanged(document, context);
         }
@@ -118,86 +117,86 @@ namespace SpeckleGrasshopper
         {
             string inputId = null;
             DA.GetData(0, ref inputId);
-            Debug.WriteLine("StreamId: " + streamId + " Read ID: " + inputId);
+            Debug.WriteLine("StreamId: " + StreamId + " Read ID: " + inputId);
 
-            if(apiUrl==null || token == null)
+            if(ApiUrl==null || Token == null)
             {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to init. No server details.");
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to init. No server details.");
                 return;
             }
 
-            if (inputId == null && streamId == null)
+            if (inputId == null && StreamId == null)
             {
                 Debug.WriteLine("No streamId to listen to.");
                 return;
             }
-            else if ((inputId != streamId) && (inputId != null))
+            else if ((inputId != StreamId) && (inputId != null))
             {
                 Debug.WriteLine("changing streamid");
-                streamId = inputId;
-                if (myReceiver != null) myReceiver.Dispose();
+                StreamId = inputId;
+                if (Receiver != null) Receiver.Dispose();
 
-                myReceiver = new SpeckleReceiver(apiUrl, token, streamId, new GhRhConveter());
+                Receiver = new SpeckleReceiver(ApiUrl, Token, StreamId, new GhRhConveter());
 
-                registermyReceiverEvents();
+                RegistermyReceiverEvents();
                 Message = "";
                 return;
             }
 
-            setObjects(DA, objects, layers);
+            SetObjects(DA, Objects, Layers);
         }
 
-        void registermyReceiverEvents()
+        void RegistermyReceiverEvents()
         {
-            if (myReceiver == null) return;
+            if (Receiver == null) return;
 
-            myReceiver.OnDataMessage +=OnDataMessage;
+            Receiver.OnDataMessage +=OnDataMessage;
 
-            myReceiver.OnError += OnError;
+            Receiver.OnError += OnError;
 
-            myReceiver.OnReady += OnReady;
+            Receiver.OnReady += OnReady;
 
-            myReceiver.OnMetadata += OnMetadata;
+            Receiver.OnMetadata += OnMetadata;
 
-            myReceiver.OnData += OnData;
+            Receiver.OnData += OnData;
 
-            myReceiver.OnHistory += OnHistory;
+            Receiver.OnHistory += OnHistory;
 
-            myReceiver.OnMessage += OnVolatileMessage;
+            Receiver.OnMessage += OnVolatileMessage;
 
-            myReceiver.OnBroadcast += OnBroadcast;
+            Receiver.OnBroadcast += OnBroadcast;
         }
 
         private void OnDataMessage(object source, SpeckleEventArgs e)
         {
-            this.Message = "Update in progress.";
+            Message = "Update in progress.";
         }
 
         #region virtual event handlers
 
         public virtual void OnError(object source, SpeckleEventArgs e)
         {
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventInfo);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventInfo);
         }
 
         public virtual void OnReady(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("[Gh Receiver] Got a ready message. Extend this class and implement custom protocols at ease.");
 
-            this.Name = this.NickName = (string)e.Data.name;
-            diffStructure(e.Data.layers);
-            layers = e.Data.layers;
-            objects = e.Data.objects;
+            Name = NickName = (string)e.Data.name;
+            DiffStructure(e.Data.layers);
+            Layers = e.Data.layers;
+            Objects = e.Data.objects;
 
             Debug.WriteLine("ready event");
-            Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
         }
 
         public virtual void OnMetadata(object source, SpeckleEventArgs e)
         {
-            this.Name = this.NickName = (string)e.Data.name;
-            diffStructure(e.Data.layers);
-            layers = e.Data.layers;
+            Name = NickName = (string)e.Data.name;
+            DiffStructure(e.Data.layers);
+            Layers = e.Data.layers;
 
             Debug.WriteLine("metadata event");
         }
@@ -205,14 +204,14 @@ namespace SpeckleGrasshopper
         public virtual void OnData(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("RECEIVER: Received live update event: " + e.EventInfo);
-            this.Name = this.NickName = (string)e.Data.name;
-            diffStructure(e.Data.layers);
-            layers = e.Data.layers;
-            objects = e.Data.objects;
+            Name = NickName = (string)e.Data.name;
+            DiffStructure(e.Data.layers);
+            Layers = e.Data.layers;
+            Objects = e.Data.objects;
 
             Debug.WriteLine("data event");
-            this.Message = "Loaded update.";
-            Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+            Message = "Loaded update.";
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
         }
 
         public virtual void OnHistory(object source, SpeckleEventArgs e)
@@ -234,13 +233,13 @@ namespace SpeckleGrasshopper
 
         #region workhorses
 
-        public void diffStructure(List<SpeckleLayer> newLayers)
+        public void DiffStructure(List<SpeckleLayer> newLayers)
         {
-            dynamic diffResult = SpeckleLayer.diffLayers(getLayers(), newLayers);
+            dynamic diffResult = SpeckleLayer.DiffLayers(GetLayers(), newLayers);
 
             foreach (SpeckleLayer layer in diffResult.toRemove)
             {
-                var myparam = Params.Output.FirstOrDefault(item => { return item.Name == layer.guid; });
+                var myparam = Params.Output.FirstOrDefault(item => { return item.Name == layer.Uuid.ToString(); });
 
                 if (myparam != null)
                     Params.UnregisterOutputParameter(myparam);
@@ -248,7 +247,7 @@ namespace SpeckleGrasshopper
 
             foreach (var layer in diffResult.toAdd)
             {
-                Param_GenericObject newParam = getGhParameter(layer);
+                Param_GenericObject newParam = GetGhParameter(layer);
                 Params.RegisterOutputParam(newParam, layer.orderIndex);
             }
 
@@ -262,20 +261,20 @@ namespace SpeckleGrasshopper
 
         }
 
-        public void setObjects(IGH_DataAccess DA, List<object> objects, List<SpeckleLayer> structure)
+        public void SetObjects(IGH_DataAccess DA, List<object> objects, List<SpeckleLayer> structure)
         {
             if (structure == null) return;
             foreach (SpeckleLayer layer in structure)
             {
-                var subset = objects.GetRange(layer.startIndex, layer.objectCount);
+                var subset = objects.GetRange(layer.StartIndex, layer.ObjectCount);
 
-                if (layer.topology == "")
-                    DA.SetDataList(layer.orderIndex, subset);
+                if (layer.Topology == "")
+                    DA.SetDataList(layer.OrderIndex, subset);
                 else
                 {
                     //HIC SVNT DRACONES
                     var tree = new DataTree<object>();
-                    var treeTopo = layer.topology.Split(' ');
+                    var treeTopo = layer.Topology.Split(' ');
                     int subsetCount = 0;
                     foreach (var branch in treeTopo)
                     {
@@ -293,7 +292,7 @@ namespace SpeckleGrasshopper
                             subsetCount += elCount;
                         }
                     }
-                    DA.SetDataTree(layer.orderIndex, tree);
+                    DA.SetDataTree(layer.OrderIndex, tree);
                 }
             }
         }
@@ -302,13 +301,15 @@ namespace SpeckleGrasshopper
 
         #region Variable Parm
 
-        private Param_GenericObject getGhParameter(SpeckleLayer param)
+        private Param_GenericObject GetGhParameter(SpeckleLayer param)
         {
-            Param_GenericObject newParam = new Param_GenericObject();
-            newParam.Name = (string)param.guid;
-            newParam.NickName = (string)param.name;
-            newParam.MutableNickName = false;
-            newParam.Access = GH_ParamAccess.tree;
+            Param_GenericObject newParam = new Param_GenericObject()
+            {
+                Name = param.Uuid.ToString(),
+                NickName = param.Name,
+                MutableNickName = false,
+                Access = GH_ParamAccess.tree
+            };
             return newParam;
         }
 
@@ -336,17 +337,17 @@ namespace SpeckleGrasshopper
 
         #region Layer Helpers
 
-        public string getTopology(IGH_Param param)
+        public string GetTopology(IGH_Param param)
         {
             string topology = "";
-            foreach (Grasshopper.Kernel.Data.GH_Path mypath in param.VolatileData.Paths)
+            foreach (GH_Path mypath in param.VolatileData.Paths)
             {
                 topology += mypath.ToString(false) + "-" + param.VolatileData.get_Branch(mypath).Count + " ";
             }
             return topology;
         }
 
-        public List<SpeckleLayer> getLayers()
+        public List<SpeckleLayer> GetLayers()
         {
             List<SpeckleLayer> layers = new List<SpeckleLayer>();
             int startIndex = 0;
@@ -356,7 +357,7 @@ namespace SpeckleGrasshopper
                 // NOTE: For gh receivers, we store the original guid of the sender component layer inside the parametr name.
                 SpeckleLayer myLayer = new SpeckleLayer(
                     myParam.NickName,
-                    myParam.Name /* aka the orignal guid*/, getTopology(myParam),
+                    Guid.Parse(myParam.Name) /* aka the orignal guid*/, GetTopology(myParam),
                     myParam.VolatileDataCount,
                     startIndex,
                     count);

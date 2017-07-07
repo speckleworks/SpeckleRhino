@@ -51,7 +51,7 @@ namespace SpeckleGrasshopper
             object myObj = new object();
             DA.GetData(0, ref myObj);
 
-            var result = GhRhConveter.fromGhRhObject(myObj);
+            var result = GhRhConveter.FromGhRhObject(myObj);
             DA.SetData(0, JsonConvert.SerializeObject(result, Formatting.Indented));
             DA.SetData(1, result);
         }

@@ -25,13 +25,13 @@ namespace SpeckleGrasshopper
 {
     public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
     {
-        string streamId, wsSessionId;
-        string serialisedSender;
-        bool ready;
+        string StreamId, WsSessionId;
+        string SerialisedSender;
+        bool Ready;
 
-        Action expireComponentAction;
+        Action ExpireComponentAction;
 
-        SpeckleSender mySender;
+        SpeckleSender Sender;
 
         public GhSenderClient()
           : base("Speckle Sender", "Speckle Sender",
@@ -42,15 +42,15 @@ namespace SpeckleGrasshopper
 
         public override bool Write(GH_IWriter writer)
         {
-            if (mySender != null)
-                writer.SetString("specklesender", mySender.ToString());
+            if (Sender != null)
+                writer.SetString("specklesender", Sender.ToString());
 
             return base.Write(writer);
         }
 
         public override bool Read(GH_IReader reader)
         {
-            reader.TryGetString("specklesender", ref serialisedSender);
+            reader.TryGetString("specklesender", ref SerialisedSender);
             return base.Read(reader);
         }
 
@@ -58,62 +58,63 @@ namespace SpeckleGrasshopper
         {
             base.AddedToDocument(document);
 
-            ready = false;
+            Ready = false;
 
-            if (serialisedSender != null)
-                mySender = new SpeckleSender(serialisedSender, new GhRhConveter());
+            if (SerialisedSender != null)
+                Sender = new SpeckleSender(SerialisedSender, new GhRhConveter());
             else
             {
 
                 var myForm = new SpecklePopup.MainWindow();
 
-                var some = new System.Windows.Interop.WindowInteropHelper(myForm);
-                some.Owner = Rhino.RhinoApp.MainWindowHandle();
-
+                var some = new System.Windows.Interop.WindowInteropHelper(myForm)
+                {
+                    Owner = Rhino.RhinoApp.MainWindowHandle()
+                };
                 myForm.ShowDialog();
 
                 if (myForm.restApi != null && myForm.apitoken != null)
-                    mySender = new SpeckleSender(myForm.restApi, myForm.apitoken, new GhRhConveter());
+                    Sender = new SpeckleSender(myForm.restApi, myForm.apitoken, new GhRhConveter());
             }
 
-            if (mySender == null) return;
+            if (Sender == null) return;
 
-            mySender.OnError += OnError;
+            Sender.OnError += OnError;
 
-            mySender.OnReady += OnReady;
+            Sender.OnReady += OnReady;
 
-            mySender.OnDataSent += OnDataSent;
+            Sender.OnDataSent += OnDataSent;
 
-            mySender.OnMessage += OnVolatileMessage;
+            Sender.OnMessage += OnVolatileMessage;
 
-            mySender.OnBroadcast += OnBroadcast;
+            Sender.OnBroadcast += OnBroadcast;
 
-            expireComponentAction = () => this.ExpireSolution(true);
+            ExpireComponentAction = () => ExpireSolution(true);
 
-            this.ObjectChanged += (sender, e) => updateMetadata();
+            ObjectChanged += (sender, e) => UpdateMetadata();
 
             foreach (var param in Params.Input)
-                param.ObjectChanged += (sender, e) => updateMetadata();
+                param.ObjectChanged += (sender, e) => UpdateMetadata();
         }
 
         public virtual void OnError(object source, SpeckleEventArgs e)
         {
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventInfo);
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventInfo);
         }
 
         public virtual void OnReady(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("Sender ready:::" + (string)e.Data.streamId + ":::" + (string)e.Data.wsSessionId);
-            this.ready = true;
-            this.streamId = e.Data.streamId;
-            this.wsSessionId = e.Data.wsSessionId;
+            Ready = true;
+            StreamId = e.Data.streamId;
+            WsSessionId = e.Data.wsSessionId;
         }
 
         public virtual void OnDataSent(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("Data was sent. Stop the loading bar :) Wait. What loading bar? The one luis wanted! Where is it? I dunno");
 
-            this.Message = "Data sent.";
+            Message = "Data sent.";
         }
 
         public virtual void OnVolatileMessage(object source, SpeckleEventArgs e)
@@ -128,14 +129,14 @@ namespace SpeckleGrasshopper
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            if(mySender!=null) mySender.Dispose();
+            if(Sender!=null) Sender.Dispose();
             base.RemovedFromDocument(document);
         }
 
         public override void DocumentContextChanged(GH_Document document, GH_DocumentContext context)
         {
             if (context == GH_DocumentContext.Close)
-                if (mySender != null) mySender.Dispose();
+                if (Sender != null) Sender.Dispose();
 
             base.DocumentContextChanged(document, context);
         }
@@ -143,9 +144,9 @@ namespace SpeckleGrasshopper
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
         {
             base.AppendAdditionalMenuItems(menu);
-            GH_DocumentObject.Menu_AppendItem(menu, @"Save current state", (sender, e) =>
+            Menu_AppendItem(menu, @"Save current state", (sender, e) =>
             {
-                mySender.saveToHistory();
+                Sender.SaveToHistory();
             });
         }
 
@@ -153,14 +154,14 @@ namespace SpeckleGrasshopper
         /// <summary>
         /// Registers all the input parameters for this component.
         /// </summary>
-        protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
+        protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
         }
 
         /// <summary>
         /// Registers all the output parameters for this component.
         /// </summary>
-        protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
+        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("URL", "URL", "Link to the latest uploaded file.", GH_ParamAccess.item);
             pManager.AddTextParameter("ID", "ID", "Stream Id", GH_ParamAccess.item);
@@ -173,19 +174,19 @@ namespace SpeckleGrasshopper
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            if (mySender == null)
+            if (Sender == null)
             {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to initialise.");
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to initialise.");
                 return;
             }
-            DA.SetData(0, mySender.getServer() + @"/streams/" + mySender.getStreamId());
-            DA.SetData(1, mySender.getStreamId());
+            DA.SetData(0, Sender.GetServer() + @"/streams/" + Sender.GetStreamId());
+            DA.SetData(1, Sender.GetStreamId());
 
-            if (!ready) return;
+            if (!Ready) return;
 
-            updateData();
+            UpdateData();
 
-            this.Message = "Sending Data...";
+            Message = "Sending Data...";
         }
 
 
@@ -216,16 +217,17 @@ namespace SpeckleGrasshopper
 
         IGH_Param IGH_VariableParameterComponent.CreateParameter(GH_ParameterSide side, int index)
         {
-            Grasshopper.Kernel.Parameters.Param_GenericObject param = new Param_GenericObject();
-
-            param.Name = GH_ComponentParamServer.InventUniqueNickname("ABCDEFGHIJKLMNOPQRSTUVWXYZ", Params.Input);
+            Param_GenericObject param = new Param_GenericObject()
+            {
+                Name = GH_ComponentParamServer.InventUniqueNickname("ABCDEFGHIJKLMNOPQRSTUVWXYZ", Params.Input)
+            };
             param.NickName = param.Name;
             param.Description = "Things to be sent around.";
             param.Optional = true;
             param.Access = GH_ParamAccess.tree;
 
             param.AttributesChanged += (sender, e) => Debug.WriteLine("Attributes have changed! (of param)");
-            param.ObjectChanged += (sender, e) => updateMetadata();
+            param.ObjectChanged += (sender, e) => UpdateMetadata();
 
             return param;
         }
@@ -240,7 +242,7 @@ namespace SpeckleGrasshopper
         }
 
 
-        public string getTopology(IGH_Param param)
+        public string GetTopology(IGH_Param param)
         {
             string topology = "";
             foreach (Grasshopper.Kernel.Data.GH_Path mypath in param.VolatileData.Paths)
@@ -250,7 +252,7 @@ namespace SpeckleGrasshopper
             return topology;
         }
 
-        public List<SpeckleLayer> getLayers()
+        public List<SpeckleLayer> GetLayers()
         {
             List<SpeckleLayer> layers = new List<SpeckleLayer>();
             int startIndex = 0;
@@ -259,8 +261,8 @@ namespace SpeckleGrasshopper
             {
                 SpeckleLayer myLayer = new SpeckleLayer(
                     myParam.NickName,
-                    myParam.InstanceGuid.ToString(), 
-                    getTopology(myParam),
+                    myParam.InstanceGuid, 
+                    GetTopology(myParam),
                     myParam.VolatileDataCount,
                     startIndex,
                     count);
@@ -272,7 +274,7 @@ namespace SpeckleGrasshopper
             return layers;
         }
 
-        public List<object> getData()
+        public List<object> GetData()
         {
             List<object> data = new List<dynamic>();
             foreach (IGH_Param myParam in Params.Input)
@@ -283,16 +285,16 @@ namespace SpeckleGrasshopper
             return data;
         }
 
-        public void updateMetadata()
+        public void UpdateMetadata()
         {
             Debug.WriteLine("Component: UPDATING METADATA");
-            mySender.sendMetadataUpdate(getLayers(), this.NickName);
+            Sender.SendMetadataUpdate(GetLayers(), this.NickName);
         }
 
-        public void updateData()
+        public void UpdateData()
         {
             Debug.WriteLine("Component: UPDATING DATA");
-            mySender.sendDataUpdate(getData(), getLayers(), this.NickName);
+            Sender.SendDataUpdate(GetData(), GetLayers(), this.NickName);
         }
 
         protected override System.Drawing.Bitmap Icon
