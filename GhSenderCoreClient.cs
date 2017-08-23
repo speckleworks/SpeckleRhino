@@ -81,7 +81,6 @@ namespace SpeckleGrasshopper
         {
             base.AddedToDocument(document);
 
-
             ready = false;
 
             if (mySender == null)
@@ -106,8 +105,6 @@ namespace SpeckleGrasshopper
 
             mySender.OnError += OnError;
 
-            mySender.OnReady += OnReady;
-
             mySender.OnWsMessage += OnWsMessage;
 
             mySender.OnLogData += (sender, e) =>
@@ -118,9 +115,9 @@ namespace SpeckleGrasshopper
 
             expireComponentAction = () => this.ExpireSolution(true);
 
-            this.ObjectChanged += (sender, e) => updateMetadata();
+            this.ObjectChanged += (sender, e) => UpdateMetadata();
 
-            foreach (var param in Params.Input) param.ObjectChanged += (sender, e) => updateMetadata();
+            foreach (var param in Params.Input) param.ObjectChanged += (sender, e) => UpdateMetadata();
 
             Grasshopper.Instances.DocumentServer.DocumentRemoved += (sender, e) =>
             {
@@ -129,14 +126,11 @@ namespace SpeckleGrasshopper
                     var payload = new PayloadClientUpdate();
                     payload.Client = new SpeckleClient();
                     payload.Client.Online = false;
-                    this.mySender.ClientUpdate(payload, mySender.ClientId);
+
+                    mySender.ClientUpdate(payload, mySender.ClientId);
+                    mySender.Dispose();
                 }
             };
-        }
-
-        private void GhSenderCoreClient_ObjectChanged(IGH_DocumentObject sender, GH_ObjectChangedEventArgs e)
-        {
-            Debug.WriteLine(e.Type);
         }
 
         public virtual void OnError(object source, SpeckleEventArgs e)
@@ -144,22 +138,9 @@ namespace SpeckleGrasshopper
             this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventData);
         }
 
-        public virtual void OnReady(object source, SpeckleEventArgs e)
-        {
-            this.ready = true;
-            this.streamId = mySender.StreamId;
-            this.clientId = mySender.ClientId;
-            this.baseUrl = mySender.BaseUrl;
-        }
-
         public virtual void OnWsMessage(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease.");
-        }
-
-        public virtual void OnBroadcast(object source, SpeckleEventArgs e)
-        {
-            Debug.WriteLine("[Gh Sender] Got a volatile broadcast. Extend this class and implement custom protocols at ease.");
         }
 
         public override void RemovedFromDocument(GH_Document document)
@@ -179,49 +160,80 @@ namespace SpeckleGrasshopper
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
         {
             base.AppendAdditionalMenuItems(menu);
-            GH_DocumentObject.Menu_AppendItem(menu, @"Save current state", (sender, e) =>
+            GH_DocumentObject.Menu_AppendItem(menu, @"Broadcast test message.", (sender, e) =>
             {
-                mySender.StreamDuplicateAsync(mySender.Stream.StreamId).ContinueWith(response =>
-                {
-                    // TODO 
-                });
+                mySender.BroadcastMessage(new { eventType = "get-sliders" } );
+                //mySender.SendMessage();
             });
         }
 
-
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
         }
 
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddTextParameter("out", "out", "Log data.", GH_ParamAccess.item);
             pManager.AddTextParameter("ID", "ID", "The stream's short id.", GH_ParamAccess.item);
         }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
-        /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             DA.SetData(0, Log);
             DA.SetData(1, mySender.StreamId);
 
-            if (!ready) return;
+            if (!mySender.IsConnected) return;
 
-            updateData();
-
-            //this.Message = "Sending Data...";
+            mySender.UpdateDataDebonuced(this.NickName, GetData(), GetLayers());
         }
 
+        public void UpdateMetadata()
+        {
+            mySender.UpdateMetadataDebounced(this.NickName, GetLayers());
+        }
+
+        public List<object> GetData()
+        {
+            List<object> data = new List<dynamic>();
+            foreach (IGH_Param myParam in Params.Input)
+            {
+                foreach (object o in myParam.VolatileData.AllData(false))
+                    data.Add(o);
+            }
+            return data;
+        }
+
+        public List<SpeckleLayer> GetLayers()
+        {
+            List<SpeckleLayer> layers = new List<SpeckleLayer>();
+            int startIndex = 0;
+            int count = 0;
+            foreach (IGH_Param myParam in Params.Input)
+            {
+                SpeckleLayer myLayer = new SpeckleLayer(
+                    myParam.NickName,
+                    myParam.InstanceGuid.ToString(),
+                    GetParamTopology(myParam),
+                    myParam.VolatileDataCount,
+                    startIndex,
+                    count);
+
+                layers.Add(myLayer);
+                startIndex += myParam.VolatileDataCount;
+                count++;
+            }
+            return layers;
+        }
+
+        public string GetParamTopology(IGH_Param param)
+        {
+            string topology = "";
+            foreach (Grasshopper.Kernel.Data.GH_Path mypath in param.VolatileData.Paths)
+            {
+                topology += mypath.ToString(false) + "-" + param.VolatileData.get_Branch(mypath).Count + " ";
+            }
+            return topology;
+        }
 
         bool IGH_VariableParameterComponent.CanInsertParameter(GH_ParameterSide side, int index)
         {
@@ -259,77 +271,21 @@ namespace SpeckleGrasshopper
             param.Access = GH_ParamAccess.tree;
 
             param.AttributesChanged += (sender, e) => Debug.WriteLine("Attributes have changed! (of param)");
-            param.ObjectChanged += (sender, e) => updateMetadata();
+            param.ObjectChanged += (sender, e) => UpdateMetadata();
 
-            this.updateMetadata();
+            this.UpdateMetadata();
 
             return param;
         }
 
         bool IGH_VariableParameterComponent.DestroyParameter(GH_ParameterSide side, int index)
         {
-            this.updateMetadata();
+            this.UpdateMetadata();
             return true;
         }
 
         void IGH_VariableParameterComponent.VariableParameterMaintenance()
         {
-        }
-
-
-        public string getTopology(IGH_Param param)
-        {
-            string topology = "";
-            foreach (Grasshopper.Kernel.Data.GH_Path mypath in param.VolatileData.Paths)
-            {
-                topology += mypath.ToString(false) + "-" + param.VolatileData.get_Branch(mypath).Count + " ";
-            }
-            return topology;
-        }
-
-        public List<SpeckleLayer> getLayers()
-        {
-            List<SpeckleLayer> layers = new List<SpeckleLayer>();
-            int startIndex = 0;
-            int count = 0;
-            foreach (IGH_Param myParam in Params.Input)
-            {
-                SpeckleLayer myLayer = new SpeckleLayer(
-                    myParam.NickName,
-                    myParam.InstanceGuid.ToString(),
-                    getTopology(myParam),
-                    myParam.VolatileDataCount,
-                    startIndex,
-                    count);
-
-                layers.Add(myLayer);
-                startIndex += myParam.VolatileDataCount;
-                count++;
-            }
-            return layers;
-        }
-
-        public List<object> getData()
-        {
-            List<object> data = new List<dynamic>();
-            foreach (IGH_Param myParam in Params.Input)
-            {
-                foreach (object o in myParam.VolatileData.AllData(false))
-                    data.Add(o);
-            }
-            return data;
-        }
-
-        public void updateMetadata()
-        {
-            mySender.UpdateMetadataDebounced(this.NickName, getLayers());
-        }
-
-        public void updateData()
-        {
-            //Debug.WriteLine("Component: UPDATING DATA");
-            //mySender.sendDataUpdate(getData(), getLayers(), this.NickName);
-            mySender.UpdateDataDebonuced(this.NickName, getData(), getLayers());
         }
 
         protected override System.Drawing.Bitmap Icon

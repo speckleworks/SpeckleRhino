@@ -15,17 +15,17 @@ namespace SpeckleGrasshopper
         public ExtenededReceiver()
         {
             this.Category = "Speckle";
-            this.SubCategory = "Debug";
+            this.SubCategory = "Extensions";
             this.Name = "Extended Receiver";
             this.NickName = "Extended Receiver";
         }
 
-        public override void OnVolatileMessage(object source, SpeckleEventArgs e)
-        {
-            base.OnVolatileMessage(source, e);
-            System.Diagnostics.Debug.WriteLine("I've Inherited this method and now i can do whatever I want here, like my own extra protocol.");
-            System.Diagnostics.Debug.WriteLine((string) e.Data.args);
-        }
+        //public override void OnVolatileMessage(object source, SpeckleEventArgs e)
+        //{
+        //    base.OnVolatileMessage(source, e);
+        //    System.Diagnostics.Debug.WriteLine("I've Inherited this method and now i can do whatever I want here, like my own extra protocol.");
+        //    System.Diagnostics.Debug.WriteLine((string) e.Data.args);
+        //}
 
         /// <summary>
         /// Provides an Icon for the component.
@@ -34,9 +34,7 @@ namespace SpeckleGrasshopper
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
+                return Properties.Resources.receiver_2;
             }
         }
 
