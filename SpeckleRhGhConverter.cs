@@ -20,45 +20,25 @@ using System.Reflection;
 namespace SpeckleGhRhConverter
 {
     /// <summary>
-    /// Handles Grasshopper objects: GH_Brep, GH_Mesh, etc. All non-gh specific converting functions are found in the RhinoGeometryConverter class. 
+    /// A Rhino conversion utility class. 
     /// </summary>
-    /// 
-
-    public class GhRhConveter : SpeckleCommon.SpeckleConverter
-    {
-        public override List<SpeckleCommon.SpeckleObject> convert(IEnumerable<object> objects)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void convertAsync(IEnumerable<object> objects, Action<List<SpeckleCommon.SpeckleObject>> callback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override dynamic description()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override object encodeObject(dynamic myObj, dynamic objectProperties = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override List<SpeckleCommon.SpeckleObjectProperties> getObjectProperties(IEnumerable<object> objects)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public class RhinoConverter : Converter, IDisposable
     {
+        /// <summary>
+        /// Converts Speckle objects to Rhino objects.
+        /// </summary>
+        /// <param name="_objects"></param>
+        /// <returns></returns>
         public override IEnumerable<object> ToNative(IEnumerable<SpeckleObject> _objects)
         {
             return _objects.Select(o => ToNative(o));
         }
 
+        /// <summary>
+        /// Converts Speckle objects to Rhino objects.
+        /// </summary>
+        /// <param name="_objects"></param>
+        /// <returns></returns>
         public override object ToNative(SpeckleObject _object)
         {
             object encodedObject = null;
@@ -144,11 +124,21 @@ namespace SpeckleGhRhConverter
             return myObj;
         }
 
+        /// <summary>
+        /// Converts Rhino objects to Speckle objects.
+        /// </summary>
+        /// <param name="_objects"></param>
+        /// <returns></returns>
         public override IEnumerable<SpeckleObject> ToSpeckle(IEnumerable<object> _objects)
         {
             return _objects.Select(o => ToSpeckle(o));
         }
 
+        /// <summary>
+        /// Converts Rhino objects to Speckle objects.
+        /// </summary>
+        /// <param name="_objects"></param>
+        /// <returns></returns>
         public override SpeckleObject ToSpeckle(object _object)
         {
             object myObject = _object;
@@ -232,20 +222,21 @@ namespace SpeckleGhRhConverter
             return new SpeckleString(myObject.ToString());
         }
 
+        /// <summary>
+        /// Converts a Speckle object's properties to a native Rhino UserDictionary (ArchivableDictionary).
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
         public static ArchivableDictionary PropertiesToNative(Dictionary<string, object> dict)
         {
             try
             {
-                var x = dict;
-                if((bool)dict["_conversion_visited"] == true)
+                if((bool)dict["_conversion_visited_flag"] == true)
                 {
                     throw new Exception("Circular reference in user dictionary. Whopsie.");
                 }
             }
-            catch
-            {
-
-            }
+            catch { }
 
             ArchivableDictionary myDictionary = new ArchivableDictionary();
 
@@ -345,10 +336,15 @@ namespace SpeckleGhRhConverter
                 }
 
             }
-            dict.Add("_conversion_visited", true);
+            dict.Add("_conversion_visited_flag", true);
             return myDictionary;
         }
 
+        /// <summary>
+        /// Converts an object's UserDictionary to a f###ing normal Dictionary.
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
         public static Dictionary<string, object> PropertiesToSpeckle(ArchivableDictionary dict)
         {
             Dictionary<string, object> myDictionary = new Dictionary<string, object>();
