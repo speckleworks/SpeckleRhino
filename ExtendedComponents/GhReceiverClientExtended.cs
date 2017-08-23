@@ -34,13 +34,8 @@ namespace SpeckleGrasshopper
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("{05e864ac-ed69-4f08-a812-d78d2f2d7a6a}"); }
+            get { return new Guid("{36728fa7-ab47-40a1-b47c-c072da646eb7}"); }
         }
-    }
-
-    public class ExtendedSender : GhSenderClient
-    {
-
     }
 
 }

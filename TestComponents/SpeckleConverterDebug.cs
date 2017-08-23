@@ -29,9 +29,9 @@ namespace SpeckleGrasshopper
         Converter c = new RhinoConverter();
 
         public EncodeToSpeckle()
-          : base("Speckle Converter", "Speckle Converter",
-              "Speckle Converter",
-              "Speckle", "Test")
+          : base("Serialiser", "SRL",
+              "Serialises a Rhino object to a Speckle object.",
+              "Speckle", "Converters")
         {
         }
 
@@ -81,9 +81,9 @@ namespace SpeckleGrasshopper
         Converter c = new RhinoConverter();
 
         public DecodeFromSpeckle()
-          : base("Speckle Decoder", "Speckle Decoder",
-              "Speckle Decoder",
-              "Speckle", "Debug")
+          : base("Deserialiser", "DSR",
+              "Deserialises Speckle objects to Rhino objects.",
+              "Speckle", "Converters")
         {
         }
 
