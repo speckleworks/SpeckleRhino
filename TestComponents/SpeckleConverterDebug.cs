@@ -22,6 +22,7 @@ using SpeckleCore;
 
 namespace SpeckleGrasshopper
 {
+
     public class EncodeToSpeckle : GH_Component
     {
 
@@ -30,7 +31,7 @@ namespace SpeckleGrasshopper
         public EncodeToSpeckle()
           : base("Speckle Converter", "Speckle Converter",
               "Speckle Converter",
-              "Speckle", "Debug")
+              "Speckle", "Test")
         {
         }
 
@@ -125,4 +126,5 @@ namespace SpeckleGrasshopper
             }
         }
     }
+
 }

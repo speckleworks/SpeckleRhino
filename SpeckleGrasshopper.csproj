@@ -85,9 +85,6 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
     <Reference Include="RhinoCommon, Version=5.1.30000.16, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
       <HintPath>packages\RhinoCommon.5.12.50810.13095\lib\net35\RhinoCommon.dll</HintPath>
     </Reference>
@@ -96,29 +93,20 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Windows.Presentation" />
-    <Reference Include="System.Xml" />
-    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GhReceiverCoreClient.cs" />
-    <Compile Include="GhSenderClient.cs" />
-    <Compile Include="GhSenderCoreClient.cs" />
-    <Compile Include="SpeckleConverterDebug.cs" />
-    <Compile Include="GhReceiverClientExtended.cs" />
+    <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
+    <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="TestComponents\SpeckleConverterDebug.cs" />
+    <Compile Include="ExtendedComponents\GhReceiverClientExtended.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SpeckleCoreTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -140,10 +128,6 @@
     <ProjectReference Include="..\SpeckleAccountManager\SpecklePopup.csproj">
       <Project>{d65594c8-ea2e-46ca-a756-b1634edc3ae3}</Project>
       <Name>SpecklePopup</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SpeckleCommon\SpeckleCommon.csproj">
-      <Project>{d38d3139-5861-4704-9aa5-950253d96d73}</Project>
-      <Name>SpeckleCommon</Name>
     </ProjectReference>
     <ProjectReference Include="..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>

@@ -26,7 +26,7 @@ using System.IO;
 
 namespace SpeckleGrasshopper
 {
-    public class GhSenderCoreClient : GH_Component, IGH_VariableParameterComponent
+    public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
     {
         string streamId, clientId, baseUrl;
         string Log { get; set; }
@@ -36,10 +36,10 @@ namespace SpeckleGrasshopper
 
         SpeckleApiClient mySender;
 
-        public GhSenderCoreClient()
-          : base("SCore Sender", "SCore Sender",
-              "SCore Sender",
-              "Speckle", "Speckle")
+        public GhSenderClient()
+          : base("Data Sender", "Data Sender",
+              "Sends data to Speckle.",
+              "Speckle", "I/O")
         {
         }
 

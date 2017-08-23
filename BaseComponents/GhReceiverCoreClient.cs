@@ -39,9 +39,9 @@ namespace SpeckleGrasshopper
         RhinoConverter Converter;
         
         public GhReceiverClient()
-          : base("SCore Receiver", "SCore Receiver",
-              "SCore Receier",
-              "Speckle", "Speckle")
+          : base("Data Receiver", "Data Receiver",
+              "Receives data from Speckle.",
+              "Speckle", "I/O")
         {
         }
 
