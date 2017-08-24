@@ -99,6 +99,9 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="Management\ExpandObject.cs" />
+    <Compile Include="Management\ListMyAccounts.cs" />
+    <Compile Include="Management\ListMyStreams.cs" />
     <Compile Include="TestComponents\SpeckleConverterDebug.cs" />
     <Compile Include="ExtendedComponents\GhReceiverClientExtended.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -137,6 +140,12 @@
       <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
       <Name>SpeckleGhRhConverter</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Expand Objectxs-.png" />
+    <None Include="Resources\Create Objectxs-.png" />
+    <Content Include="Resources\GenericIcon.png" />
+    <None Include="Resources\GenericIconXS.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

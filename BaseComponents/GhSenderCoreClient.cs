@@ -80,7 +80,6 @@ namespace SpeckleGrasshopper
         public override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
-
             ready = false;
 
             if (mySender == null)

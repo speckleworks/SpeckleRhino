@@ -87,11 +87,6 @@ namespace SpeckleGrasshopper
         {
         }
 
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{43b4f541-d914-471e-9f37-72291db2f2d4}"); }
-        }
-
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddGenericParameter("Object", "O", "Objects to cast.", GH_ParamAccess.item);
@@ -124,6 +119,11 @@ namespace SpeckleGrasshopper
                 // return Resources.IconForThisComponent;
                 return null;
             }
+        }
+
+        public override Guid ComponentGuid
+        {
+            get { return new Guid("{43b4f541-d914-471e-9f37-72291db2f2d4}"); }
         }
     }
 
