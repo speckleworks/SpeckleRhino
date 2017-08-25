@@ -181,6 +181,8 @@ namespace SpecklePopup
                     Dictionary<string, string> newUser = new Dictionary<string, string>();
                     newUser.Add("email", email);
                     newUser.Add("password", password);
+                    newUser.Add("surname", this.SurnameBox.Text);
+                    newUser.Add("name", this.NameBox.Text);
 
                     client.Headers[HttpRequestHeader.ContentType] = "application/json";
 
