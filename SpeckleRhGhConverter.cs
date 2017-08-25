@@ -2,22 +2,16 @@
 using Rhino.Collections;
 using Rhino.Geometry;
 using Rhino.Runtime;
-//using SpeckleCommon;
 
 using SpeckleCore;
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Dynamic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Reflection;
 
-namespace SpeckleGhRhConverter
+namespace SpeckleRhinoConverter
 {
     /// <summary>
     /// A Rhino conversion utility class. 
@@ -452,7 +446,7 @@ namespace SpeckleGhRhConverter
 
         public static Interval ToRhino(this SpeckleInterval interval)
         {
-            return new Interval((double)interval.Start, (double)interval.End);
+            return new Interval((double)interval.Start, (double)interval.End); ;
         }
 
         // Interval2d
