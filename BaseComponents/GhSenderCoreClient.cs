@@ -9,7 +9,7 @@ using Grasshopper.Kernel.Parameters;
 using GH_IO.Serialization;
 
 using SpeckleCore;
-using SpeckleGhRhConverter;
+using SpeckleRhinoConverter;
 using SpecklePopup;
 
 using System.Dynamic;

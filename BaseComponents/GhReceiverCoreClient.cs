@@ -10,7 +10,7 @@ using System.Diagnostics;
 using Grasshopper.Kernel.Parameters;
 
 using SpeckleCore;
-using SpeckleGhRhConverter;
+using SpeckleRhinoConverter;
 using SpecklePopup;
 
 

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "SpeckleGrasshopper.csproj", "{82EC14D9-01C7-46C7-8600-DB75F871740D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -9,11 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "Speck
 		{E967A1E1-37FF-4394-B793-6987A7958016} = {E967A1E1-37FF-4394-B793-6987A7958016}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGhRhConverter", "..\SpeckleRhinoConverter\SpeckleGhRhConverter.csproj", "{E967A1E1-37FF-4394-B793-6987A7958016}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleRhinoConverter", "..\SpeckleRhinoConverter\SpeckleRhinoConverter.csproj", "{E967A1E1-37FF-4394-B793-6987A7958016}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecklePopup", "..\SpeckleAccountManager\SpecklePopup.csproj", "{D65594C8-EA2E-46CA-A756-B1634EDC3AE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserDataUtils", "..\SpeckleUserDataUtils\UserDataUtils.csproj", "{46948630-9BB9-4624-8BF9-C866F2B52674}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleUserData", "..\SpeckleUserDataUtils\SpeckleUserData.csproj", "{46948630-9BB9-4624-8BF9-C866F2B52674}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E967A1E1-37FF-4394-B793-6987A7958016} = {E967A1E1-37FF-4394-B793-6987A7958016}
 	EndProjectSection
@@ -117,5 +117,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7546F89E-F811-4A2C-A3E5-EA409115FEEE}
 	EndGlobalSection
 EndGlobal

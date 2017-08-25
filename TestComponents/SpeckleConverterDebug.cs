@@ -9,9 +9,6 @@ using GH_IO.Serialization;
 using System.Diagnostics;
 using Grasshopper.Kernel.Parameters;
 
-using SpeckleGhRhConverter;
-
-
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 
@@ -19,6 +16,7 @@ using Newtonsoft.Json;
 using System.Dynamic;
 
 using SpeckleCore;
+using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper
 {
@@ -26,7 +24,7 @@ namespace SpeckleGrasshopper
     public class EncodeToSpeckle : GH_Component
     {
 
-        Converter c = new RhinoConverter();
+        Converter c = new SpeckleRhinoConverter.RhinoConverter();
 
         public EncodeToSpeckle()
           : base("Serialiser", "SRL",
@@ -68,9 +66,7 @@ namespace SpeckleGrasshopper
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
+                return Resources.GenericIconXS;
             }
         }
     }
@@ -78,11 +74,11 @@ namespace SpeckleGrasshopper
     public class DecodeFromSpeckle : GH_Component
     {
 
-        Converter c = new RhinoConverter();
+        Converter c = new SpeckleRhinoConverter.RhinoConverter();
 
         public DecodeFromSpeckle()
           : base("Deserialiser", "DSR",
-              "Deserialises Speckle objects to Rhino objects.",
+              "Deserialises Speckle (geometry) objects to Rhino objects.",
               "Speckle", "Converters")
         {
         }
@@ -103,7 +99,6 @@ namespace SpeckleGrasshopper
             DA.GetData(0, ref myObj);
 
             var cast = myObj as Grasshopper.Kernel.Types.GH_ObjectWrapper;
-
             var result = c.ToNative((SpeckleObject) cast.Value);
             DA.SetData(0, result);
         }
@@ -115,9 +110,7 @@ namespace SpeckleGrasshopper
         {
             get
             {
-                //You can add image files to your project resources and access them like this:
-                // return Resources.IconForThisComponent;
-                return null;
+                return Resources.GenericIconXS;
             }
         }
 
