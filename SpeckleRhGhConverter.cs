@@ -330,7 +330,6 @@ namespace SpeckleRhinoConverter
                 }
 
             }
-            dict.Add("_conversion_visited_flag", true);
             return myDictionary;
         }
 
