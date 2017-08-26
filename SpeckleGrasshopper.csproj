@@ -142,6 +142,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\play25px.png" />
+    <None Include="Resources\pause25px.png" />
     <None Include="Resources\Expand Objectxs-.png" />
     <None Include="Resources\Create Objectxs-.png" />
     <Content Include="Resources\GenericIcon.png" />

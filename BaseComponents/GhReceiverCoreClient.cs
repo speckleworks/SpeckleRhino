@@ -22,6 +22,10 @@ using Newtonsoft.Json;
 using System.Dynamic;
 using System.Windows;
 using System.Threading.Tasks;
+using System.Drawing;
+using Grasshopper.GUI.Canvas;
+using System.Windows.Forms;
+using Grasshopper.GUI;
 
 namespace SpeckleGrasshopper
 {
@@ -30,19 +34,27 @@ namespace SpeckleGrasshopper
         string AuthToken;
         string StreamId;
 
-        SpeckleApiClient myReceiver;
+        public bool Paused = false;
+        public bool Expired = false;
+
+        public SpeckleApiClient myReceiver;
         List<SpeckleLayer> Layers;
         List<SpeckleObject> Objects;
 
         Action expireComponentAction;
 
         RhinoConverter Converter;
-        
+
         public GhReceiverClient()
           : base("Data Receiver", "Data Receiver",
               "Receives data from Speckle.",
               "Speckle", "I/O")
         {
+        }
+
+        public override void CreateAttributes()
+        {
+            m_attributes = new GhReceiverClientAttributes(this);
         }
 
         public override bool Write(GH_IWriter writer)
@@ -116,6 +128,11 @@ namespace SpeckleGrasshopper
             Converter = new RhinoConverter();
         }
 
+        public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
+        {
+            base.AppendAdditionalMenuItems(menu);
+        }
+
         public virtual void OnError(object source, SpeckleEventArgs e)
         {
             this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventData);
@@ -123,6 +140,14 @@ namespace SpeckleGrasshopper
 
         public virtual void OnWsMessage(object source, SpeckleEventArgs e)
         {
+            if (Paused)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Update available.");
+                Expired = true;
+                //Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+                return;
+            }
+
             switch ((string)e.EventObject.args.eventType)
             {
                 case "update-global":
@@ -158,7 +183,7 @@ namespace SpeckleGrasshopper
             Task.WhenAll(new Task[] { getName, getLayers }).Wait();
 
             NickName = getName.Result.Name;
-            Layers = getLayers.Result.Layers.ToList() ;
+            Layers = getLayers.Result.Layers.ToList();
             UpdateOutputStructure();
         }
 
@@ -194,6 +219,12 @@ namespace SpeckleGrasshopper
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            if (Paused)
+            {
+                SetObjects(DA);
+                return;
+            }
+
             string inputId = null;
             DA.GetData(0, ref inputId);
 
@@ -207,6 +238,7 @@ namespace SpeckleGrasshopper
             }
 
             if (!myReceiver.IsConnected) return;
+            if (Expired) { Expired = false; UpdateGlobal(); return; }
 
             SetObjects(DA);
         }
@@ -359,5 +391,73 @@ namespace SpeckleGrasshopper
         {
             get { return new Guid("{e35c72a5-9e1c-4d79-8879-a9d6db8006fb}"); }
         }
+    }
+
+    public class GhReceiverClientAttributes : Grasshopper.Kernel.Attributes.GH_ComponentAttributes
+    {
+        GhReceiverClient Base;
+        Rectangle BaseRectangle;
+        Rectangle StreamIdBounds;
+        Rectangle StreamNameBounds;
+        Rectangle PauseButtonBounds;
+
+        public GhReceiverClientAttributes(GhReceiverClient component) : base(component)
+        {
+            Base = component;
+        }
+
+        protected override void Layout()
+        {
+            base.Layout();
+            BaseRectangle = GH_Convert.ToRectangle(Bounds);
+            StreamIdBounds = new Rectangle((int)(BaseRectangle.X + (BaseRectangle.Width - 120) * 0.5), BaseRectangle.Y - 25, 120, 20);
+            StreamNameBounds = new Rectangle(StreamIdBounds.X, BaseRectangle.Y - 50, 120, 20);
+
+            PauseButtonBounds = new Rectangle((int)(BaseRectangle.X + (BaseRectangle.Width - 30) * 0.5), BaseRectangle.Y + BaseRectangle.Height, 30, 30);
+
+            Rectangle newBaseRectangle = new Rectangle(BaseRectangle.X, BaseRectangle.Y, BaseRectangle.Width, BaseRectangle.Height + 33);
+            Bounds = newBaseRectangle;
+        }
+
+        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel)
+        {
+            base.Render(canvas, graphics, channel);
+            if (channel == GH_CanvasChannel.Objects)
+            {
+                GH_PaletteStyle myStyle = new GH_PaletteStyle(System.Drawing.ColorTranslator.FromHtml("#B3B3B3"), System.Drawing.ColorTranslator.FromHtml("#FFFFFF"), System.Drawing.ColorTranslator.FromHtml("#4C4C4C"));
+
+                GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle(System.Drawing.Color.FromArgb(0, 0, 0, 0));
+
+                var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: GH_Palette.Transparent, text: "ID: " + Base.myReceiver.StreamId, highlight: 0, radius: 5);
+                streamIdCapsule.Render(graphics, myStyle);
+                streamIdCapsule.Dispose();
+
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName + (Base.Paused ? " (Paused)" : ""), highlight: 0, radius: 5);
+                streamNameCapsule.Render(graphics, myStyle);
+                streamNameCapsule.Dispose();
+
+                //var pauseStreamingButton = GH_Capsule.CreateTextCapsule(PauseButtonBounds, PauseButtonBounds, GH_Palette.Black, "");
+                //pauseStreamingButton.Text = Base.Paused ? "Paused" : "Streaming";
+                //pauseStreamingButton.Render(graphics, myStyle);
+
+                var pauseStreamingButton = GH_Capsule.CreateCapsule(PauseButtonBounds, GH_Palette.Transparent, 30, 0);
+                pauseStreamingButton.Render(graphics, Base.Paused ? Properties.Resources.play25px : Properties.Resources.pause25px, myTransparentStyle);
+            }
+        }
+
+        public override GH_ObjectResponse RespondToMouseDown(GH_Canvas sender, GH_CanvasMouseEvent e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                if (((RectangleF)PauseButtonBounds).Contains(e.CanvasLocation))
+                {
+                    Base.Paused = !Base.Paused;
+                    Base.ExpireSolution(true);
+                    return GH_ObjectResponse.Handled;
+                }
+            }
+            return base.RespondToMouseDown(sender, e);
+        }
+
     }
 }

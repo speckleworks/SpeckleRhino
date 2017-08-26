@@ -23,18 +23,18 @@ using SpeckleGrasshopper.Properties;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Drawing;
+using Grasshopper.GUI.Canvas;
 
 namespace SpeckleGrasshopper
 {
     public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
     {
-        string streamId, clientId, baseUrl;
         string Log { get; set; }
-        bool ready;
 
         Action expireComponentAction;
 
-        SpeckleApiClient mySender;
+        public SpeckleApiClient mySender;
 
         public GhSenderClient()
           : base("Data Sender", "Data Sender",
@@ -42,6 +42,12 @@ namespace SpeckleGrasshopper
               "Speckle", "I/O")
         {
         }
+
+        public override void CreateAttributes()
+        {
+            m_attributes = new GhSenderClientAttributes(this);
+        }
+
 
         public override bool Write(GH_IWriter writer)
         {
@@ -80,7 +86,6 @@ namespace SpeckleGrasshopper
         public override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
-            ready = false;
 
             if (mySender == null)
             {
@@ -96,7 +101,6 @@ namespace SpeckleGrasshopper
                     mySender = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
                     mySender.IntializeSender(myForm.apitoken).ContinueWith(task =>
                     {
-                        streamId = task.Result;
                         Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
                     });
                 }
@@ -122,19 +126,6 @@ namespace SpeckleGrasshopper
             this.ObjectChanged += (sender, e) => UpdateMetadata();
 
             foreach (var param in Params.Input) param.ObjectChanged += (sender, e) => UpdateMetadata();
-
-            Grasshopper.Instances.DocumentServer.DocumentRemoved += (sender, e) =>
-            {
-                if (e.DocumentID == document.DocumentID)
-                {
-                    var payload = new PayloadClientUpdate();
-                    payload.Client = new SpeckleClient();
-                    payload.Client.Online = false;
-
-                    mySender.ClientUpdate(payload, mySender.ClientId);
-                    mySender.Dispose();
-                }
-            };
         }
 
         public virtual void OnError(object source, SpeckleEventArgs e)
@@ -308,7 +299,47 @@ namespace SpeckleGrasshopper
             get { return new Guid("{e66e6873-ddcd-4089-93ff-75ae09f8ada3}"); }
         }
     }
-    
 
+    public class GhSenderClientAttributes : Grasshopper.Kernel.Attributes.GH_ComponentAttributes
+    {
+        GhSenderClient Base;
+        Rectangle BaseRectangle;
+        Rectangle StreamIdBounds;
+        Rectangle StreamNameBounds;
+        Rectangle PauseButtonBounds;
+
+        public GhSenderClientAttributes(GhSenderClient component) : base(component)
+        {
+            Base = component;
+        }
+
+        protected override void Layout()
+        {
+            base.Layout();
+            BaseRectangle = GH_Convert.ToRectangle(Bounds);
+            StreamIdBounds = new Rectangle((int)(BaseRectangle.X + (BaseRectangle.Width - 120) * 0.5), BaseRectangle.Y - 25, 120, 20);
+            StreamNameBounds = new Rectangle(StreamIdBounds.X, BaseRectangle.Y - 50, 120, 20);
+        }
+
+        protected override void Render(GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel)
+        {
+            base.Render(canvas, graphics, channel);
+            if (channel == GH_CanvasChannel.Objects)
+            {
+                GH_PaletteStyle myStyle = new GH_PaletteStyle(System.Drawing.ColorTranslator.FromHtml("#B3B3B3"), System.Drawing.ColorTranslator.FromHtml("#FFFFFF"), System.Drawing.ColorTranslator.FromHtml("#4C4C4C"));
+
+                GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle(System.Drawing.Color.FromArgb(0, 0, 0, 0));
+
+                var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: GH_Palette.Transparent, text: "ID: " + Base.mySender.StreamId, highlight: 0, radius: 5);
+                streamIdCapsule.Render(graphics, myStyle);
+                streamIdCapsule.Dispose();
+
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName, highlight: 0, radius: 5);
+                streamNameCapsule.Render(graphics, myStyle);
+                streamNameCapsule.Dispose();
+            }
+        }
+
+    }
 }
 
