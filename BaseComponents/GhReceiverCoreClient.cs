@@ -95,7 +95,17 @@ namespace SpeckleGrasshopper
                     myReceiver = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
                     AuthToken = myForm.apitoken;
                 }
+                else
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Account selection failed.");
+                    return;
+                }
             }
+
+            myReceiver.OnReady += (sender, e) =>
+            {
+                UpdateGlobal();
+            };
 
             myReceiver.OnWsMessage += OnWsMessage;
 

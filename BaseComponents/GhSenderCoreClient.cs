@@ -100,6 +100,11 @@ namespace SpeckleGrasshopper
                         Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
                     });
                 }
+                else
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Account selection failed");
+                    return;
+                }
             } else { mySender.Converter = new RhinoConverter(); }
 
             mySender.OnError += OnError;
@@ -178,6 +183,8 @@ namespace SpeckleGrasshopper
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            if (mySender == null) return;
+
             DA.SetData(0, Log);
             DA.SetData(1, mySender.StreamId);
 
@@ -301,5 +308,7 @@ namespace SpeckleGrasshopper
             get { return new Guid("{e66e6873-ddcd-4089-93ff-75ae09f8ada3}"); }
         }
     }
+    
+
 }
 
