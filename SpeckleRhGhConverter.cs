@@ -194,6 +194,7 @@ namespace SpeckleRhinoConverter
                 }
 
                 obj.Properties = crvProps;
+                obj.SetFullHash(); // why can't polylines have fucking user dictionaries man this sucks 
                 //obj.properties = crvProps; // <MMMM?WAT
                 return obj;
             }
