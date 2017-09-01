@@ -144,7 +144,7 @@ namespace SpeckleRhinoConverter
             }
             catch { };
 
-            if (myObject == null) return new SpeckleString("Converter Error.");
+            if (myObject == null) return new SpeckleString("Null object.");
 
             if (myObject is bool)
                 return new SpeckleBoolean((bool)myObject);
@@ -203,6 +203,9 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Circle)
                 return ((Circle)myObject).ToSpeckle();
+
+            if (myObject is Box)
+                return ((Box)myObject).ToSpeckle();
 
             if (myObject is Rectangle3d)
                 return ((Rectangle3d)myObject).ToSpeckle();
