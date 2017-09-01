@@ -119,7 +119,7 @@ namespace SpeckleGrasshopper
             {
                 this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
                 this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData);
-            };
+            };  
 
             expireComponentAction = () => this.ExpireSolution(true);
 
@@ -155,11 +155,6 @@ namespace SpeckleGrasshopper
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
         {
             base.AppendAdditionalMenuItems(menu);
-            GH_DocumentObject.Menu_AppendItem(menu, @"Broadcast test message.", (sender, e) =>
-            {
-                mySender.BroadcastMessage(new { eventType = "get-sliders" } );
-                //mySender.SendMessage();
-            });
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)

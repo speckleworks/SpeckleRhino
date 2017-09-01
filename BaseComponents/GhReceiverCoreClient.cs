@@ -39,7 +39,8 @@ namespace SpeckleGrasshopper
 
         public SpeckleApiClient myReceiver;
         List<SpeckleLayer> Layers;
-        List<SpeckleObject> Objects;
+        List<SpeckleObjectPlaceholder> PlaceholderObjects;
+        List<SpeckleObject> RealObjects;
 
         Action expireComponentAction;
 
@@ -169,10 +170,13 @@ namespace SpeckleGrasshopper
 
             NickName = getStream.Result.Stream.Name;
             Layers = getStream.Result.Stream.Layers.ToList();
-            Objects = getStream.Result.Stream.Objects.ToList();
 
-            UpdateOutputStructure();
-            Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+            myReceiver.GetObjectList(getStream.Result.Stream.Objects, (myList) =>
+            {
+                RealObjects = myList;
+                UpdateOutputStructure();
+                Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+            });  
         }
 
         public virtual void UpdateMeta()
@@ -278,7 +282,8 @@ namespace SpeckleGrasshopper
 
             RhinoConverter converter = new RhinoConverter();
 
-            var convObjs = converter.ToNative(Objects).ToList();
+            var convObjs = converter.ToNative(RealObjects).ToList();
+            //var convObjs = PlaceholderObjects;
 
             foreach (SpeckleLayer layer in Layers)
             {
