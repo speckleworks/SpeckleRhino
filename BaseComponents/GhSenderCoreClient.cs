@@ -30,11 +30,13 @@ namespace SpeckleGrasshopper
 {
     public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
     {
-        string Log { get; set; }
+       public string Log { get; set; }
 
-        Action expireComponentAction;
+        public Action expireComponentAction;
 
         public SpeckleApiClient mySender;
+
+        public GH_Document Document;
 
         public GhSenderClient()
           : base("Data Sender", "Data Sender",
@@ -86,6 +88,7 @@ namespace SpeckleGrasshopper
         public override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
+            Document = this.OnPingDocument();
 
             if (mySender == null)
             {
@@ -118,7 +121,7 @@ namespace SpeckleGrasshopper
             mySender.OnLogData += (sender, e) =>
             {
                 this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData);
+                //this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData);
             };  
 
             expireComponentAction = () => this.ExpireSolution(true);

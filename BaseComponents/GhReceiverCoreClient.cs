@@ -145,7 +145,6 @@ namespace SpeckleGrasshopper
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Update available.");
                 Expired = true;
-                //Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
                 return;
             }
 
