@@ -86,7 +86,7 @@ namespace SpeckleGrasshopper
                 JobQueue.RemoveAt(0);
                 this.Message = "JobQueue: " + JobQueue.Count;
                 if (JobQueue.Count != 0)
-                    Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+                    Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
             }
         }
 
@@ -148,7 +148,7 @@ namespace SpeckleGrasshopper
                 }
             }
             // TODO: Expire component
-            Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
         }
 
         public override void OnWsMessage(object source, SpeckleEventArgs e)
@@ -176,7 +176,7 @@ namespace SpeckleGrasshopper
                     else
                         JobQueue.Add(key, e.EventObject.args.requestParameters);
 
-                    Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+                    Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
                     break;
                 default:
                     Log += DateTime.Now.ToString("dd:HH:mm:ss") + " Defaulted, could not parse event. \n";

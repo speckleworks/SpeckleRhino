@@ -32,7 +32,7 @@ namespace SpeckleGrasshopper
     {
        public string Log { get; set; }
 
-        public Action expireComponentAction;
+        public Action ExpireComponentAction;
 
         public SpeckleApiClient mySender;
 
@@ -49,7 +49,6 @@ namespace SpeckleGrasshopper
         {
             m_attributes = new GhSenderClientAttributes(this);
         }
-
 
         public override bool Write(GH_IWriter writer)
         {
@@ -81,7 +80,6 @@ namespace SpeckleGrasshopper
                 }
             }
             catch { }
-
             return base.Read(reader);
         }
 
@@ -94,9 +92,10 @@ namespace SpeckleGrasshopper
             {
                 var myForm = new SpecklePopup.MainWindow();
 
-                var some = new System.Windows.Interop.WindowInteropHelper(myForm);
-                some.Owner = Rhino.RhinoApp.MainWindowHandle();
-
+                var some = new System.Windows.Interop.WindowInteropHelper(myForm)
+                {
+                    Owner = Rhino.RhinoApp.MainWindowHandle()
+                };
                 myForm.ShowDialog();
 
                 if (myForm.restApi != null && myForm.apitoken != null)
@@ -104,7 +103,7 @@ namespace SpeckleGrasshopper
                     mySender = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
                     mySender.IntializeSender(myForm.apitoken).ContinueWith(task =>
                     {
-                        Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+                        Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
                     });
                 }
                 else
@@ -114,9 +113,7 @@ namespace SpeckleGrasshopper
                 }
             } else { mySender.Converter = new RhinoConverter(); }
 
-            mySender.OnError += OnError;
-
-            mySender.OnWsMessage += OnWsMessage;
+            mySender.OnWsMessage += OnVolatileMessage;
 
             mySender.OnLogData += (sender, e) =>
             {
@@ -124,33 +121,28 @@ namespace SpeckleGrasshopper
                 //this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData);
             };  
 
-            expireComponentAction = () => this.ExpireSolution(true);
+            ExpireComponentAction = () => ExpireSolution(true);
 
-            this.ObjectChanged += (sender, e) => UpdateMetadata();
+            ObjectChanged += (sender, e) => UpdateMetadata();
 
-            foreach (var param in Params.Input) param.ObjectChanged += (sender, e) => UpdateMetadata();
+            foreach (var param in Params.Input)
+                param.ObjectChanged += (sender, e) => UpdateMetadata();
         }
 
-        public virtual void OnError(object source, SpeckleEventArgs e)
-        {
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventData);
-        }
 
-        public virtual void OnWsMessage(object source, SpeckleEventArgs e)
+        public virtual void OnVolatileMessage(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease.");
         }
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            if (mySender != null) mySender.Dispose();
+            if (mySender != null) mySender.Dispose();        
             base.RemovedFromDocument(document);
         }
 
         public override void DocumentContextChanged(GH_Document document, GH_DocumentContext context)
         {
-            if (context == GH_DocumentContext.Close)
-                if (mySender != null) mySender.Dispose();
 
             base.DocumentContextChanged(document, context);
         }
@@ -257,9 +249,10 @@ namespace SpeckleGrasshopper
 
         IGH_Param IGH_VariableParameterComponent.CreateParameter(GH_ParameterSide side, int index)
         {
-            Grasshopper.Kernel.Parameters.Param_GenericObject param = new Param_GenericObject();
-
-            param.Name = GH_ComponentParamServer.InventUniqueNickname("ABCDEFGHIJKLMNOPQRSTUVWXYZ", Params.Input);
+            Param_GenericObject param = new Param_GenericObject()
+            {
+                Name = GH_ComponentParamServer.InventUniqueNickname("ABCDEFGHIJKLMNOPQRSTUVWXYZ", Params.Input)
+            };
             param.NickName = param.Name;
             param.Description = "Things to be sent around.";
             param.Optional = true;
@@ -269,7 +262,6 @@ namespace SpeckleGrasshopper
             param.ObjectChanged += (sender, e) => UpdateMetadata();
 
             this.UpdateMetadata();
-
             return param;
         }
 
@@ -282,6 +274,18 @@ namespace SpeckleGrasshopper
         void IGH_VariableParameterComponent.VariableParameterMaintenance()
         {
         }
+
+        public string GetTopology(IGH_Param param)
+        {
+            string topology = "";
+            foreach (Grasshopper.Kernel.Data.GH_Path mypath in param.VolatileData.Paths)
+            {
+                topology += mypath.ToString(false) + "-" + param.VolatileData.get_Branch(mypath).Count + " ";
+            }
+            return topology;
+        }
+
+        
 
         protected override System.Drawing.Bitmap Icon
         {
