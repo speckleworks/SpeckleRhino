@@ -207,7 +207,6 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Box)
                 return ((Box)myObject).ToSpeckle();
-
             if (myObject is Rectangle3d)
                 return ((Rectangle3d)myObject).ToSpeckle();
 
