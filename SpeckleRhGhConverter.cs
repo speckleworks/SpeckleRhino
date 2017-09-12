@@ -470,7 +470,10 @@ namespace SpeckleRhinoConverter
         }
         public static Plane ToRhino(this SpecklePlane plane)
         {
-            return new Plane(plane.Origin.ToRhino(), plane.Normal.ToRhino());
+            var returnPlane = new Plane(plane.Origin.ToRhino(), plane.Normal.ToRhino());
+            returnPlane.XAxis = plane.Xdir.ToRhino();
+            returnPlane.YAxis = plane.Ydir.ToRhino();
+            return returnPlane;
         }
 
         // Line
