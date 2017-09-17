@@ -113,7 +113,7 @@ namespace SpeckleGrasshopper
                 }
             } else { mySender.Converter = new RhinoConverter(); }
 
-            mySender.OnWsMessage += OnVolatileMessage;
+            mySender.OnWsMessage += OnWsMessage;
 
             mySender.OnLogData += (sender, e) =>
             {
@@ -130,7 +130,7 @@ namespace SpeckleGrasshopper
         }
 
 
-        public virtual void OnVolatileMessage(object source, SpeckleEventArgs e)
+        public virtual void OnWsMessage(object source, SpeckleEventArgs e)
         {
             Debug.WriteLine("[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease.");
         }
