@@ -170,7 +170,7 @@ namespace SpeckleGrasshopper
             NickName = getStream.Result.Stream.Name;
             Layers = getStream.Result.Stream.Layers.ToList();
 
-            myReceiver.GetObjectList(getStream.Result.Stream.Objects, (myList) =>
+            myReceiver.GetObjectList(getStream.Result.Stream.Objects.Select( obj => { return new SpeckleObjectPlaceholder() { Hash = "", DatabaseId = obj }; }), (myList) =>
             {
                 RealObjects = myList;
                 UpdateOutputStructure();
@@ -181,7 +181,7 @@ namespace SpeckleGrasshopper
         public virtual void UpdateMeta()
         {
             var getName = myReceiver.StreamGetNameAsync(StreamId);
-            var getLayers = myReceiver.StreamsGetLayersAsync(StreamId);
+            var getLayers = myReceiver.GetLayersAsync(StreamId);
 
             Task.WhenAll(new Task[] { getName, getLayers }).Wait();
 

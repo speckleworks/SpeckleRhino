@@ -25,18 +25,28 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Drawing;
 using Grasshopper.GUI.Canvas;
+using System.Timers;
+using System.Threading.Tasks;
 
 namespace SpeckleGrasshopper
 {
     public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
     {
-       public string Log { get; set; }
+        public string Log { get; set; }
 
         public Action ExpireComponentAction;
 
         public SpeckleApiClient mySender;
 
         public GH_Document Document;
+
+        System.Timers.Timer MetadataSender, DataSender;
+
+        private string BucketName;
+        private List<SpeckleLayer> BucketLayers = new List<SpeckleLayer>();
+        private List<object> BucketObjects = new List<object>();
+
+        private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
         public GhSenderClient()
           : base("Data Sender", "Data Sender",
@@ -111,15 +121,15 @@ namespace SpeckleGrasshopper
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Account selection failed");
                     return;
                 }
-            } else { mySender.Converter = new RhinoConverter(); }
+            }
+            else { mySender.Converter = new RhinoConverter(); }
 
             mySender.OnWsMessage += OnWsMessage;
 
             mySender.OnLogData += (sender, e) =>
             {
                 this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
-                //this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData);
-            };  
+            };
 
             ExpireComponentAction = () => ExpireSolution(true);
 
@@ -127,6 +137,12 @@ namespace SpeckleGrasshopper
 
             foreach (var param in Params.Input)
                 param.ObjectChanged += (sender, e) => UpdateMetadata();
+
+            MetadataSender = new System.Timers.Timer(1000) { AutoReset = false, Enabled = false };
+            MetadataSender.Elapsed += MetadataSender_Elapsed;
+
+            DataSender = new System.Timers.Timer(2000) { AutoReset = false, Enabled = false };
+            DataSender.Elapsed += DataSender_Elapsed;
         }
 
 
@@ -137,7 +153,7 @@ namespace SpeckleGrasshopper
 
         public override void RemovedFromDocument(GH_Document document)
         {
-            if (mySender != null) mySender.Dispose();        
+            if (mySender != null) mySender.Dispose();
             base.RemovedFromDocument(document);
         }
 
@@ -171,13 +187,73 @@ namespace SpeckleGrasshopper
 
             if (!mySender.IsConnected) return;
 
-            mySender.UpdateDataDebonuced(this.NickName, GetData(), GetLayers());
+            UpdateData();
+        }
+
+        public void UpdateData()
+        {
+            BucketName = this.NickName;
+            BucketLayers = this.GetLayers();
+            BucketObjects = this.GetData();
+
+            DataSender.Start();
+        }
+
+        private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Log += "Sending data update.";
+            var Converter = new RhinoConverter();
+
+            var convertedObjects = Converter.ToSpeckle(BucketObjects).Select(obj =>
+            {
+                if (ObjectCache.ContainsKey(obj.Hash))
+                    return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[obj.Hash].DatabaseId };
+                return obj;
+            });
+
+            PayloadStreamUpdate payload = new PayloadStreamUpdate();
+            payload.Layers = BucketLayers;
+            payload.Name = BucketName;
+            payload.Objects = convertedObjects;
+            mySender.StreamUpdateAsync(payload, mySender.StreamId).ContinueWith(tres =>
+            {
+                mySender.BroadcastMessage(new { eventType = "update-global" });
+                int k = 0;
+                foreach (var obj in convertedObjects)
+                {
+                    obj.DatabaseId = tres.Result.Objects[k++];
+                    ObjectCache[obj.Hash] = obj;
+                }
+            });
         }
 
         public void UpdateMetadata()
         {
-            mySender.UpdateMetadataDebounced(this.NickName, GetLayers());
+            BucketName = this.NickName;
+            BucketLayers = this.GetLayers();
+
+            MetadataSender.Start();
         }
+
+        private void MetadataSender_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (DataSender.Enabled) return;
+            var payload = new PayloadStreamMetaUpdate();
+            payload.Layers = BucketLayers;
+            payload.Name = BucketName;
+
+            Task[] tasks = new Task[2] {
+                mySender.StreamUpdateNameAsync( new PayloadStreamNameUpdate(){ Name=BucketName }, mySender.StreamId),
+                mySender.ReplaceLayersAsync( new PayloadMultipleLayers() {Layers = BucketLayers}, mySender.StreamId)
+            };
+
+            Task.WhenAll(tasks).ContinueWith(task =>
+            {
+                Log+="Metadata updated.";
+                mySender.BroadcastMessage(new { eventType = "update-meta" });
+            });
+        }
+
 
         public List<object> GetData()
         {
@@ -285,14 +361,11 @@ namespace SpeckleGrasshopper
             return topology;
         }
 
-        
-
         protected override System.Drawing.Bitmap Icon
         {
             get
             {
                 return Resources.sender_2;
-                //return null;
             }
         }
 
