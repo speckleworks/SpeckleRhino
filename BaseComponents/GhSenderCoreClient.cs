@@ -111,10 +111,10 @@ namespace SpeckleGrasshopper
                 if (myForm.restApi != null && myForm.apitoken != null)
                 {
                     mySender = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
-                    mySender.IntializeSender(myForm.apitoken).ContinueWith(task =>
-                    {
-                        Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
-                    });
+                    mySender.IntializeSender(myForm.apitoken, document.DisplayName, "Grasshopper", document.DocumentID.ToString()).ContinueWith(task =>
+                       {
+                           Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
+                       });
                 }
                 else
                 {
@@ -249,7 +249,7 @@ namespace SpeckleGrasshopper
 
             Task.WhenAll(tasks).ContinueWith(task =>
             {
-                Log+="Metadata updated.";
+                Log += "Metadata updated.";
                 mySender.BroadcastMessage(new { eventType = "update-meta" });
             });
         }
