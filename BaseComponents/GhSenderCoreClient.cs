@@ -111,7 +111,7 @@ namespace SpeckleGrasshopper
                 if (myForm.restApi != null && myForm.apitoken != null)
                 {
                     mySender = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
-                    mySender.IntializeSender(myForm.apitoken, document.DisplayName, "Grasshopper", document.DocumentID.ToString()).ContinueWith(task =>
+                    mySender.IntializeSender(myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString()).ContinueWith(task =>
                        {
                            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
                        });
@@ -143,6 +143,8 @@ namespace SpeckleGrasshopper
 
             DataSender = new System.Timers.Timer(2000) { AutoReset = false, Enabled = false };
             DataSender.Elapsed += DataSender_Elapsed;
+
+            ObjectCache = new Dictionary<string, SpeckleObject>();
         }
 
 

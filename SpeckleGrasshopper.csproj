@@ -103,7 +103,7 @@
     <Compile Include="Management\ListMyAccounts.cs" />
     <Compile Include="Management\ListMyStreams.cs" />
     <Compile Include="TestComponents\SpeckleConverterDebug.cs" />
-    <Compile Include="ExtendedComponents\GhReceiverClientExtended.cs" />
+    <Compile Include="ExtendedComponents\GhExtendedClients.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

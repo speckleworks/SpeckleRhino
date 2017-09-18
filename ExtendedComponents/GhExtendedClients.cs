@@ -42,7 +42,7 @@ namespace SpeckleGrasshopper
             base.AppendAdditionalComponentMenuItems(menu);
             GH_DocumentObject.Menu_AppendItem(menu, @"Save current configuration as default", (sender, e) =>
             {
-                mySender.StreamCustomUpdate(this.NickName, GetLayers(), GetData());
+                //mySender.StreamCustomUpdate(this.NickName, GetLayers(), GetData());
             });
         }
 
@@ -69,19 +69,19 @@ namespace SpeckleGrasshopper
             else
             {
                 solutionPrepared = false;
-                mySender.StreamCreateAndPopulate(this.NickName, GetLayers(), GetData(), (streamId) =>
-                {
-                    List<SpeckleInputParam> inputControllers = null;
-                    List<SpeckleOutputParam> outputControllers = null;
-                    GetDefinitionIO(ref inputControllers, ref outputControllers);
+                //mySender.StreamCreateAndPopulate(this.NickName, GetLayers(), GetData(), (streamId) =>
+                //{
+                //    List<SpeckleInputParam> inputControllers = null;
+                //    List<SpeckleOutputParam> outputControllers = null;
+                //    GetDefinitionIO(ref inputControllers, ref outputControllers);
 
-                    Dictionary<string, object> args = new Dictionary<string, object>();
-                    args["eventType"] = "computation-result";
-                    args["streamId"] = streamId;
-                    args["outputRef"] = outputControllers;
+                //    Dictionary<string, object> args = new Dictionary<string, object>();
+                //    args["eventType"] = "computation-result";
+                //    args["streamId"] = streamId;
+                //    args["outputRef"] = outputControllers;
 
-                    mySender.SendMessage(CurrentJobClient, args);
-                });
+                //    mySender.SendMessage(CurrentJobClient, args);
+                //});
 
                 JobQueue.RemoveAt(0);
                 this.Message = "JobQueue: " + JobQueue.Count;
@@ -300,18 +300,11 @@ namespace SpeckleGrasshopper
 
     public class PointController : GH_Component
     {
-
-
         public Point3d? OutputPoint = null;
         public SpecklePoint StreamedPoint = null;
 
         public PointController() : base("PointController", "PCR", "PCR", "Speckle", "Exetensions")
         {
-            //this.Category = "Speckle";
-            //this.SubCategory = "Extensions";
-            //this.Name = "Point Controller";
-            //this.NickName = "PCR";
-            //this.Description = "Tells the viewer this is a controllable point.";
         }
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -429,7 +422,4 @@ namespace SpeckleGrasshopper
             get { return new Guid("{36728fa7-ab47-40a1-b47c-c072da646eb7}"); }
         }
     }
-
-
-
 }

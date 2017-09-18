@@ -37,6 +37,8 @@ namespace SpeckleGrasshopper
         public bool Paused = false;
         public bool Expired = false;
 
+        public GH_Document Document;
+
         public SpeckleApiClient myReceiver;
         List<SpeckleLayer> Layers;
         List<SpeckleObjectPlaceholder> PlaceholderObjects;
@@ -45,6 +47,8 @@ namespace SpeckleGrasshopper
         Action expireComponentAction;
 
         RhinoConverter Converter;
+
+        private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
         public GhReceiverClient()
           : base("Data Receiver", "Data Receiver",
@@ -93,6 +97,7 @@ namespace SpeckleGrasshopper
         public override void AddedToDocument(GH_Document document)
         {
             base.AddedToDocument(document);
+            Document = this.OnPingDocument();
 
             if (myReceiver == null)
             {
@@ -127,6 +132,10 @@ namespace SpeckleGrasshopper
             expireComponentAction = () => this.ExpireSolution(true);
 
             Converter = new RhinoConverter();
+
+            ObjectCache = new Dictionary<string, SpeckleObject>();
+
+            RealObjects = new List<SpeckleObject>();
         }
 
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
@@ -170,12 +179,24 @@ namespace SpeckleGrasshopper
             NickName = getStream.Result.Stream.Name;
             Layers = getStream.Result.Stream.Layers.ToList();
 
-            myReceiver.GetObjectList(getStream.Result.Stream.Objects.Select( obj => { return new SpeckleObjectPlaceholder() { Hash = "", DatabaseId = obj }; }), (myList) =>
+            // TODO: Implement cache
+            // we can safely omit the displayValue, since this is rhino!
+            PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
+            payload.Objects = getStream.Result.Stream.Objects.Where(o => !ObjectCache.ContainsKey(o));
+            myReceiver.ObjectGetBulkAsync("omit=displayValue", payload).ContinueWith(tres =>
             {
-                RealObjects = myList;
+                // add to cache
+                foreach (var x in tres.Result.Objects)
+                    ObjectCache[x.DatabaseId] = x;
+
+                // populate real objects
+                RealObjects.Clear();
+                foreach (var objId in getStream.Result.Stream.Objects)
+                    RealObjects.Add(ObjectCache[objId]);
+
                 UpdateOutputStructure();
                 Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
-            });  
+            });
         }
 
         public virtual void UpdateMeta()
@@ -236,7 +257,7 @@ namespace SpeckleGrasshopper
             else if ((inputId != StreamId) && (inputId != null))
             {
                 StreamId = inputId;
-                myReceiver.IntializeReceiver(StreamId, AuthToken);
+                myReceiver.IntializeReceiver(StreamId, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString(), AuthToken);
                 return;
             }
 
@@ -279,10 +300,7 @@ namespace SpeckleGrasshopper
         {
             if (Layers == null) return;
 
-            RhinoConverter converter = new RhinoConverter();
-
-            var convObjs = converter.ToNative(RealObjects).ToList();
-            //var convObjs = PlaceholderObjects;
+            var convObjs = Converter.ToNative(RealObjects).ToList();
 
             foreach (SpeckleLayer layer in Layers)
             {
