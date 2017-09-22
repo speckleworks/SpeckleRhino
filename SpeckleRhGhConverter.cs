@@ -526,9 +526,10 @@ namespace SpeckleRhinoConverter
             return new SpeckleCircle(circ.Center.ToSpeckle(), circ.Normal.ToSpeckle(), circ.Radius);
         }
 
-        public static Circle ToRhino(this SpeckleCircle circ)
+        public static NurbsCurve ToRhino(this SpeckleCircle circ)
         {
-            return new Circle(new Plane(circ.Center.ToRhino(), circ.Normal.ToRhino()), (double)circ.Radius);
+            Circle circle = new Circle(new Plane(circ.Center.ToRhino(), circ.Normal.ToRhino()), (double)circ.Radius);
+            return circle.ToNurbsCurve();
         }
 
         // Box
