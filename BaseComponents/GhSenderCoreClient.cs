@@ -46,7 +46,7 @@ namespace SpeckleGrasshopper
         private List<SpeckleLayer> BucketLayers = new List<SpeckleLayer>();
         private List<object> BucketObjects = new List<object>();
 
-        private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
+        public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
         public GhSenderClient()
           : base("Data Sender", "Data Sender",
