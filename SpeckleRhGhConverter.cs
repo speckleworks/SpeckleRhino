@@ -90,6 +90,16 @@ namespace SpeckleRhinoConverter
                 case "Mesh":
                     encodedObject = ((SpeckleMesh)_object).ToRhino();
                     break;
+                case "Annotation":
+                    if (double.IsNaN(((SpeckleAnnotation)_object).TextHeight))
+                    {
+                        encodedObject = ((SpeckleAnnotation)_object).ToRhinoTextDot();
+                    }
+                    else
+                    {
+                        encodedObject = ((SpeckleAnnotation)_object).ToRhinoTextEntity();
+                    }
+                    break;
                 default:
                     encodedObject = _object;
                     break;
@@ -215,7 +225,11 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Brep)
                 return ((Brep)myObject).ToSpeckle();
+            if (myObject is TextEntity)
+                return ((TextEntity)myObject).ToSpeckle();
 
+            if (myObject is TextDot)
+                return ((TextDot)myObject).ToSpeckle();
             return new SpeckleString(myObject.ToString());
         }
 
@@ -228,7 +242,7 @@ namespace SpeckleRhinoConverter
         {
             try
             {
-                if((bool)dict["_conversion_visited_flag"] == true)
+                if ((bool)dict["_conversion_visited_flag"] == true)
                 {
                     throw new Exception("Circular reference in user dictionary. Whopsie.");
                 }
@@ -298,6 +312,10 @@ namespace SpeckleRhinoConverter
                                 break;
                             case "Mesh":
                                 myDictionary.Set(key, (Mesh)converter.ToNative((SpeckleObject)dict[key]));
+                                break;
+                            case "Annotation":
+                                myDictionary.Set(key, (TextDot)converter.ToNative((SpeckleObject)dict[key]));
+                                myDictionary.Set(key, (TextEntity)converter.ToNative((SpeckleObject)dict[key]));
                                 break;
                             default:
                                 myDictionary.Set(key, "This is the default statement in a switch, which means something went wrong. Sorry!");
@@ -508,9 +526,10 @@ namespace SpeckleRhinoConverter
             return new SpeckleCircle(circ.Center.ToSpeckle(), circ.Normal.ToSpeckle(), circ.Radius);
         }
 
-        public static Circle ToRhino(this SpeckleCircle circ)
+        public static NurbsCurve ToRhino(this SpeckleCircle circ)
         {
-            return new Circle(new Plane(circ.Center.ToRhino(), circ.Normal.ToRhino()), (double)circ.Radius);
+            Circle circle = new Circle(new Plane(circ.Center.ToRhino(), circ.Normal.ToRhino()), (double)circ.Radius);
+            return circle.ToNurbsCurve();
         }
 
         // Box
@@ -607,6 +626,44 @@ namespace SpeckleRhinoConverter
                 return (Brep)Converter.getObjFromString(brep.Base64);
             else
                 throw new Exception("Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other.");
+        }
+        // Texts & Annotations
+        public static SpeckleAnnotation ToSpeckle(this TextEntity textentity)
+        {
+            Rhino.DocObjects.Tables.FontTable fontTable = Rhino.RhinoDoc.ActiveDoc.Fonts;
+            Rhino.DocObjects.Font font = fontTable[textentity.FontIndex];
+
+            return new SpeckleAnnotation(textentity.Text, textentity.TextHeight, font.FaceName, font.Bold, font.Italic, textentity.Plane.ToSpeckle(), textentity.Plane.Origin.ToSpeckle(), properties: RhinoConverter.PropertiesToSpeckle(textentity.UserDictionary));
+        }
+
+        public static SpeckleAnnotation ToSpeckle(this TextDot textdot)
+        {
+            Rhino.Geometry.Plane plane = Plane.Unset;
+            double textHeight = double.NaN;
+            string faceName = "";
+            bool bold = new bool();
+            bool italic = new bool();
+            return new SpeckleAnnotation(textdot.Text, textHeight, faceName, bold, italic, plane.ToSpeckle(), textdot.Point.ToSpeckle(), properties: RhinoConverter.PropertiesToSpeckle(textdot.UserDictionary));
+        }
+
+
+        public static TextDot ToRhinoTextDot(this SpeckleAnnotation textdot)
+        {
+            return new TextDot(textdot.Text, textdot.Location.ToRhino());
+        }
+
+        public static TextEntity ToRhinoTextEntity(this SpeckleAnnotation textentity)
+        {
+            Rhino.DocObjects.Tables.FontTable fontTable = Rhino.RhinoDoc.ActiveDoc.Fonts;
+
+
+            TextEntity textEntity = new TextEntity();
+            textEntity.Text = textentity.Text;
+            textEntity.Plane = textentity.Plane.ToRhino();
+            textEntity.TextHeight = textentity.TextHeight;
+            int fontIndex = fontTable.FindOrCreate(textentity.FaceName, textentity.Bold, textentity.Italic);
+            textEntity.FontIndex = fontIndex;
+            return textEntity;
         }
     }
 }
