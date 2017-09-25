@@ -74,6 +74,12 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
+      <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
+      <Name>SpeckleCore</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
@@ -86,8 +92,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets'))" />
     <Error Condition="!Exists('packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets'))" />
-    <Error Condition="!Exists('..\SpeckleCore\SpeckleCore\packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\SpeckleCore\SpeckleCore\packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets'))" />
-    <Error Condition="!Exists('..\SpeckleCore\SpeckleCore\packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\SpeckleCore\SpeckleCore\packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets'))" />
   </Target>
   <Import Project="packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets" Condition="Exists('packages\Grasshopper.0.9.76\build\net35\Grasshopper.targets')" />
   <Import Project="..\SpeckleCore\SpeckleCore\packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets" Condition="Exists('..\SpeckleCore\SpeckleCore\packages\RhinoCommon.5.12.50810.13095\build\net35\RhinoCommon.targets')" />
