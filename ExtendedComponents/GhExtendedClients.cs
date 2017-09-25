@@ -84,11 +84,15 @@ namespace SpeckleGrasshopper
                 List<SpeckleOutputParam> outputControllers = null;
                 GetDefinitionIO(ref inputControllers, ref outputControllers);
 
+                List<ISpeckleControllerParam> measures = new List<ISpeckleControllerParam>();
+                foreach (var x in inputControllers) measures.Add(x);
+                foreach (var x in outputControllers) measures.Add(x);
+
                 PayloadStreamCreate myNewStreamPayload = new PayloadStreamCreate
                 {
                     IsComputed = true,
                     Parent = mySender.StreamId,
-                    GlobalMeasures = outputControllers,
+                    GlobalMeasures = measures,
                     Name = this.NickName,
                     Layers = GetLayers(),
                     Objects = convertedObjects
