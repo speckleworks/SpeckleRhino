@@ -69,19 +69,50 @@ namespace SpeckleGrasshopper
             else
             {
                 solutionPrepared = false;
-                //mySender.StreamCreateAndPopulate(this.NickName, GetLayers(), GetData(), (streamId) =>
-                //{
-                //    List<SpeckleInputParam> inputControllers = null;
-                //    List<SpeckleOutputParam> outputControllers = null;
-                //    GetDefinitionIO(ref inputControllers, ref outputControllers);
 
-                //    Dictionary<string, object> args = new Dictionary<string, object>();
-                //    args["eventType"] = "computation-result";
-                //    args["streamId"] = streamId;
-                //    args["outputRef"] = outputControllers;
+                var Converter = new SpeckleRhinoConverter.RhinoConverter();
+                var BucketObjects = GetData();
 
-                //    mySender.SendMessage(CurrentJobClient, args);
-                //});
+                var convertedObjects = Converter.ToSpeckle(BucketObjects).Select(obj =>
+                {
+                    if (ObjectCache.ContainsKey(obj.Hash))
+                        return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[obj.Hash].DatabaseId };
+                    return obj;
+                });
+
+                List<SpeckleInputParam> inputControllers = null;
+                List<SpeckleOutputParam> outputControllers = null;
+                GetDefinitionIO(ref inputControllers, ref outputControllers);
+
+                List<ISpeckleControllerParam> measures = new List<ISpeckleControllerParam>();
+                foreach (var x in inputControllers) measures.Add(x);
+                foreach (var x in outputControllers) measures.Add(x);
+
+                PayloadStreamCreate myNewStreamPayload = new PayloadStreamCreate
+                {
+                    IsComputed = true,
+                    Parent = mySender.StreamId,
+                    GlobalMeasures = measures,
+                    Name = this.NickName,
+                    Layers = GetLayers(),
+                    Objects = convertedObjects
+                };
+
+                mySender.StreamCreateAsync(myNewStreamPayload).ContinueWith(tres =>
+                {
+                    Dictionary<string, object> args = new Dictionary<string, object>();
+                    args["eventType"] = "computation-result";
+                    args["streamId"] = tres.Result.Stream.StreamId;
+                    args["outputRef"] = outputControllers;
+
+                    mySender.SendMessage(CurrentJobClient, args);
+                    int k = 0;
+                    foreach (var obj in convertedObjects)
+                    {
+                        obj.DatabaseId = tres.Result.Stream.Objects[k++];
+                        ObjectCache[obj.Hash] = obj;
+                    }
+                });
 
                 JobQueue.RemoveAt(0);
                 this.Message = "JobQueue: " + JobQueue.Count;
@@ -127,16 +158,17 @@ namespace SpeckleGrasshopper
                     }
                 else
                 {
-                    if(param.type == "MaterialTable")
+                    if (param.type == "MaterialTable")
                     {
-                        var MatOut = (GH_Panel) Document.Objects.FirstOrDefault(doc => doc.NickName == "MAT_OUT");
-                        if(MatOut!= null)
+                        var MatOut = (GH_Panel)Document.Objects.FirstOrDefault(doc => doc.NickName == "MAT_OUT");
+                        if (MatOut != null)
                         {
                             string mats = "";
-                            foreach ( var layer in param.layers )
+                            foreach (var layer in param.layers)
                             {
-                                try { 
-                                mats += layer.name + ":" + layer.material + ":" + layer.price + "\n";
+                                try
+                                {
+                                    mats += layer.name + ":" + layer.material + ":" + layer.price + "\n";
                                 }
                                 catch { }
                             }
@@ -170,7 +202,7 @@ namespace SpeckleGrasshopper
                     mySender.SendMessage(e.EventObject.senderId, message);
                     break;
                 case "compute-request":
-                    var key = (string)e.EventObject.senderId;                   
+                    var key = (string)e.EventObject.senderId;
                     if (JobQueue.Contains((string)e.EventObject.senderId))
                         JobQueue[key] = e.EventObject.args.requestParameters;
                     else

@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GH_IO.Serialization;
+using Newtonsoft.Json;
 
 namespace SpeckleGrasshopper.Management
 {
@@ -19,6 +21,27 @@ namespace SpeckleGrasshopper.Management
         Action ExpireComponent;
 
         public ListMyAccounts() : base("Accounts", "Accounts", "Lists your existing Speckle accounts.", "Speckle", "Management") { }
+
+
+        public override bool Read(GH_IReader reader)
+        {
+            string serialisedAccount = "";
+            reader.TryGetString("selectedAccount", ref serialisedAccount);
+
+            if (serialisedAccount!="")
+            {
+                SpeckleAccount myAccount = JsonConvert.DeserializeObject<SpeckleAccount>(serialisedAccount);
+                Selected = myAccount;
+            }
+
+            return base.Read(reader);
+        }
+
+        public override bool Write(GH_IWriter writer)
+        {
+            writer.SetString("selectedAccount", JsonConvert.SerializeObject(Selected));
+            return base.Write(writer);
+        }
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
