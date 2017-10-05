@@ -225,6 +225,7 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Brep)
                 return ((Brep)myObject).ToSpeckle();
+
             if (myObject is TextEntity)
                 return ((TextEntity)myObject).ToSpeckle();
 
