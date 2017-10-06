@@ -40,7 +40,6 @@ namespace SpeckleRhino
             IndexPath = Path.Combine(PathResources, "index.html");
 
 #if ETO
-
             var form = new EtoForm();
             form.Topmost = true;
 
@@ -48,10 +47,14 @@ namespace SpeckleRhino
             var form = new WinForm();
             form.TopMost = true;
 #endif
-
             form.ShowInTaskbar = true;
             form.BringToFront();
+#if DEBUG
+            // Remeber to start the server (npm run dev)
+            form.SetWVUrl(@"http://10.211.55.2:9090/");
+#else
             form.SetWVUrl(IndexPath);
+#endif
             form.Show();
             return Result.Success;
         }
