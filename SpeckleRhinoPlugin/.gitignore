@@ -1,0 +1,9 @@
+packages
+.vs
+TestWebUImacOS/bin
+TestWebUImacOS/obj
+TestWebUIWinR5/bin
+TestWebUIWinR5/obj
+TestWebUIWinR6/bin
+TestWebUIWinR6/obj
+*.userprefs
