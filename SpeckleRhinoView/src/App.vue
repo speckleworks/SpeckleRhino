@@ -1,5 +1,16 @@
 <template>
   <div id="app">
+    <md-toolbar class="md-dense md-accent">
+      <md-button class="md-icon-button">
+        <md-icon>menu</md-icon>
+      </md-button>
+
+      <h2 class="md-title" style="flex: 1">Speckle</h2>
+
+      <md-button class="md-icon-button">
+        <md-icon>favorite</md-icon>
+      </md-button>
+    </md-toolbar>
     <img src="./assets/logo.png">
     <h1>Hello world!</h1>
   </div>
@@ -21,26 +32,5 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-h1, h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
 }
 </style>

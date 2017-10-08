@@ -1,16 +1,17 @@
-var path = require('path')
-var webpack = require('webpack')
+var path = require( 'path' )
+var webpack = require( 'webpack' )
 
 module.exports = {
-  entry: './src/main.js',
+  entry: {
+    app: [ 'babel-polyfill', './src/main.js' ]
+  },
   output: {
-    path: path.resolve(__dirname, './dist'),
+    path: path.resolve( __dirname, './dist' ),
     publicPath: '/dist/',
     filename: 'build.js'
   },
   module: {
-    rules: [
-      {
+    rules: [ {
         test: /\.vue$/,
         loader: 'vue-loader',
         options: {
@@ -56,23 +57,23 @@ module.exports = {
   devtool: '#eval-source-map'
 }
 
-if (process.env.NODE_ENV === 'production') {
+if ( process.env.NODE_ENV === 'production' ) {
   module.exports.devtool = '#source-map'
   // http://vue-loader.vuejs.org/en/workflow/production.html
-  module.exports.plugins = (module.exports.plugins || []).concat([
-    new webpack.DefinePlugin({
+  module.exports.plugins = ( module.exports.plugins || [ ] ).concat( [
+    new webpack.DefinePlugin( {
       'process.env': {
         NODE_ENV: '"production"'
       }
-    }),
-    new webpack.optimize.UglifyJsPlugin({
+    } ),
+    new webpack.optimize.UglifyJsPlugin( {
       sourceMap: true,
       compress: {
         warnings: false
       }
-    }),
-    new webpack.LoaderOptionsPlugin({
+    } ),
+    new webpack.LoaderOptionsPlugin( {
       minimize: true
-    })
-  ])
+    } )
+  ] )
 }
