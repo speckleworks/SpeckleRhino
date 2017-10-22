@@ -1,70 +1,63 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Windows.Forms;
+using CefSharp;
+using CefSharp.WinForms;
+using Rhino;
 
 namespace SpeckleRhino
 {
     public partial class WinForm : Form
     {
-        public WebBrowser Wv { get; private set; }
-        public bool IndexLoaded = false;
-        string index;
+        public ChromiumWebBrowser chromeBrowser;
+
         public WinForm()
         {
             InitializeComponent();
-            Wv = webBrowser;
-            Wv.DocumentCompleted += E_DocumentLoaded;
-            Wv.Navigating += E_DocumentLoading;
+            // Start the browser after initialize global component
+            InitializeChromium();
         }
 
-        public void SetWVUrl(string url)
+        public void InitializeChromium()
         {
-            index = url.Replace("\\", "/");
-            Wv.Url = new Uri(index);
+            CefSettings settings = new CefSettings();
+            settings.RemoteDebuggingPort = 8088;
+            // Initialize cef with the provided settings
+            Cef.Initialize(settings);
+
+            // Create a browser component
+            //chromeBrowser = new ChromiumWebBrowser(@"https://speckle.works");
+            chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+           
+
+            // Add it to the form and fill it to the form window.
+            this.Controls.Add(chromeBrowser);
+            chromeBrowser.Dock = DockStyle.Fill;
+
+            // Allow the use of local resources in the browser
+            BrowserSettings browserSettings = new BrowserSettings();
+            browserSettings.FileAccessFromFileUrls = CefState.Enabled;
+            browserSettings.UniversalAccessFromFileUrls = CefState.Enabled;
+            chromeBrowser.BrowserSettings = browserSettings;
+
+            chromeBrowser.RegisterAsyncJsObject("Interop", new Interop(chromeBrowser, this));
         }
 
-        private void E_DocumentLoading(object sender, WebBrowserNavigatingEventArgs e)
+        private void WinForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            Rhino.RhinoApp.WriteLine(e.Url.ToString());
-            Rhino.RhinoApp.WriteLine(index);
-
-            if (e.Url.AbsolutePath != index && IndexLoaded)
+            Action ShutDownCef = () =>
             {
-                e.Cancel = true;
+                Cef.Shutdown();
+            };
 
-                var result = "";
-                var deserializedObject = new TestObject();
-
-                Object[] objArray = new Object[1];
-                
-
-                if (e.Url.ToString().Contains("sayhi"))
-                {
-                    objArray[0] = (Object)"Luis";
-                    result = Wv.Document.InvokeScript("SayHi", objArray).ToString();
-                    deserializedObject = JsonConvert.DeserializeObject<TestObject>(result);
-                }
-
-                if (e.Url.ToString().Contains("returndata"))
-                {
-                    objArray[0] = (Object)1000;
-                    result = Wv.Document.InvokeScript("ReturnData", objArray).ToString();
-                    deserializedObject = JsonConvert.DeserializeObject<TestObject>(result);
-                }
-
-                Rhino.RhinoApp.WriteLine(deserializedObject.ReturnValue);
-
-                foreach (var num in deserializedObject.Numbers)
-                    Rhino.RhinoApp.Write("{0}{1}", num, ",");
-
-                Rhino.RhinoApp.WriteLine();
-
-            }
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ShutDownCef);
         }
 
-        private void E_DocumentLoaded(object sender, WebBrowserDocumentCompletedEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (e.Url.AbsolutePath == index) IndexLoaded = true;
+            this.Hide();
+            e.Cancel = true;
+            base.OnFormClosing(e);
         }
     }
 }
