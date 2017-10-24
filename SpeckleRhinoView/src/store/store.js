@@ -5,13 +5,21 @@ Vue.use( Vuex )
 
 export default new Vuex.Store( {
   state: {
-    accounts: [],
-    clients: []
+    accounts: [ ],
+    clients: [ ]
   },
   getters: {
-    
+    accounts: state => state.accounts
   },
   actions: {
+
   },
-  mutations: {}
+  mutations: {
+    SET_ACCOUNTS( state, payload ) {
+      state.accounts = payload
+    },
+    ADD_ACCOUNTS( state, payload ) {
+      state.accounts = [ ...state.accounts, ...payload ]
+    }
+  }
 } )

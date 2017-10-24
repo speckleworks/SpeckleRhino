@@ -10,6 +10,8 @@ namespace SpeckleRhino
     public partial class WinForm : Form
     {
         public ChromiumWebBrowser chromeBrowser;
+        public Interop Store;
+
 
         public WinForm()
         {
@@ -22,6 +24,7 @@ namespace SpeckleRhino
         {
             CefSettings settings = new CefSettings();
             settings.RemoteDebuggingPort = 8088;
+            settings.LogSeverity = LogSeverity.Verbose;
             // Initialize cef with the provided settings
             Cef.Initialize(settings);
 
@@ -40,7 +43,9 @@ namespace SpeckleRhino
             browserSettings.UniversalAccessFromFileUrls = CefState.Enabled;
             chromeBrowser.BrowserSettings = browserSettings;
 
-            chromeBrowser.RegisterAsyncJsObject("Interop", new Interop(chromeBrowser, this));
+            Store = new Interop(chromeBrowser, this);
+
+            chromeBrowser.RegisterAsyncJsObject("Interop", Store);
         }
 
         private void WinForm_FormClosed(object sender, FormClosedEventArgs e)
