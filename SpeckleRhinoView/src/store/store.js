@@ -20,6 +20,10 @@ export default new Vuex.Store( {
     },
     ADD_ACCOUNTS( state, payload ) {
       state.accounts = [ ...state.accounts, ...payload ]
+    },
+    DELETE_ACCOUNT( state, payload ) {
+      console.log( payload )
+      state.accounts = state.accounts.filter( item => item.fileName !== payload )
     }
   }
 } )

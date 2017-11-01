@@ -9,6 +9,9 @@ using CefSharp;
 using Newtonsoft.Json;
 using System.IO;
 
+using SpeckleCore;
+using SpeckleRhinoConverter;
+
 namespace SpeckleRhino
 {
     // CEF Bound object. 
@@ -21,7 +24,7 @@ namespace SpeckleRhino
         private static WinForm mainForm;
 
         private List<SpeckleAccount> UserAccounts;
-        private List<double> UserClients;
+        private List<SpeckleApiClient> UserClients;
 
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
@@ -29,10 +32,12 @@ namespace SpeckleRhino
             mainForm = _mainForm;
             UserAccounts = new List<SpeckleAccount>();
             ReadUserAccounts();
+            ReadFileClients();
         }
 
         private void ReadUserAccounts()
         {
+            UserAccounts = new List<SpeckleAccount>();
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = strPath + @"\SpeckleSettings";
 
@@ -45,6 +50,11 @@ namespace SpeckleRhino
                 }
         }
 
+        private void ReadFileClients()
+        {
+
+        }
+
         public void ShowDev()
         {
             Browser.ShowDevTools();
@@ -52,6 +62,7 @@ namespace SpeckleRhino
 
         public string GetUserAccounts()
         {
+            ReadUserAccounts();
             return JsonConvert.SerializeObject(UserAccounts);
         }
 
@@ -60,22 +71,23 @@ namespace SpeckleRhino
             return "lol";
         }
 
-        public void AddAccount()
+        public void AddAccount(string payload)
         {
 
         }
 
-        public void RemoveAccount()
+        public void RemoveAccount(string payload)
+        {
+            var x = UserAccounts.RemoveAll( account => { return account.fileName == payload; });
+            var y = x;
+        }
+
+        public void AddClient(string payload)
         {
 
         }
 
-        public void AddClient()
-        {
-
-        }
-
-        public void RemoveClient()
+        public void RemoveClient(string payload)
         {
 
         }

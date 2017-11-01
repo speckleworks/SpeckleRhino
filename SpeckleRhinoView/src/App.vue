@@ -1,19 +1,37 @@
 <template>
   <div id="app">
-    <md-toolbar class="md-large xxxmd-primary">
-      <h2 class="md-title" style="flex: 1">Speckle</h2>
-      <md-button class="md-icon-button" @click.native='showDev()'>
-        <md-icon>settings</md-icon>
-      </md-button>
-    </md-toolbar>
-    <md-tabs class='md-accent'>
-      <md-tab id='streams' md-label='streams'>
-        <h1 class='md-display-3'>Hello Streams.</h1>
-      </md-tab>
-      <md-tab id='accounts' md-label='accounts'>
-        <accounts-manager></accounts-manager>
-      </md-tab>
-    </md-tabs>
+    <v-app dark>
+      <v-tabs dark grow>
+        <v-toolbar class='grey darken-4 white--text' fixed top>
+          <v-toolbar-title>Speckle</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click.native='showDev' class='white--text'>
+            <v-icon>code</v-icon>
+          </v-btn>
+        </v-toolbar>
+        <v-tabs-bar class='blue white--text' fixed top style='margin-top:50px;'>
+          <v-tabs-item key='streams' href='streams'>
+            streams
+          </v-tabs-item>
+          <v-tabs-item key='accounts' href='accounts'>
+            accounts
+          </v-tabs-item>
+          <v-tabs-slider color='white'></v-tabs-slider>
+        </v-tabs-bar>
+        <v-tabs-items>
+          <v-tabs-content id='streams' key='streams'>
+             <v-card flat>
+              <v-card-text>
+                <h1>Hello Future Streams</h1>
+              </v-card-text>
+            </v-card>
+          </v-tabs-content>        
+          <v-tabs-content id='accounts' key='accounts' dark>
+              <accounts-manager></accounts-manager>
+          </v-tabs-content>
+        </v-tabs-items>
+      </v-tabs>
+    </v-app>
   </div>
 </template>
 
@@ -27,22 +45,20 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      
     }
   },
   methods: {
     showDev( ) {
-      // alert("woot")
       Interop.showDev()
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style>
+body{
+}
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 </style>

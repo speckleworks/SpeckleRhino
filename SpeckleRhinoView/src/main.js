@@ -1,19 +1,15 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import App from './App.vue'
-import VueMaterial from 'vue-material'
+
+import Vuetify from 'vuetify'
+
+
 
 import Store from './store/store.js'
 
 Vue.use( Vuex )
-Vue.use( VueMaterial )
-
-Vue.material.registerTheme('default', {
-  primary: 'black',
-  accent: 'light-blue',
-  warn: 'red',
-  background: 'white'
-})
+Vue.use( Vuetify )
 
 new Vue( {
   store: Store,

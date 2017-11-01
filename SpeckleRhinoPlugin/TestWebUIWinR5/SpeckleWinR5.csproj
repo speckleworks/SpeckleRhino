@@ -113,6 +113,16 @@
       <DependentUpon>WinForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
+      <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
+      <Name>SpeckleCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SpeckleRhinoConverter\SpeckleRhinoConverter.csproj">
+      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
+      <Name>SpeckleRhinoConverter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

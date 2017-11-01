@@ -34,11 +34,10 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(306, 299);
-            this.ControlBox = false;
+            this.ClientSize = new System.Drawing.Size(306, 561);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "WinForm";
-            this.Text = "WinForm";
+            this.Text = "Speckle Tab";
             this.ResumeLayout(false);
 
         }
