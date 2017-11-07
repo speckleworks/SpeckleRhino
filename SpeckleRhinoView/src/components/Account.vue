@@ -1,21 +1,24 @@
 <template>
-  <v-list-group :value='true'>
-    <v-list-tile slot='item' @click=''>
-      <v-list-tile-content>
-        <v-list-tile-title v-html="account.serverName"></v-list-tile-title>
-        <v-list-tile-sub-title v-html="account.email"></v-list-tile-sub-title>
-      </v-list-tile-content>
-      <v-list-tile-action>
-        <v-icon>keyboard_arrow_down</v-icon>
-      </v-list-tile-action>
-    </v-list-tile>
-    <v-list-tile slot='sub'>
-      <v-list-tile-content>
-        <v-list-tile-title>{{account.restApi}}</v-list-tile-title>
-        <v-list-tile-sub-title>{{account.apiToken}}</v-list-tile-sub-title>
-      </v-list-tile-content>
-    </v-list-tile>
-  </v-list-group>
+  <v-card>
+    <v-card-text class="grey darken-4">
+      API Token: <span class='caption'>{{ account.apiToken }}</span>
+      <br>
+      URL: <span class='caption'>{{ account.restApi }}</span>
+      <br>      
+      <v-dialog v-model="deleteDialog" persistent style='width: 100%;'>
+        <v-btn block flat small color='red' dark slot="activator">delete</v-btn>
+        <v-card>
+          <v-card-title class="headline">Are you sure?</v-card-title>
+          <v-card-text>This will permanently delete this account, and there's no undo button.</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn flat @click.native="deleteDialog=false">Cancel</v-btn>
+            <v-btn color="red" flat @click.native="deleteAccount">Delete</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -26,7 +29,7 @@ export default {
   },
   data() {
     return {
-      active: true
+      deleteDialog: false,
     }
   },
   methods: {
@@ -39,7 +42,4 @@ export default {
 </script>
 
 <style lang="scss">
-.account {
-  margin-bottom: 10px;
-}
 </style>

@@ -11,6 +11,7 @@ using System.IO;
 
 using SpeckleCore;
 using SpeckleRhinoConverter;
+using System.Diagnostics;
 
 namespace SpeckleRhino
 {
@@ -31,6 +32,7 @@ namespace SpeckleRhino
             Browser = _originalBrowser;
             mainForm = _mainForm;
             UserAccounts = new List<SpeckleAccount>();
+            UserClients = new List<SpeckleApiClient>();
             ReadUserAccounts();
             ReadFileClients();
         }
@@ -41,7 +43,7 @@ namespace SpeckleRhino
             string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
             strPath = strPath + @"\SpeckleSettings";
 
-            if (Directory.Exists(strPath) && Directory.EnumerateFiles(strPath, "*.txt").Count() > 0) 
+            if (Directory.Exists(strPath) && Directory.EnumerateFiles(strPath, "*.txt").Count() > 0)
                 foreach (string file in Directory.EnumerateFiles(strPath, "*.txt"))
                 {
                     string content = File.ReadAllText(file);
@@ -68,7 +70,7 @@ namespace SpeckleRhino
 
         public string GetFileStreams()
         {
-            return "lol";
+            return JsonConvert.SerializeObject(UserClients);
         }
 
         public void AddAccount(string payload)
@@ -78,19 +80,78 @@ namespace SpeckleRhino
 
         public void RemoveAccount(string payload)
         {
-            var x = UserAccounts.RemoveAll( account => { return account.fileName == payload; });
+            var x = UserAccounts.RemoveAll(account => { return account.fileName == payload; });
             var y = x;
         }
 
-        public void AddClient(string payload)
+        public bool AddReceiverClient(string _payload)
         {
+            System.Diagnostics.Debug.WriteLine(_payload);
+            dynamic payload = JsonConvert.DeserializeObject(_payload);
 
+            SpeckleApiClient newClient = new SpeckleApiClient((string)payload.account.restApi, new RhinoConverter(), true);
+
+            newClient.OnReady += (sender, e) =>
+            {
+                NotifySpeckleFrame("client-add", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(new { stream = newClient.Stream, client = newClient}));
+            };
+
+            newClient.OnLogData += (sender, e) =>
+            {
+                NotifySpeckleFrame("client-log", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(e.EventData));
+            };
+
+            newClient.OnWsMessage += (sender, e) =>
+            {
+                Debug.WriteLine("Got ws message." + ((SpeckleApiClient) sender).StreamId );
+                NotifySpeckleFrame("client-ws-message", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(e.EventObject));
+            };
+
+            newClient.IntializeReceiver((string)payload.streamId, "test", "rhino", "test", (string)payload.account.apiToken).Wait();
+
+            UserClients.Add(newClient);
+
+            return true;
         }
 
-        public void RemoveClient(string payload)
+        public bool RemoveReceiverClient(string _payload)
         {
-
+            return true;
         }
 
+        public bool AddSenderClient(string _payload)
+        {
+            return true;
+        }
+
+        public bool RemoveSenderClient(string _payload)
+        {
+            return true;
+        }
+
+        public bool RemoveClient(string _payload)
+        {
+            var myClient = UserClients.FirstOrDefault(client => client.ClientId == _payload);
+            if(myClient!=null)
+                myClient.Dispose();
+
+            return UserClients.Remove(myClient);
+        }
+
+        public bool RemoveAllClients()
+        {
+            foreach(var uc in UserClients)
+            {
+                uc.Dispose();
+            }
+            UserClients.RemoveAll( c => true);
+            return true;
+        }
+
+        public void NotifySpeckleFrame(string EventType, string StreamId, string EventInfo)
+        {
+            var script = string.Format("window.EventBus.$emit('{0}', '{1}', '{2}')", EventType, StreamId, EventInfo);
+            Browser.GetMainFrame().EvaluateScriptAsync(script);
+        }
     }
 }

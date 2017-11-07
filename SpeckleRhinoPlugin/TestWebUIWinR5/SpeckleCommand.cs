@@ -46,6 +46,7 @@ namespace SpeckleRhino
 #elif WINR5
                 TheForm = new WinForm();
                 TheForm.TopMost = true;
+                TheForm.AllowDrop = true;
 #endif
                 TheForm.ShowInTaskbar = true;
                 TheForm.BringToFront();
