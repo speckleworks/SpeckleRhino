@@ -104,6 +104,9 @@ namespace SpeckleRhino
             newClient.OnWsMessage += (sender, e) =>
             {
                 Debug.WriteLine("Got ws message." + ((SpeckleApiClient) sender).StreamId );
+
+
+
                 NotifySpeckleFrame("client-ws-message", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(e.EventObject));
             };
 

@@ -10,7 +10,7 @@
           {{ client.stream.name }}
         </span>
         <br>
-        <span class='grey--text'>{{ client.stream.streamId }}</span>
+        <span class='grey--text'>{{ client.stream.streamId }} (receiver) </span>
         <!-- <div class='grey--text text--lighten-2 caption'>Last updated at:</div> -->
       </div>
     </v-card-title>
