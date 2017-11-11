@@ -19,12 +19,12 @@ using Rhino.PlugIns;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TestEtoWebkitWindowsR5")] // Plug-In title is extracted from this
+[assembly: AssemblyTitle("Speckle Rhino Plugin")] // Plug-In title is extracted from this
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TestEtoWebkitWindowsR5")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyProduct("Speckle Rhino Plugin")]
+[assembly: AssemblyCopyright("Copyright Speckle.Works ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

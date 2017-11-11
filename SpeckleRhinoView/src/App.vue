@@ -1,46 +1,87 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>Hello world!</h1>
+    <v-app dark>
+      <v-tabs dark grow>
+        <v-toolbar class='grey darken-4 white--text' fixed top>
+          <v-toolbar-title>Speckle</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click.native='showDev' class='white--text'>
+            <v-icon>code</v-icon>
+          </v-btn>
+        </v-toolbar>
+        <v-tabs-bar class='grey darken-2 white--text' fixed top style='margin-top:60px;'>
+          <v-tabs-item key='Clients' href='Clients'>
+            Clients
+          </v-tabs-item>
+          <v-tabs-item key='accounts' href='accounts'>
+            accounts
+          </v-tabs-item>
+          <v-tabs-slider color='white'></v-tabs-slider>
+        </v-tabs-bar>
+        <v-tabs-items>
+          <v-tabs-content id='Clients' key='Clients'>
+            <v-card flat>
+              <client-manager></client-manager>
+            </v-card>
+          </v-tabs-content>        
+          <v-tabs-content id='accounts' key='accounts'>
+            <v-card flat>
+              <accounts-manager></accounts-manager>
+            </v-card>
+          </v-tabs-content>
+        </v-tabs-items>
+      </v-tabs>
+      <v-speed-dial v-model='fab' hover fixed bottom right direction='top'>
+        <v-btn slot='activator' fab v-model='fab' color='light-blue'>
+          <v-icon>add</v-icon>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-btn fab dark small color='cyan' @click='addReceiver'>
+          <v-icon>cloud_download</v-icon>
+        </v-btn>
+        <v-btn fab dark small color='grey' @click='purgeClients'>
+          <v-icon>refresh</v-icon>
+        </v-btn>
+      </v-speed-dial>
+    </v-app>
   </div>
 </template>
 
 <script>
+import AccountsManager from './components/AccountsManager.vue'
+import ClientManager from './components/ClientManager.vue'
+import { EventBus } from './event-bus'
+
 export default {
   name: 'app',
+  components: {
+    AccountsManager,
+    ClientManager
+  },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      fab: {}
+    }
+  },
+  methods: {
+    showDev( ) {
+      Interop.showDev()
+    },
+    addReceiver() {
+      EventBus.$emit('show-add-receiver-dialog')
+    },
+    purgeClients() {
+      Interop.removeAllClients()
+      .then( res => {})
+      .catch( res => {})
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style>
+body{
+}
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-h1, h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
 }
 </style>

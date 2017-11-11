@@ -7,9 +7,12 @@ namespace SpeckleRhino
 {
     public class SpeckleCommand : Command
     {
+        private WinForm TheForm;
 
         public string PathResources { get; set; }
         public string IndexPath { get; set; }
+
+        public bool Init { get; set; } = false;
 
         public SpeckleCommand()
         {
@@ -34,29 +37,28 @@ namespace SpeckleRhino
         {
             RhinoApp.WriteLine("The {0} command is under construction.", EnglishName);
 
-            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            string assemblyPath = Path.GetDirectoryName(assemblyLocation);
-            PathResources = Path.Combine(assemblyPath, "app");
-            IndexPath = Path.Combine(PathResources, "index.html");
-
+            if (!Init)
+                //if (true)
+            {
 #if ETO
             var form = new EtoForm();
             form.Topmost = true;
-
 #elif WINR5
-            var form = new WinForm();
-            form.TopMost = true;
+                TheForm = new WinForm();
+                TheForm.TopMost = true;
+                TheForm.AllowDrop = true;
 #endif
-            form.ShowInTaskbar = true;
-            form.BringToFront();
-#if DEBUG
-            // Remeber to start the server (npm run dev)
-            form.SetWVUrl(@"http://10.211.55.2:9090/");
-#else
-            form.SetWVUrl(IndexPath);
-#endif
-            form.Show();
-            return Result.Success;
+                TheForm.ShowInTaskbar = true;
+                TheForm.BringToFront();
+                TheForm.Show();
+                Init = true;
+                return Result.Success;
+            }
+            else
+            {
+                TheForm.Show();
+                return Result.Success;
+            }
         }
     }
 }

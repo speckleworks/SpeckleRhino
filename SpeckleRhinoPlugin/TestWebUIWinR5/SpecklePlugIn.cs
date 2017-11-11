@@ -30,9 +30,6 @@ namespace SpeckleRhino
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
-
-
-
             return base.OnLoad(ref errorMessage);
         }
 
