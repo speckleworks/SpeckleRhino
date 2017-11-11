@@ -4,9 +4,9 @@
     <v-card-title primary-title>
       <div>
         <span class='headline'>
-          <v-btn fab dark small flat color='cyan'>
+          <!-- <v-btn fab dark small flat color='cyan'>
             <v-icon>cloud_download</v-icon>
-          </v-btn>
+          </v-btn> -->
           {{ client.stream.name }}
         </span>
         <br>
@@ -61,11 +61,12 @@
           <template v-for='log in client.log'> 
             <div class='caption' mb-5>
             <v-divider></v-divider>
-            {{ log }}
+            <timeago :since='log.timestamp'></timeago>: {{ log.message }}
             </div>
           </template>
         </div>
-        <div class='caption'>Client id: {{client.ClientId}}</div>
+        <br>
+        <div class='caption'>Client id: <code>{{client.ClientId}}</code></div>
       </v-card-text>
     </v-slide-y-transition>
   </v-card>

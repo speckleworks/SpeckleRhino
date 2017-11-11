@@ -49,7 +49,7 @@ export default new Vuex.Store( {
     },
     ADD_CLIENT( state, payload ) {
       payload.client.stream = payload.stream
-      payload.client.log = [ 'Client added.' ]
+      payload.client.log = [ { timestamp: new Date(), message: 'Client added.' } ]
       state.clients.unshift( payload.client )
     },
     REMOVE_CLIENT( state, payload ) {
@@ -64,7 +64,7 @@ export default new Vuex.Store( {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
       if( !client ) return console.warn( 'No client found!' )
 
-      client.log.unshift( Date.now() + ': ' + payload.data )
+      client.log.unshift( { timestamp: new Date(), message: payload.data } )
       if ( client.log.length > 42 ) log.pop( )
     }
   }

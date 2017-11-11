@@ -10,8 +10,8 @@
           </v-btn>
         </v-toolbar>
         <v-tabs-bar class='grey darken-2 white--text' fixed top style='margin-top:60px;'>
-          <v-tabs-item key='streams' href='streams'>
-            streams
+          <v-tabs-item key='Clients' href='Clients'>
+            Clients
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
             accounts
@@ -19,7 +19,7 @@
           <v-tabs-slider color='white'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
-          <v-tabs-content id='streams' key='streams'>
+          <v-tabs-content id='Clients' key='Clients'>
             <v-card flat>
               <client-manager></client-manager>
             </v-card>
@@ -33,11 +33,8 @@
       </v-tabs>
       <v-speed-dial v-model='fab' hover fixed bottom right direction='top'>
         <v-btn slot='activator' fab v-model='fab' color='light-blue'>
-          <v-icon>more_vert</v-icon>
+          <v-icon>add</v-icon>
           <v-icon>close</v-icon>
-        </v-btn>
-        <v-btn fab dark small color='pink'>
-          <v-icon>cloud_upload</v-icon>
         </v-btn>
         <v-btn fab dark small color='cyan' @click='addReceiver'>
           <v-icon>cloud_download</v-icon>
@@ -45,7 +42,6 @@
         <v-btn fab dark small color='grey' @click='purgeClients'>
           <v-icon>refresh</v-icon>
         </v-btn>
-
       </v-speed-dial>
     </v-app>
   </div>

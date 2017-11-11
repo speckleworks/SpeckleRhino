@@ -25,14 +25,21 @@ namespace SpeckleRhino
         private static WinForm mainForm;
 
         private List<SpeckleAccount> UserAccounts;
-        private List<SpeckleApiClient> UserClients;
+        public List<ISpeckleRhinoClient> UserClients;
+
+        public Dictionary<string, SpeckleObject> ObjectCache;
 
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
             Browser = _originalBrowser;
             mainForm = _mainForm;
+
             UserAccounts = new List<SpeckleAccount>();
-            UserClients = new List<SpeckleApiClient>();
+
+            UserClients = new List<ISpeckleRhinoClient>();
+
+            ObjectCache = new Dictionary<string, SpeckleObject>();
+
             ReadUserAccounts();
             ReadFileClients();
         }
@@ -62,6 +69,16 @@ namespace SpeckleRhino
             Browser.ShowDevTools();
         }
 
+        public string GetDocumentName()
+        {
+            return Rhino.RhinoDoc.ActiveDoc.Name;
+        }
+
+        public string GetDocumentGuid()
+        {
+            return Rhino.RhinoDoc.ActiveDoc.DocumentId+":::";
+        }
+
         public string GetUserAccounts()
         {
             ReadUserAccounts();
@@ -86,34 +103,7 @@ namespace SpeckleRhino
 
         public bool AddReceiverClient(string _payload)
         {
-            System.Diagnostics.Debug.WriteLine(_payload);
-            dynamic payload = JsonConvert.DeserializeObject(_payload);
-
-            SpeckleApiClient newClient = new SpeckleApiClient((string)payload.account.restApi, new RhinoConverter(), true);
-
-            newClient.OnReady += (sender, e) =>
-            {
-                NotifySpeckleFrame("client-add", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(new { stream = newClient.Stream, client = newClient}));
-            };
-
-            newClient.OnLogData += (sender, e) =>
-            {
-                NotifySpeckleFrame("client-log", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(e.EventData));
-            };
-
-            newClient.OnWsMessage += (sender, e) =>
-            {
-                Debug.WriteLine("Got ws message." + ((SpeckleApiClient) sender).StreamId );
-
-
-
-                NotifySpeckleFrame("client-ws-message", ((SpeckleApiClient)sender).StreamId, JsonConvert.SerializeObject(e.EventObject));
-            };
-
-            newClient.IntializeReceiver((string)payload.streamId, "test", "rhino", "test", (string)payload.account.apiToken).Wait();
-
-            UserClients.Add(newClient);
-
+            var myReceiver = new RhinoReceiver(_payload, this);
             return true;
         }
 
@@ -134,7 +124,7 @@ namespace SpeckleRhino
 
         public bool RemoveClient(string _payload)
         {
-            var myClient = UserClients.FirstOrDefault(client => client.ClientId == _payload);
+            var myClient = UserClients.FirstOrDefault(client => client.GetClientId() == _payload);
             if(myClient!=null)
                 myClient.Dispose();
 

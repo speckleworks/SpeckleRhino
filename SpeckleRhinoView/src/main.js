@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import Vuetify from 'vuetify'
+import VueTimeago from 'vue-timeago'
 
 import App from './App.vue'
 import Store from './store/store.js'
@@ -9,6 +10,14 @@ import { EventBus } from './event-bus'
 
 Vue.use( Vuex )
 Vue.use( Vuetify )
+
+Vue.use( VueTimeago, {
+  name: 'timeago',
+  locale: 'en-US',
+  locales: {
+    'en-US': require('vue-timeago/locales/en-US.json')
+  }
+})
 
 new Vue( {
   store: Store,
