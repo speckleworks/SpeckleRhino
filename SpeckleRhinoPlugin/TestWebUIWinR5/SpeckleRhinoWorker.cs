@@ -14,7 +14,16 @@ namespace SpeckleRhino
     public interface ISpeckleRhinoClient : IDisposable
     {
         SpeckleCore.ClientRole GetRole();
+
         string GetClientId();
+
+        void TogglePaused(bool status);
+
+        void ToggleVisibility(bool status);
+
+        void ToggleLayerVisibility(bool status);
+
+        void ToggleHover(bool status);
     }
 
     /// <summary>
@@ -33,6 +42,26 @@ namespace SpeckleRhino
         }
 
         public string GetClientId()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TogglePaused(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleVisibility(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleHover(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleLayerVisibility(bool status)
         {
             throw new NotImplementedException();
         }
@@ -56,6 +85,8 @@ namespace SpeckleRhino
 
         public bool Paused { get; set; } = false;
 
+        public bool Visible { get; set; } = true;
+
         public RhinoReceiver(string _payload, Interop _parent)
         {
             Context = _parent;
@@ -69,14 +100,13 @@ namespace SpeckleRhino
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
 
-            Client.IntializeReceiver((string)payload.streamId, "test", "Rhino", "test", (string)payload.account.apiToken);
+            Client.IntializeReceiver((string)payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), (string)payload.account.apiToken);
 
             Display = new SpeckleDisplayConduit();
             Display.Enabled = true;
 
             Objects = new List<SpeckleObject>();
         }
-
 
         public virtual void Client_OnLogData(object source, SpeckleEventArgs e)
         {
@@ -106,14 +136,31 @@ namespace SpeckleRhino
                     UpdateGlobal();
                     break;
                 case "update-meta":
-                    //UpdateMeta();
+                    UpdateMeta();
                     break;
                 case "update-object":
                     break;
                 default:
-                    //CustomMessageHandler((string)e.EventObject.args.eventType, e);
+                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType));
                     break;
             }
+        }
+
+        public void UpdateMeta()
+        {
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Metadata update received."));
+
+            var streamGetResponse = Client.StreamGet(StreamId);
+            if (streamGetResponse.Success == false)
+            {
+                Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
+                Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Failed to retrieve global update."));
+            }
+
+            Client.Stream = streamGetResponse.Stream;
+
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
+
         }
 
         public void UpdateGlobal()
@@ -128,6 +175,9 @@ namespace SpeckleRhino
             }
 
             Client.Stream = streamGetResponse.Stream;
+            var COPY = Client.Stream;
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
+            Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
 
             // prepare payload
             PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
@@ -139,6 +189,7 @@ namespace SpeckleRhino
                 if (tres.Result.Success == false)
                  Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
                 var copy = tres.Result;
+
                 // add to cache
                 foreach (var obj in tres.Result.Objects)
                     Context.ObjectCache[obj.DatabaseId] = obj;
@@ -149,6 +200,7 @@ namespace SpeckleRhino
                     Objects.Add(Context.ObjectCache[objId]);
 
                 DisplayContents();
+                Context.NotifySpeckleFrame("client-done-loading", StreamId, "");
             });
 
         }
@@ -167,6 +219,12 @@ namespace SpeckleRhino
                     case "Curve":
                         Display.Geometry.Add((GeometryBase) rhinoConverter.ToNative(myObject));
                         break;
+                    case "Polyline":
+                        Display.Geometry.Add(((Polyline)rhinoConverter.ToNative(myObject)).ToNurbsCurve());
+                        break;
+                    case "Point":
+
+                        break;
                 }
             }
             
@@ -177,6 +235,7 @@ namespace SpeckleRhino
         {
             Client.Dispose();
             Display.Enabled = false;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         public string GetClientId()
@@ -187,6 +246,27 @@ namespace SpeckleRhino
         public ClientRole GetRole()
         {
             return ClientRole.Receiver;
+        }
+
+        public void TogglePaused(bool status)
+        {
+            this.Paused = status;
+        }
+
+        public void ToggleVisibility(bool status)
+        {
+            this.Display.Enabled = status;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+        }
+
+        public void ToggleHover(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleLayerVisibility(bool status)
+        {
+            throw new NotImplementedException();
         }
     }
 }

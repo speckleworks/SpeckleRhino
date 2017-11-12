@@ -13,7 +13,7 @@
           <br>
             <div class='subheading' v-show='selectedAccountValue!=null && !fail'>
             Existing streams:
-            <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'></v-select>
+            <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
             Or input a stream id:
             <v-text-field v-model='directStreamId'></v-text-field>
           </div>

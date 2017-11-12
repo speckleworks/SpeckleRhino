@@ -1,6 +1,7 @@
 <template>
   <div>
     <receiver-add></receiver-add>
+    
     <div v-for='client in clients' :key='client.restApi' flat class='receiver'>
       <receiver v-if='client.Role === 1' :client='client'></receiver>
     </div>

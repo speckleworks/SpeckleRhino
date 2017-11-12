@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card class='account-content'>
     <v-card-text class="grey darken-4">
       API Token: <span class='caption'>{{ account.apiToken }}</span>
       <br>

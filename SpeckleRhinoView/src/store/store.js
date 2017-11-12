@@ -47,15 +47,20 @@ export default new Vuex.Store( {
     DELETE_ACCOUNT( state, payload ) {
       state.accounts = state.accounts.filter( item => item.fileName !== payload )
     },
-    ADD_CLIENT( state, payload ) {
+    ADD_CLIENT( state, payload ) {  
       payload.client.stream = payload.stream
+      
+      // extra props
       payload.client.log = [ { timestamp: new Date(), message: 'Client added.' } ]
+      payload.client.isLoading = false
+      payload.client.error = null
+      payload.client.expired = false
+      payload.client.lastUpdate = new Date()
+
       state.clients.unshift( payload.client )
     },
     REMOVE_CLIENT( state, payload ) {
-      console.log( state.clients )
       state.clients = state.clients.filter( client => client.ClientId !== payload )
-      console.log( state.clients )
     },
     SET_CLIENTS( state, payload ) {
 
@@ -66,6 +71,25 @@ export default new Vuex.Store( {
 
       client.log.unshift( { timestamp: new Date(), message: payload.data } )
       if ( client.log.length > 42 ) log.pop( )
-    }
+    },
+    SET_LOADING( state, payload ) { 
+      let client = state.clients.find( c => c.stream.streamId === payload.streamId )
+      if( !client ) return console.warn( 'No client found!' )
+
+      client.isLoading = payload.status
+    },
+    SET_EXPIRED( state, payload ) { 
+      let client = state.clients.find( c => c.stream.streamId === payload.streamId )
+      if( !client ) return console.warn( 'No client found!' )
+
+      client.expired = payload.status
+    },
+    SET_METADATA( state, payload ) { 
+      let client = state.clients.find( c => c.stream.streamId === payload.streamId )
+      if( !client ) return console.warn( 'No client found!' )
+
+      client.stream.name = payload.stream.name
+      client.stream.layers = payload.stream.layers
+    },
   }
 } )
