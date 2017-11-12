@@ -158,14 +158,14 @@ namespace SpeckleRhino
 
         }
 
-        public void setClientPause( string clientId, bool status)
+        public void setClientPause(string clientId, bool status)
         {
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
             if (myClient != null)
                 myClient.TogglePaused(status);
         }
 
-        public void setClientVisibility( string clientId, bool status)
+        public void setClientVisibility(string clientId, bool status)
         {
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
             if (myClient != null)
@@ -192,6 +192,17 @@ namespace SpeckleRhino
         public void setObjectHover(string clientId, string layerId, bool status)
         {
 
+        }
+
+        public void refreshClient(string clientId)
+        {
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                try
+                {
+                    ((RhinoReceiver)myClient).UpdateGlobal();
+                }
+                catch { throw new Exception("Refresh client was not a receiver. whoopsie poopsiee."); }
         }
 
         #endregion

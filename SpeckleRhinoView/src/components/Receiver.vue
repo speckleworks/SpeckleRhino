@@ -8,11 +8,16 @@
         </span>
         <br>
         <span class='grey--text'>{{ client.stream.streamId }} (receiver) </span>
-        <div class='grey--text text--lighten-2 caption'>Last updated at:  <timeago :since='client.lastUpdate'></timeago></div>
+        <div class='grey--text text--lighten-2 caption'>Last updated at:  <timeago :auto-update='10' :since='client.lastUpdate'></timeago></div>
       </div>
     </v-card-title>
     <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
-    
+    <v-alert color='info' v-model='client.expired' >
+      <v-layout align-center>
+        <v-flex>There are updates available.</v-flex>
+        <v-flex><v-btn dark small fab @click.native='refreshStream'><v-icon>refresh</v-icon></v-btn></v-flex>
+      </v-layout>
+    </v-alert>
     <v-card-actions>
       <v-btn icon @click.native='toggleLayers' fab small dark>
         <v-icon>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
@@ -105,6 +110,9 @@
       removeClient() {
         this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
       },
+      refreshStream() {
+        Interop.refreshClient( this.client.ClientId )
+      }
     },
     mounted() {
 

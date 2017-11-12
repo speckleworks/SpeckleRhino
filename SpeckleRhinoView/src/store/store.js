@@ -90,6 +90,9 @@ export default new Vuex.Store( {
 
       client.stream.name = payload.stream.name
       client.stream.layers = payload.stream.layers
+
+      client.lastUpdate = new Date()
+      client.expired = false
     },
   }
 } )

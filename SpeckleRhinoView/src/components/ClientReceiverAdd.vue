@@ -9,7 +9,7 @@
           <div class='subheading'>
             Select an account:
           </div>
-          <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'></v-select>
+          <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
           <br>
             <div class='subheading' v-show='selectedAccountValue!=null && !fail'>
             Existing streams:
