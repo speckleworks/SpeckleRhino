@@ -44,17 +44,18 @@ namespace SpeckleRhino
 
             ReadUserAccounts();
 
-            ReadFileClients();
+            InstantiateFileClients();
 
             RhinoDoc.NewDocument += (sender, e) =>
             {
-                this.NotifySpeckleFrame("purge-clients", "", "");
+                NotifySpeckleFrame("purge-clients", "", "");
+                RemoveAllClients();
             };
 
             RhinoDoc.EndOpenDocument += (sender, e) =>
             {
                 // purge clients from ui
-                NotifySpeckleFrame("purge-clients", "", "");
+                NotifySpeckleFrame("client-purge", "", "");
                 // purge clients from here
                 RemoveAllClients();
                 // read clients from document strings

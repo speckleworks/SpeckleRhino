@@ -281,6 +281,11 @@ namespace SpeckleRhino
 
         protected RhinoReceiver(SerializationInfo info, StreamingContext context)
         {
+            Display = new SpeckleDisplayConduit();
+            Display.Enabled = true;
+
+            Objects = new List<SpeckleObject>();
+
             byte[] serialisedClient = Convert.FromBase64String((string)info.GetString("client"));
 
             using (var ms = new MemoryStream())
@@ -288,16 +293,12 @@ namespace SpeckleRhino
                 ms.Write(serialisedClient, 0, serialisedClient.Length);
                 ms.Seek(0, SeekOrigin.Begin);
                 Client = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                StreamId = Client.StreamId;
             }
 
             Client.OnReady += Client_OnReady;
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
-
-            Display = new SpeckleDisplayConduit();
-            Display.Enabled = true;
-
-            Objects = new List<SpeckleObject>();
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
