@@ -14,9 +14,9 @@
             Clients
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
-            accounts
+            Accounts
           </v-tabs-item>
-          <v-tabs-slider color='white'></v-tabs-slider>
+          <v-tabs-slider color='light-blue'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
           <v-tabs-content id='Clients' key='Clients'>
@@ -28,7 +28,7 @@
             <v-card flat>
               <accounts-manager></accounts-manager>
             </v-card>
-          </v-tabs-content>
+          </v-tabs-content>        
         </v-tabs-items>
       </v-tabs>
       <v-speed-dial v-model='fab' hover fixed bottom right direction='top'>
@@ -69,6 +69,12 @@ export default {
     },
     addReceiver() {
       EventBus.$emit('show-add-receiver-dialog')
+    },
+    saveClients() {
+      Interop.saveFileClients()
+    },
+    readClients() {
+      Interop.getFileStreams()
     },
     purgeClients() {
       Interop.removeAllClients()

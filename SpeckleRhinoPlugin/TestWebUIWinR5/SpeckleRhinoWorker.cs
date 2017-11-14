@@ -5,21 +5,34 @@ using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SpeckleRhino
 {
-    public interface ISpeckleRhinoClient : IDisposable
+    public interface ISpeckleRhinoClient : IDisposable, ISerializable
     {
         SpeckleCore.ClientRole GetRole();
+
         string GetClientId();
+
+        void TogglePaused(bool status);
+
+        void ToggleVisibility(bool status);
+
+        void ToggleLayerVisibility(bool status);
+
+        void ToggleHover(bool status);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
+    [Serializable]
     public class RhinoSender : ISpeckleRhinoClient
     {
         public SpeckleCore.ClientRole GetRole()
@@ -36,15 +49,41 @@ namespace SpeckleRhino
         {
             throw new NotImplementedException();
         }
+
+        public void TogglePaused(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleVisibility(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleHover(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleLayerVisibility(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
     /// Class that holds a rhino receiver client warpped around the
     /// SpeckleApiClient.
     /// </summary>
+    [Serializable]
     public class RhinoReceiver : ISpeckleRhinoClient
     {
-        private Interop Context { get; set; }
+        public Interop Context { get; set; }
 
         public SpeckleApiClient Client { get; set; }
 
@@ -55,6 +94,8 @@ namespace SpeckleRhino
         public string StreamId { get; private set; }
 
         public bool Paused { get; set; } = false;
+
+        public bool Visible { get; set; } = true;
 
         public RhinoReceiver(string _payload, Interop _parent)
         {
@@ -69,14 +110,13 @@ namespace SpeckleRhino
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
 
-            Client.IntializeReceiver((string)payload.streamId, "test", "Rhino", "test", (string)payload.account.apiToken);
+            Client.IntializeReceiver((string)payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), (string)payload.account.apiToken);
 
             Display = new SpeckleDisplayConduit();
             Display.Enabled = true;
 
             Objects = new List<SpeckleObject>();
         }
-
 
         public virtual void Client_OnLogData(object source, SpeckleEventArgs e)
         {
@@ -106,14 +146,31 @@ namespace SpeckleRhino
                     UpdateGlobal();
                     break;
                 case "update-meta":
-                    //UpdateMeta();
+                    UpdateMeta();
                     break;
                 case "update-object":
                     break;
                 default:
-                    //CustomMessageHandler((string)e.EventObject.args.eventType, e);
+                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType));
                     break;
             }
+        }
+
+        public void UpdateMeta()
+        {
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Metadata update received."));
+
+            var streamGetResponse = Client.StreamGet(StreamId);
+            if (streamGetResponse.Success == false)
+            {
+                Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
+                Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Failed to retrieve global update."));
+            }
+
+            Client.Stream = streamGetResponse.Stream;
+
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
+
         }
 
         public void UpdateGlobal()
@@ -128,6 +185,9 @@ namespace SpeckleRhino
             }
 
             Client.Stream = streamGetResponse.Stream;
+            var COPY = Client.Stream;
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
+            Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
 
             // prepare payload
             PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
@@ -139,6 +199,7 @@ namespace SpeckleRhino
                 if (tres.Result.Success == false)
                  Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
                 var copy = tres.Result;
+
                 // add to cache
                 foreach (var obj in tres.Result.Objects)
                     Context.ObjectCache[obj.DatabaseId] = obj;
@@ -149,6 +210,7 @@ namespace SpeckleRhino
                     Objects.Add(Context.ObjectCache[objId]);
 
                 DisplayContents();
+                Context.NotifySpeckleFrame("client-done-loading", StreamId, "");
             });
 
         }
@@ -167,6 +229,12 @@ namespace SpeckleRhino
                     case "Curve":
                         Display.Geometry.Add((GeometryBase) rhinoConverter.ToNative(myObject));
                         break;
+                    case "Polyline":
+                        Display.Geometry.Add(((Polyline)rhinoConverter.ToNative(myObject)).ToNurbsCurve());
+                        break;
+                    case "Point":
+
+                        break;
                 }
             }
             
@@ -177,6 +245,7 @@ namespace SpeckleRhino
         {
             Client.Dispose();
             Display.Enabled = false;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         public string GetClientId()
@@ -187,6 +256,61 @@ namespace SpeckleRhino
         public ClientRole GetRole()
         {
             return ClientRole.Receiver;
+        }
+
+        public void TogglePaused(bool status)
+        {
+            this.Paused = status;
+        }
+
+        public void ToggleVisibility(bool status)
+        {
+            this.Display.Enabled = status;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+        }
+
+        public void ToggleHover(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ToggleLayerVisibility(bool status)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected RhinoReceiver(SerializationInfo info, StreamingContext context)
+        {
+            Display = new SpeckleDisplayConduit();
+            Display.Enabled = true;
+
+            Objects = new List<SpeckleObject>();
+
+            byte[] serialisedClient = Convert.FromBase64String((string)info.GetString("client"));
+
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(serialisedClient, 0, serialisedClient.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                Client = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                StreamId = Client.StreamId;
+            }
+
+            Client.OnReady += Client_OnReady;
+            Client.OnLogData += Client_OnLogData;
+            Client.OnWsMessage += Client_OnWsMessage;
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, Client);
+                info.AddValue("client", Convert.ToBase64String(ms.ToArray()));
+                info.AddValue("paused", Paused);
+                info.AddValue("visible", Visible);
+            }
         }
     }
 }

@@ -73,13 +73,39 @@ namespace SpeckleRhino
             {
                 switch (obj.ObjectType)
                 {
+                    case Rhino.DocObjects.ObjectType.Point:
+                        e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, Color.Pink);
+                        break;
+                    case Rhino.DocObjects.ObjectType.Curve:
+                        e.Display.DrawCurve((Curve)obj, Color.Chartreuse);
+                        break;
+                    case Rhino.DocObjects.ObjectType.Brep:
+                        DisplayMaterial bMaterial = new DisplayMaterial(Color.Chartreuse, 0.5);
+                        e.Display.DrawBrepShaded((Brep)obj, bMaterial);
+                        //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
+                        break;
                     case Rhino.DocObjects.ObjectType.Mesh:
-                        Rhino.Display.DisplayMaterial material = new Rhino.Display.DisplayMaterial(Color.Chartreuse, 0.5);
-                        e.Display.DrawMeshShaded((obj as Rhino.Geometry.Mesh), material);
-                        e.Display.DrawMeshWires((obj as Rhino.Geometry.Mesh), Color.Beige, 1);
+                        DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Color.Chartreuse, Color.Yellow,Color.White, Color.White, 0.1,0.5);
+                        e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                        //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
+                        break;
+                    case Rhino.DocObjects.ObjectType.TextDot:
+                        //todo
+                        break;
+                    case Rhino.DocObjects.ObjectType.Annotation:
+                        //todo
                         break;
                 }
                 count++;
+            }
+        }
+
+        protected override void DrawOverlay(DrawEventArgs e)
+        {
+            base.DrawOverlay(e);
+            foreach (var obj in Geometry)
+            {
+                //e.Display.DrawBoxCorners(((GeometryBase)obj).GetBoundingBox(false), Color.Yellow);
             }
         }
     }

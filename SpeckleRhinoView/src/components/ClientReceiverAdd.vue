@@ -9,11 +9,11 @@
           <div class='subheading'>
             Select an account:
           </div>
-          <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'></v-select>
+          <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
           <br>
             <div class='subheading' v-show='selectedAccountValue!=null && !fail'>
             Existing streams:
-            <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'></v-select>
+            <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
             Or input a stream id:
             <v-text-field v-model='directStreamId'></v-text-field>
           </div>
@@ -46,8 +46,13 @@ export default {
     selectItems() {
       return this.$store.getters.accounts.map( a => a.serverName + this.separator + a.email )
     },
-    streamsMap(){
+    streamsMap: {
+      get() {
       return this.streams.map( s => s.name + this.separator + s.streamId )
+      },
+      set( value ) {
+        
+      }
     }
   },
   watch: {
