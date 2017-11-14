@@ -26,8 +26,6 @@ new Vue( {
   mounted() {
     // Populate with existing accounts
     this.$store.dispatch( 'getUserAccounts' )
-    // // Populate with existing clients
-    // this.$store.dispatch( 'getFileStreams' )
 
     EventBus.$on( 'client-purge', () => {
       console.log( 'purge-purge' )
@@ -69,6 +67,8 @@ new Vue( {
       console.log( 'client-ws-message', streamId, JSON.parse( data ) )
     })
 
+    // tell .net that the app is ± ready.
+    Interop.appReady()
   }
 } )
 

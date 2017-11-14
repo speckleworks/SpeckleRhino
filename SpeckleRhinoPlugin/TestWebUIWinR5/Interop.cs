@@ -44,7 +44,7 @@ namespace SpeckleRhino
 
             ReadUserAccounts();
 
-            InstantiateFileClients();
+            //InstantiateFileClients();
 
             RhinoDoc.NewDocument += (sender, e) =>
             {
@@ -86,10 +86,15 @@ namespace SpeckleRhino
         }
         #endregion
 
-        #region Serialisation
-        public void ReadFileClients()
+        #region Serialisation & Init. 
+
+        /// <summary>
+        /// Do not call this from the constructor as you'll get confilcts with 
+        /// browser load, etc.
+        /// </summary>
+        public void AppReady()
         {
-            string[] clients = Rhino.RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
+            InstantiateFileClients();
         }
 
         public void SaveFileClients()
@@ -103,11 +108,10 @@ namespace SpeckleRhino
                     formatter.Serialize(ms, rhinoClient);
                     string section = rhinoClient.GetRole() == ClientRole.Receiver ? "speckle-client-receivers" : "speckle-client-senders";
                     var client = Convert.ToBase64String(ms.ToArray());
-                    RhinoDoc.ActiveDoc.Strings.SetString(section, rhinoClient.GetClientId(), client);
+                    var clientId = rhinoClient.GetClientId();
+                    RhinoDoc.ActiveDoc.Strings.SetString(section, clientId, client);
                 }
             }
-
-            var copyxxx = RhinoDoc.ActiveDoc.Strings.Count;
         }
 
         public void InstantiateFileClients()
@@ -181,14 +185,25 @@ namespace SpeckleRhino
         public bool RemoveClient(string _payload)
         {
             var myClient = UserClients.FirstOrDefault(client => client.GetClientId() == _payload);
-            if (myClient != null)
-                myClient.Dispose();
+            if (myClient == null) return false;
+
+            RhinoDoc.ActiveDoc.Strings.Delete(myClient.GetRole() == ClientRole.Receiver ? "speckle-client-receivers" : "speckle-client-senders", myClient.GetClientId());
+
+            myClient.Dispose();
 
             return UserClients.Remove(myClient);
         }
 
         public bool RemoveAllClients()
         {
+            //string[] keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
+            //foreach (string key in keys)
+            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
+
+            //keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
+            //foreach (string key in keys)
+            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
+
             foreach (var uc in UserClients)
             {
                 uc.Dispose();
