@@ -26,11 +26,12 @@ new Vue( {
   mounted() {
     // Populate with existing accounts
     this.$store.dispatch( 'getUserAccounts' )
-    // Populate with existing clients
-    this.$store.dispatch( 'getFileStreams' )
+    // // Populate with existing clients
+    // this.$store.dispatch( 'getFileStreams' )
 
-    EventBus.$on( 'purge-clients', () => {
-      console.log( 'purge-clients' )
+    EventBus.$on( 'client-purge', () => {
+      console.log( 'purge-purge' )
+      this.$store.commit( 'PURGE_CLIENTS' )
     })
 
     EventBus.$on( 'client-add', ( streamId, data ) => {

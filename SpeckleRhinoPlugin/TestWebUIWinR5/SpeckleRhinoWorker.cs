@@ -5,13 +5,16 @@ using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SpeckleRhino
 {
-    public interface ISpeckleRhinoClient : IDisposable
+    public interface ISpeckleRhinoClient : IDisposable, ISerializable
     {
         SpeckleCore.ClientRole GetRole();
 
@@ -29,6 +32,7 @@ namespace SpeckleRhino
     /// <summary>
     /// TODO
     /// </summary>
+    [Serializable]
     public class RhinoSender : ISpeckleRhinoClient
     {
         public SpeckleCore.ClientRole GetRole()
@@ -65,15 +69,21 @@ namespace SpeckleRhino
         {
             throw new NotImplementedException();
         }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
     /// Class that holds a rhino receiver client warpped around the
     /// SpeckleApiClient.
     /// </summary>
+    [Serializable]
     public class RhinoReceiver : ISpeckleRhinoClient
     {
-        private Interop Context { get; set; }
+        public Interop Context { get; set; }
 
         public SpeckleApiClient Client { get; set; }
 
@@ -267,6 +277,39 @@ namespace SpeckleRhino
         public void ToggleLayerVisibility(bool status)
         {
             throw new NotImplementedException();
+        }
+
+        protected RhinoReceiver(SerializationInfo info, StreamingContext context)
+        {
+            byte[] serialisedClient = Convert.FromBase64String((string)info.GetString("client"));
+
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(serialisedClient, 0, serialisedClient.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                Client = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+            }
+
+            Client.OnReady += Client_OnReady;
+            Client.OnLogData += Client_OnLogData;
+            Client.OnWsMessage += Client_OnWsMessage;
+
+            Display = new SpeckleDisplayConduit();
+            Display.Enabled = true;
+
+            Objects = new List<SpeckleObject>();
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, Client);
+                info.AddValue("client", Convert.ToBase64String(ms.ToArray()));
+                info.AddValue("paused", Paused);
+                info.AddValue("visible", Visible);
+            }
         }
     }
 }

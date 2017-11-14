@@ -46,8 +46,13 @@ export default {
     selectItems() {
       return this.$store.getters.accounts.map( a => a.serverName + this.separator + a.email )
     },
-    streamsMap(){
+    streamsMap: {
+      get() {
       return this.streams.map( s => s.name + this.separator + s.streamId )
+      },
+      set( value ) {
+        
+      }
     }
   },
   watch: {

@@ -59,6 +59,9 @@ export default new Vuex.Store( {
 
       state.clients.unshift( payload.client )
     },
+    PURGE_CLIENTS( state ) {
+      state.clients = []
+    },
     REMOVE_CLIENT( state, payload ) {
       state.clients = state.clients.filter( client => client.ClientId !== payload )
     },

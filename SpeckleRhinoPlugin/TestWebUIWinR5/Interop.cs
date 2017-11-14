@@ -12,6 +12,8 @@ using System.IO;
 using SpeckleCore;
 using SpeckleRhinoConverter;
 using System.Diagnostics;
+using System.Runtime.Serialization.Formatters.Binary;
+using Rhino;
 
 namespace SpeckleRhino
 {
@@ -41,7 +43,28 @@ namespace SpeckleRhino
             ObjectCache = new Dictionary<string, SpeckleObject>();
 
             ReadUserAccounts();
+
             ReadFileClients();
+
+            RhinoDoc.NewDocument += (sender, e) =>
+            {
+                this.NotifySpeckleFrame("purge-clients", "", "");
+            };
+
+            RhinoDoc.EndOpenDocument += (sender, e) =>
+            {
+                // purge clients from ui
+                NotifySpeckleFrame("purge-clients", "", "");
+                // purge clients from here
+                RemoveAllClients();
+                // read clients from document strings
+                InstantiateFileClients();
+            };
+
+            RhinoDoc.BeginSaveDocument += (sender, e) =>
+            {
+                SaveFileClients();
+            };
         }
 
         #region General Utils
@@ -63,14 +86,46 @@ namespace SpeckleRhino
         #endregion
 
         #region Serialisation
-        private void ReadFileClients()
+        public void ReadFileClients()
         {
-
+            string[] clients = Rhino.RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
         }
 
-        public string GetFileStreams()
+        public void SaveFileClients()
         {
-            return JsonConvert.SerializeObject(UserClients);
+            RhinoDoc myDoc = RhinoDoc.ActiveDoc;
+            foreach (ISpeckleRhinoClient rhinoClient in UserClients)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(ms, rhinoClient);
+                    string section = rhinoClient.GetRole() == ClientRole.Receiver ? "speckle-client-receivers" : "speckle-client-senders";
+                    var client = Convert.ToBase64String(ms.ToArray());
+                    RhinoDoc.ActiveDoc.Strings.SetString(section, rhinoClient.GetClientId(), client);
+                }
+            }
+
+            var copyxxx = RhinoDoc.ActiveDoc.Strings.Count;
+        }
+
+        public void InstantiateFileClients()
+        {
+            string[] receiverKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
+
+            foreach (string rec in receiverKeys)
+            {
+                byte[] serialisedClient = Convert.FromBase64String(RhinoDoc.ActiveDoc.Strings.GetValue("speckle-client-receivers", rec));
+                using (var ms = new MemoryStream())
+                {
+                    ms.Write(serialisedClient, 0, serialisedClient.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    RhinoReceiver client = (RhinoReceiver)new BinaryFormatter().Deserialize(ms);
+                    client.Context = this;
+                    // is there maybe a race condition here, where on ready is triggered 
+                    // faster than the context get set?
+                }
+            }
         }
         #endregion
 
@@ -151,7 +206,7 @@ namespace SpeckleRhino
         }
         #endregion
 
-        #region From UI (...)
+        #region From UI (..)
 
         public void bakeClient(string clientId)
         {
