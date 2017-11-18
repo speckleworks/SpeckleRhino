@@ -41,13 +41,13 @@
     </v-card-actions>
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' xxxclass='grey darken-4'>
-        <blockquote>Layers:</blockquote>
-        <receiver-layers :layers='client.stream.layers'></receiver-layers>
+        <blockquote class='section-title'>Layers:</blockquote>
+        <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
       </v-card-text>
     </v-slide-y-transition>
     <v-slide-y-transition>
       <v-card-text v-show='showLog' xxxclass='grey darken-4'>
-        <blockquote class=''>Log</blockquote>
+        <blockquote class='section-title'>Log</blockquote>
         <br>
         <div class='log'>
           <template v-for='log in client.log'> 
@@ -121,7 +121,9 @@
 </script>
 
 <style lang='scss'>
-
+.section-title{
+  padding: 2px 0 2px 24px;
+}
 .receiver-content {
   transition: all .3s ease;
 }

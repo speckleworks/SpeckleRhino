@@ -216,7 +216,7 @@ namespace SpeckleRhino
 
         public void bakeClient(string clientId)
         {
-
+            // TODO
         }
 
         public void setClientPause(string clientId, bool status)
@@ -242,7 +242,9 @@ namespace SpeckleRhino
 
         public void setLayerVisibility(string clientId, string layerId, bool status)
         {
-
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                myClient.ToggleLayerVisibility(layerId, status);
         }
 
         public void setLayerHover(string clientId, string layerId, bool status)

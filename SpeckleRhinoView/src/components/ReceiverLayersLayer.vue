@@ -20,7 +20,8 @@
   export default {
     name: '',
     props: {
-      layer: Object
+      layer: Object,
+      clientId: String
     },
     components: {},
     computed: {
@@ -28,6 +29,12 @@
         if( this.layer.properties && this.layer.properties.color )
           return this.layer.properties.color
         return { hex: '#00FF00', alpha: 1 }
+      }
+    },
+    watch: {
+      visible( value ) {
+        console.log( this.clientId, this.layer.guid, value )
+        Interop.setLayerVisibility( this.clientId, this.layer.guid, value )
       }
     },
     data() {
