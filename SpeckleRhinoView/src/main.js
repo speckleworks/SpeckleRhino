@@ -38,12 +38,11 @@ new Vue( {
     })
 
     EventBus.$on( 'client-metadata-update', ( streamId, data ) => {
-      console.log( 'client-metadata-update', streamId, data )
+      console.log( 'client-metadata-update', streamId )
       this.$store.commit( 'SET_METADATA', { streamId: streamId, stream: JSON.parse( data ) } )
     })
 
     EventBus.$on( 'client-log', ( streamId, data ) => {
-      console.log( data )
       console.log( 'client-log', streamId, JSON.parse( data ) )
       this.$store.commit( 'APPEND_LOG', { streamId: streamId, data: JSON.parse( data ) } )
     })
