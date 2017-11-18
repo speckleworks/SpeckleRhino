@@ -1,6 +1,6 @@
 <template>
   <v-dialog fullscreen v-model='visible' style='width: 100%' >
-    <v-card>
+    <v-card class='grey darken-4'>
       <v-card-title>
         Add Receiver
       </v-card-title>        
@@ -48,7 +48,7 @@ export default {
     },
     streamsMap: {
       get() {
-      return this.streams.map( s => s.name + this.separator + s.streamId )
+        return this.streams.map( s => s.name + this.separator + s.streamId )
       },
       set( value ) {
         
@@ -59,12 +59,12 @@ export default {
     selectedAccountValue( value ) {
       if( !value ) return
       let acDet = value.split( this.separator )
-      this.selectedAccount = this.accounts.find( ac => ac.serverName === acDet[0] && ac.email === acDet[1])
+      this.selectedAccount = this.accounts.find( ac => ac.serverName === acDet[ 0 ] && ac.email === acDet[ 1 ])
       API.getStreams( this.selectedAccount )
       .then( res => {
         this.fail = false
-        console.log(res)
         this.streams = res.streams
+        this.selectedStream = null
       })
       .catch( err => {
         this.streams = []
@@ -77,6 +77,7 @@ export default {
       this.selectedAccountValue = null
       this.selectedAccount = null
       this.selectedStream = null
+      this.directStreamId = null
       this.streams = []
     }
   },

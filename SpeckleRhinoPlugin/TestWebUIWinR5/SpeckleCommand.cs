@@ -30,7 +30,7 @@ namespace SpeckleRhino
         ///<returns>The command name as it appears on the Rhino command line.</returns>
         public override string EnglishName
         {
-            get { return "SpeckleCommand"; }
+            get { return "Speckle"; }
         }
 
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
@@ -38,16 +38,10 @@ namespace SpeckleRhino
             RhinoApp.WriteLine("The {0} command is under construction.", EnglishName);
 
             if (!Init)
-                //if (true)
             {
-#if ETO
-            var form = new EtoForm();
-            form.Topmost = true;
-#elif WINR5
                 TheForm = new WinForm();
                 TheForm.TopMost = true;
                 TheForm.AllowDrop = true;
-#endif
                 TheForm.ShowInTaskbar = true;
                 TheForm.BringToFront();
                 TheForm.Show();

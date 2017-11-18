@@ -1,11 +1,12 @@
 <template>
-  <div>
+  <v-container fluid pa-0>
     <receiver-add></receiver-add>
-    
-    <div v-for='client in clients' :key='client.restApi' flat class='receiver'>
-      <receiver v-if='client.Role === 1' :client='client'></receiver>
-    </div>
-  </div>
+    <v-layout wrap column>
+      <v-flex xs12 v-for='client in clients' :key='client.restApi' flat class='receiver'>
+        <receiver v-if='client.Role === 1' :client='client'></receiver>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
