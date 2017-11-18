@@ -1,7 +1,7 @@
 <template>
   <v-container fluid class='layer-list'>
     <br>
-    <layer v-for='layer in layers' :key='layer.guid' :layer='layer' class='layer'></layer>
+    <layer v-for='layer in layers' :key='layer.guid' :layer='layer' :clientId='clientId' class='layer'></layer>
   </v-container>
 </template>
 
@@ -11,7 +11,8 @@
   export default {
     name: 'ReceiverLayers',
     props: {
-      layers: Array
+      layers: Array,
+      clientId: String
     },
     components: {
       Layer

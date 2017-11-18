@@ -24,7 +24,7 @@ namespace SpeckleRhino
 
         void ToggleVisibility(bool status);
 
-        void ToggleLayerVisibility(bool status);
+        void ToggleLayerVisibility(string layerId, bool status);
 
         void ToggleHover(bool status);
     }
@@ -65,7 +65,7 @@ namespace SpeckleRhino
             throw new NotImplementedException();
         }
 
-        public void ToggleLayerVisibility(bool status)
+        public void ToggleLayerVisibility(string layerId, bool status)
         {
             throw new NotImplementedException();
         }
@@ -197,7 +197,7 @@ namespace SpeckleRhino
             Client.ObjectGetBulkAsync("omit=displayValue", payload).ContinueWith(tres =>
             {
                 if (tres.Result.Success == false)
-                 Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
+                    Context.NotifySpeckleFrame("client-error", StreamId, streamGetResponse.Message);
                 var copy = tres.Result;
 
                 // add to cache
@@ -218,27 +218,55 @@ namespace SpeckleRhino
         public void DisplayContents()
         {
             RhinoConverter rhinoConverter = new RhinoConverter();
+
             Display.Geometry = new List<GeometryBase>();
 
-            foreach(SpeckleObject myObject in Objects)
+            int count = 0;
+            foreach (SpeckleObject myObject in Objects)
             {
-                switch(myObject.Type)
+                Display.Colors.Add(GetColorFromLayer(GetLayerFromIndex(count)));
+
+                Display.VisibleList.Add(true);
+
+                switch (myObject.Type)
                 {
                     case "Mesh":
                     case "Brep":
                     case "Curve":
-                        Display.Geometry.Add((GeometryBase) rhinoConverter.ToNative(myObject));
+                        Display.Geometry.Add((GeometryBase)rhinoConverter.ToNative(myObject));
                         break;
                     case "Polyline":
                         Display.Geometry.Add(((Polyline)rhinoConverter.ToNative(myObject)).ToNurbsCurve());
                         break;
                     case "Point":
-
+                        Point3d conv = (Point3d)rhinoConverter.ToNative(myObject);
+                        Display.Geometry.Add(new Point(conv));
                         break;
                 }
+
+                count++;
             }
-            
+
             Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+        }
+
+        public SpeckleLayer GetLayerFromIndex(int index)
+        {
+            return Client.Stream.Layers.FirstOrDefault(layer => ((index >= layer.StartIndex) && (index < layer.StartIndex + layer.ObjectCount)));
+        }
+
+        public System.Drawing.Color GetColorFromLayer(SpeckleLayer layer)
+        {
+            System.Drawing.Color layerColor = System.Drawing.Color.Chartreuse;
+            try
+            {
+                layerColor = System.Drawing.ColorTranslator.FromHtml(layer.Properties.Color.Hex);
+            }
+            catch
+            {
+                Debug.WriteLine("Layer '{0}' had no assigned color", layer.Name);
+            }
+            return layerColor;
         }
 
         public void Dispose()
@@ -274,9 +302,14 @@ namespace SpeckleRhino
             throw new NotImplementedException();
         }
 
-        public void ToggleLayerVisibility(bool status)
+        public void ToggleLayerVisibility(string layerId, bool status)
         {
-            throw new NotImplementedException();
+            SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault(l => l.Guid == layerId);
+            if (myLayer == null) throw new Exception("Bloopers. Layer not found.");
+
+            for(int i = (int) myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++)
+                Display.VisibleList[i] = status;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         protected RhinoReceiver(SerializationInfo info, StreamingContext context)

@@ -71,7 +71,7 @@ export default new Vuex.Store( {
     APPEND_LOG( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
       if( !client ) return console.warn( 'No client found!' )
-
+      if( !client.log ) client.log = []
       client.log.unshift( { timestamp: new Date(), message: payload.data } )
       if ( client.log.length > 42 ) log.pop( )
     },

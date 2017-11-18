@@ -44,8 +44,6 @@ namespace SpeckleRhino
 
             ReadUserAccounts();
 
-            //InstantiateFileClients();
-
             RhinoDoc.NewDocument += (sender, e) =>
             {
                 NotifySpeckleFrame("purge-clients", "", "");
@@ -196,14 +194,6 @@ namespace SpeckleRhino
 
         public bool RemoveAllClients()
         {
-            //string[] keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
-            //foreach (string key in keys)
-            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
-
-            //keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
-            //foreach (string key in keys)
-            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
-
             foreach (var uc in UserClients)
             {
                 uc.Dispose();
@@ -226,7 +216,7 @@ namespace SpeckleRhino
 
         public void bakeClient(string clientId)
         {
-
+            // TODO
         }
 
         public void setClientPause(string clientId, bool status)
@@ -252,7 +242,9 @@ namespace SpeckleRhino
 
         public void setLayerVisibility(string clientId, string layerId, bool status)
         {
-
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                myClient.ToggleLayerVisibility(layerId, status);
         }
 
         public void setLayerHover(string clientId, string layerId, bool status)
