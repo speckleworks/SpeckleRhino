@@ -44,8 +44,6 @@ namespace SpeckleRhino
 
             ReadUserAccounts();
 
-            //InstantiateFileClients();
-
             RhinoDoc.NewDocument += (sender, e) =>
             {
                 NotifySpeckleFrame("purge-clients", "", "");
@@ -196,14 +194,6 @@ namespace SpeckleRhino
 
         public bool RemoveAllClients()
         {
-            //string[] keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-receivers");
-            //foreach (string key in keys)
-            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
-
-            //keys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
-            //foreach (string key in keys)
-            //    RhinoDoc.ActiveDoc.Strings.Delete("speckle-client-receivers", key);
-
             foreach (var uc in UserClients)
             {
                 uc.Dispose();

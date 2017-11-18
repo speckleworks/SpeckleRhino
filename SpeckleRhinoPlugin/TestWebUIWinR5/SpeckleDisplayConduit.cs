@@ -25,6 +25,8 @@ namespace SpeckleRhino
         public SpeckleDisplayConduit()
         {
             Geometry = new List<GeometryBase>();
+            Colors = new List<Color>();
+            VisibleList = new List<bool>();
         }
 
         public SpeckleDisplayConduit(List<GeometryBase> _Geometry)
@@ -71,31 +73,32 @@ namespace SpeckleRhino
 
             foreach (var obj in Geometry)
             {
-                switch (obj.ObjectType)
-                {
-                    case Rhino.DocObjects.ObjectType.Point:
-                        e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, Color.Pink);
-                        break;
-                    case Rhino.DocObjects.ObjectType.Curve:
-                        e.Display.DrawCurve((Curve)obj, Color.Chartreuse);
-                        break;
-                    case Rhino.DocObjects.ObjectType.Brep:
-                        DisplayMaterial bMaterial = new DisplayMaterial(Color.Chartreuse, 0.5);
-                        e.Display.DrawBrepShaded((Brep)obj, bMaterial);
-                        //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
-                        break;
-                    case Rhino.DocObjects.ObjectType.Mesh:
-                        DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Color.Chartreuse, Color.Yellow,Color.White, Color.White, 0.1,0.5);
-                        e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
-                        //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
-                        break;
-                    case Rhino.DocObjects.ObjectType.TextDot:
-                        //todo
-                        break;
-                    case Rhino.DocObjects.ObjectType.Annotation:
-                        //todo
-                        break;
-                }
+                if (VisibleList[count])
+                    switch (obj.ObjectType)
+                    {
+                        case Rhino.DocObjects.ObjectType.Point:
+                            e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, PointStyle.X, 2, Colors[count]);
+                            break;
+                        case Rhino.DocObjects.ObjectType.Curve:
+                            e.Display.DrawCurve((Curve)obj, Colors[count]);
+                            break;
+                        case Rhino.DocObjects.ObjectType.Brep:
+                            DisplayMaterial bMaterial = new DisplayMaterial(Colors[count], 0.5);
+                            e.Display.DrawBrepShaded((Brep)obj, bMaterial);
+                            //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
+                            break;
+                        case Rhino.DocObjects.ObjectType.Mesh:
+                            DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Colors[count], Color.Yellow, Color.White, Color.White, 0.1, 0.5);
+                            e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                            //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
+                            break;
+                        case Rhino.DocObjects.ObjectType.TextDot:
+                            //todo
+                            break;
+                        case Rhino.DocObjects.ObjectType.Annotation:
+                            //todo
+                            break;
+                    }
                 count++;
             }
         }
