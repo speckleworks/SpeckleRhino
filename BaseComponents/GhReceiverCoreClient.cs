@@ -32,7 +32,8 @@ namespace SpeckleGrasshopper
     public class GhReceiverClient : GH_Component, IGH_VariableParameterComponent
     {
         string AuthToken;
-        string StreamId;
+        string RestApi;
+        public string StreamId;
 
         public bool Paused = false;
         public bool Expired = false;
@@ -90,7 +91,12 @@ namespace SpeckleGrasshopper
                     ms.Write(serialisedClient, 0, serialisedClient.Length);
                     ms.Seek(0, SeekOrigin.Begin);
                     myReceiver = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
-                    InitBasics();
+
+                    StreamId = myReceiver.StreamId;
+                    AuthToken = myReceiver.AuthToken;
+                    RestApi = myReceiver.BaseUrl;
+
+                    InitReceiverEventsAndGlobals();
                 }
             }
             catch {
@@ -115,10 +121,8 @@ namespace SpeckleGrasshopper
 
                 if (myForm.restApi != null && myForm.apitoken != null)
                 {
-                    myReceiver = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
+                    RestApi = myForm.restApi;
                     AuthToken = myForm.apitoken;
-
-                    InitBasics();
                 }
                 else
                 {
@@ -128,7 +132,7 @@ namespace SpeckleGrasshopper
             }
         }
 
-        public void InitBasics()
+        public void InitReceiverEventsAndGlobals()
         {
             Converter = new RhinoConverter();
 
@@ -137,8 +141,6 @@ namespace SpeckleGrasshopper
             SpeckleObjects = new List<SpeckleObject>();
 
             ConvertedObjects = new List<object>();
-
-            StreamId = myReceiver.Stream.StreamId;
 
             myReceiver.OnReady += (sender, e) =>
             {
@@ -262,9 +264,9 @@ namespace SpeckleGrasshopper
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            Debug.WriteLine("\n---\n" +
-                "SolveInstance: streamId {0}, clientId {1}, paused {2}, connected {3}" +
-                "\n---\n", myReceiver.Stream.StreamId, myReceiver.ClientId, this.Paused, myReceiver.IsConnected);
+            //Debug.WriteLine("\n---\n" +
+            //    "SolveInstance: streamId {0}, clientId {1}, paused {2}, connected {3}" +
+            //    "\n---\n", myReceiver.Stream.StreamId, myReceiver.ClientId, this.Paused, myReceiver.IsConnected);
 
             if (Paused)
             {
@@ -279,13 +281,30 @@ namespace SpeckleGrasshopper
 
             if (inputId != StreamId)
             {
-                Debug.WriteLine("Chaningin streams: {0} ::> {1}", inputId, StreamId);
+                Debug.WriteLine("Changing streams: {0} ::> {1}", inputId, StreamId);
+
                 StreamId = inputId;
+
+                if(myReceiver!=null)
+                    myReceiver.Dispose(true);
+
+                myReceiver = new SpeckleApiClient(RestApi, Converter, true);
+
+                InitReceiverEventsAndGlobals();
+
                 myReceiver.IntializeReceiver(StreamId, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString(), AuthToken);
+
+                return;
+            }
+
+            if (myReceiver == null)
+            {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Receiver not intialised.");
                 return;
             }
 
             if (!myReceiver.IsConnected) return;
+
             if (Expired) { Expired = false; UpdateGlobal(); return; }
 
             SetObjects(DA);
@@ -472,7 +491,7 @@ namespace SpeckleGrasshopper
 
                 GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle(System.Drawing.Color.FromArgb(0, 0, 0, 0));
 
-                var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: GH_Palette.Transparent, text: "ID: " + Base.myReceiver.StreamId, highlight: 0, radius: 5);
+                var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: GH_Palette.Transparent, text: "ID: " + Base.StreamId, highlight: 0, radius: 5);
                 streamIdCapsule.Render(graphics, myStyle);
                 streamIdCapsule.Dispose();
 
@@ -504,4 +523,4 @@ namespace SpeckleGrasshopper
         }
 
     }
-}
+};
