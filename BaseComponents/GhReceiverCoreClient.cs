@@ -42,7 +42,8 @@ namespace SpeckleGrasshopper
         public SpeckleApiClient myReceiver;
         List<SpeckleLayer> Layers;
         List<SpeckleObjectPlaceholder> PlaceholderObjects;
-        List<SpeckleObject> RealObjects;
+        List<SpeckleObject> SpeckleObjects;
+        List<object> ConvertedObjects;
 
         Action expireComponentAction;
 
@@ -82,15 +83,19 @@ namespace SpeckleGrasshopper
         {
             try
             {
+                Debug.WriteLine("Trying to read client!");
                 var serialisedClient = reader.GetByteArray("speckleclient");
                 using (var ms = new MemoryStream())
                 {
                     ms.Write(serialisedClient, 0, serialisedClient.Length);
                     ms.Seek(0, SeekOrigin.Begin);
                     myReceiver = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                    InitBasics();
                 }
             }
-            catch { }
+            catch {
+                Debug.WriteLine("No client was present.");
+            }
             return base.Read(reader);
         }
 
@@ -112,6 +117,8 @@ namespace SpeckleGrasshopper
                 {
                     myReceiver = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
                     AuthToken = myForm.apitoken;
+
+                    InitBasics();
                 }
                 else
                 {
@@ -119,6 +126,19 @@ namespace SpeckleGrasshopper
                     return;
                 }
             }
+        }
+
+        public void InitBasics()
+        {
+            Converter = new RhinoConverter();
+
+            ObjectCache = new Dictionary<string, SpeckleObject>();
+
+            SpeckleObjects = new List<SpeckleObject>();
+
+            ConvertedObjects = new List<object>();
+
+            StreamId = myReceiver.Stream.StreamId;
 
             myReceiver.OnReady += (sender, e) =>
             {
@@ -130,12 +150,6 @@ namespace SpeckleGrasshopper
             myReceiver.OnError += OnError;
 
             expireComponentAction = () => this.ExpireSolution(true);
-
-            Converter = new RhinoConverter();
-
-            ObjectCache = new Dictionary<string, SpeckleObject>();
-
-            RealObjects = new List<SpeckleObject>();
         }
 
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
@@ -190,11 +204,16 @@ namespace SpeckleGrasshopper
                     ObjectCache[x.DatabaseId] = x;
 
                 // populate real objects
-                RealObjects.Clear();
+                SpeckleObjects.Clear();
                 foreach (var objId in getStream.Result.Stream.Objects)
-                    RealObjects.Add(ObjectCache[objId]);
+                    SpeckleObjects.Add(ObjectCache[objId]);
+
+                ConvertedObjects = Converter.ToNative(SpeckleObjects).ToList();
 
                 UpdateOutputStructure();
+
+                Debug.WriteLine("\n----\nGlobal update done for stream {0}, client {1}, object count {2} \n---\n", getStream.Result.Stream.StreamId, myReceiver.ClientId, ConvertedObjects.Count);
+
                 Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
             });
         }
@@ -243,6 +262,10 @@ namespace SpeckleGrasshopper
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            Debug.WriteLine("\n---\n" +
+                "SolveInstance: streamId {0}, clientId {1}, paused {2}, connected {3}" +
+                "\n---\n", myReceiver.Stream.StreamId, myReceiver.ClientId, this.Paused, myReceiver.IsConnected);
+
             if (Paused)
             {
                 SetObjects(DA);
@@ -254,8 +277,9 @@ namespace SpeckleGrasshopper
 
             if (inputId == null && StreamId == null) return;
 
-            else if ((inputId != StreamId) && (inputId != null))
+            if (inputId != StreamId)
             {
+                Debug.WriteLine("Chaningin streams: {0} ::> {1}", inputId, StreamId);
                 StreamId = inputId;
                 myReceiver.IntializeReceiver(StreamId, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString(), AuthToken);
                 return;
@@ -300,11 +324,9 @@ namespace SpeckleGrasshopper
         {
             if (Layers == null) return;
 
-            var convObjs = Converter.ToNative(RealObjects).ToList();
-
             foreach (SpeckleLayer layer in Layers)
             {
-                var subset = convObjs.GetRange((int)layer.StartIndex, (int)layer.ObjectCount);
+                var subset = ConvertedObjects.GetRange((int)layer.StartIndex, (int)layer.ObjectCount);
 
                 if (layer.Topology == "")
                     DA.SetDataList((int)layer.OrderIndex, subset);
