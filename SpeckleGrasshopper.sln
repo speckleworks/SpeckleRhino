@@ -15,6 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecklePopup", "..\SpeckleA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleUserData", "..\SpeckleUserDataUtils\SpeckleUserData.csproj", "{46948630-9BB9-4624-8BF9-C866F2B52674}"
 	ProjectSection(ProjectDependencies) = postProject
+		{CFE27D3D-8A1A-43F9-9387-8FD9E119E174} = {CFE27D3D-8A1A-43F9-9387-8FD9E119E174}
 		{E967A1E1-37FF-4394-B793-6987A7958016} = {E967A1E1-37FF-4394-B793-6987A7958016}
 	EndProjectSection
 EndProject
