@@ -34,6 +34,9 @@ namespace SpeckleGrasshopper
     {
         public string Log { get; set; }
 
+        string RestApi;
+        string StreamId;
+
         public Action ExpireComponentAction;
 
         public SpeckleApiClient mySender;
@@ -86,7 +89,8 @@ namespace SpeckleGrasshopper
                     ms.Write(serialisedClient, 0, serialisedClient.Length);
                     ms.Seek(0, SeekOrigin.Begin);
                     mySender = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
-                    var x = mySender;
+                    RestApi = mySender.BaseUrl;
+                    StreamId = mySender.StreamId;
                 }
             }
             catch { }
@@ -111,6 +115,7 @@ namespace SpeckleGrasshopper
                 if (myForm.restApi != null && myForm.apitoken != null)
                 {
                     mySender = new SpeckleApiClient(myForm.restApi, new RhinoConverter());
+                    RestApi = myForm.restApi;
                     mySender.IntializeSender(myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString()).ContinueWith(task =>
                        {
                            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
@@ -123,6 +128,11 @@ namespace SpeckleGrasshopper
                 }
             }
             else { mySender.Converter = new RhinoConverter(); }
+
+            mySender.OnReady += (sender, e) =>
+            {
+                StreamId = mySender.StreamId;
+            };
 
             mySender.OnWsMessage += OnWsMessage;
 
@@ -168,6 +178,31 @@ namespace SpeckleGrasshopper
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
         {
             base.AppendAdditionalMenuItems(menu);
+            GH_DocumentObject.Menu_AppendItem(menu, "Copy streamId (" + StreamId + ") to clipboard.", (sender, e) =>
+            {
+                if (StreamId != null)
+                    System.Windows.Clipboard.SetText(StreamId);
+            });
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View stream data.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId);
+            });
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View layers data online.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/layers");
+            });
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View objects data online.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64");
+            });
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -183,6 +218,8 @@ namespace SpeckleGrasshopper
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             if (mySender == null) return;
+
+            StreamId = mySender.StreamId;
 
             DA.SetData(0, Log);
             DA.SetData(1, mySender.StreamId);
@@ -226,6 +263,9 @@ namespace SpeckleGrasshopper
                     obj.DatabaseId = tres.Result.Objects[k++];
                     ObjectCache[obj.Hash] = obj;
                 }
+
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
+                Message = "Data sent\n@" + DateTime.Now.ToString("hh:mm:ss");
             });
         }
 

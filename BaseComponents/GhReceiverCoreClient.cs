@@ -99,7 +99,8 @@ namespace SpeckleGrasshopper
                     InitReceiverEventsAndGlobals();
                 }
             }
-            catch {
+            catch
+            {
                 Debug.WriteLine("No client was present.");
             }
             return base.Read(reader);
@@ -157,6 +158,32 @@ namespace SpeckleGrasshopper
         public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
         {
             base.AppendAdditionalMenuItems(menu);
+            GH_DocumentObject.Menu_AppendItem(menu, "Copy streamId (" + StreamId + ") to clipboard.", (sender, e) =>
+             {
+                 if (StreamId != null)
+                     System.Windows.Clipboard.SetText(StreamId);
+             });
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View stream data.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId);
+            });
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View layers data online.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/layers");
+            });
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View objects data online.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64");
+            });
+
         }
 
         public virtual void OnError(object source, SpeckleEventArgs e)
@@ -168,7 +195,7 @@ namespace SpeckleGrasshopper
         {
             if (Paused)
             {
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Update available.");
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Update available since " + DateTime.Now);
                 Expired = true;
                 return;
             }
@@ -214,7 +241,7 @@ namespace SpeckleGrasshopper
 
                 UpdateOutputStructure();
 
-                Debug.WriteLine("\n----\nGlobal update done for stream {0}, client {1}, object count {2} \n---\n", getStream.Result.Stream.StreamId, myReceiver.ClientId, ConvertedObjects.Count);
+                Message = "Got data\n@" + DateTime.Now.ToString("hh:mm:ss");
 
                 Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
             });
@@ -264,10 +291,6 @@ namespace SpeckleGrasshopper
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            //Debug.WriteLine("\n---\n" +
-            //    "SolveInstance: streamId {0}, clientId {1}, paused {2}, connected {3}" +
-            //    "\n---\n", myReceiver.Stream.StreamId, myReceiver.ClientId, this.Paused, myReceiver.IsConnected);
-
             if (Paused)
             {
                 SetObjects(DA);
@@ -285,7 +308,7 @@ namespace SpeckleGrasshopper
 
                 StreamId = inputId;
 
-                if(myReceiver!=null)
+                if (myReceiver != null)
                     myReceiver.Dispose(true);
 
                 myReceiver = new SpeckleApiClient(RestApi, Converter, true);
