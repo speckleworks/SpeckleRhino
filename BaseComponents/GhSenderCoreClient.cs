@@ -203,6 +203,44 @@ namespace SpeckleGrasshopper
                 if (StreamId == null) return;
                 System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64");
             });
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+            GH_DocumentObject.Menu_AppendItem(menu, "Save current stream as a version.", (sender, e) =>
+            {
+                var cloneResult = mySender.StreamClone(StreamId);
+                mySender.Stream.Children.Add(cloneResult.Clone.StreamId);
+
+                mySender.BroadcastMessage(new { eventType = "update-children" });
+
+                System.Windows.MessageBox.Show("Stream version saved. CloneId: " + cloneResult.Clone.StreamId);
+            });
+
+            if (mySender.Stream == null) return;
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+            if (mySender.Stream.Parent == null)
+                GH_DocumentObject.Menu_AppendItem(menu: menu, text: "This is a parent stream.", enabled: false, click: null);
+            else
+                GH_DocumentObject.Menu_AppendItem(menu: menu, text: "Parent: " + mySender.Stream.Parent, click: (sender, e) =>
+                {
+                    System.Windows.Clipboard.SetText(mySender.Stream.Parent);
+                    System.Windows.MessageBox.Show("Parent id copied to clipboard. Share away!");
+                });
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+            GH_DocumentObject.Menu_AppendItem(menu, "Children:");
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            foreach (string childId in mySender.Stream.Children)
+            {
+                GH_DocumentObject.Menu_AppendItem(menu, "Child " + childId, (sender, e) =>
+                {
+                    System.Windows.Clipboard.SetText(childId);
+                    System.Windows.MessageBox.Show("Child id copied to clipboard. Share away!");
+                });
+            }
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
@@ -211,8 +249,8 @@ namespace SpeckleGrasshopper
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddTextParameter("out", "out", "Log data.", GH_ParamAccess.item);
-            pManager.AddTextParameter("ID", "ID", "The stream's short id.", GH_ParamAccess.item);
+            pManager.AddTextParameter("log", "log", "Log data.", GH_ParamAccess.item);
+            pManager.AddTextParameter("stream id", "streamId", "The stream's short id.", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)

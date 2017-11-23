@@ -184,6 +184,32 @@ namespace SpeckleGrasshopper
                 System.Diagnostics.Process.Start(RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64");
             });
 
+            if (myReceiver.Stream == null) return;
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+            if (myReceiver.Stream.Parent == null)
+                GH_DocumentObject.Menu_AppendItem(menu: menu, text: "This is a parent stream.", enabled: false, click: null);
+            else
+                GH_DocumentObject.Menu_AppendItem(menu: menu, text: "Parent: " + myReceiver.Stream.Parent, click: (sender, e) =>
+                {
+                    System.Windows.Clipboard.SetText(myReceiver.Stream.Parent);
+                    System.Windows.MessageBox.Show("Parent id copied to clipboard. Share away!");
+                });
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+            GH_DocumentObject.Menu_AppendItem(menu, "Children:");
+            GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            foreach (string childId in myReceiver.Stream.Children)
+            {
+                GH_DocumentObject.Menu_AppendItem(menu, "Child " + childId, (sender, e) =>
+                {
+                    System.Windows.Clipboard.SetText(childId);
+                    System.Windows.MessageBox.Show("Child id copied to clipboard. Share away!");
+                });
+            }
+
         }
 
         public virtual void OnError(object source, SpeckleEventArgs e)
@@ -207,6 +233,9 @@ namespace SpeckleGrasshopper
                     break;
                 case "update-meta":
                     UpdateMeta();
+                    break;
+                case "update-children":
+                    UpdateChildren();
                     break;
                 default:
                     CustomMessageHandler((string)e.EventObject.args.eventType, e);
@@ -257,6 +286,13 @@ namespace SpeckleGrasshopper
             NickName = getName.Result.Name;
             Layers = getLayers.Result.Layers.ToList();
             UpdateOutputStructure();
+        }
+
+        public virtual void UpdateChildren()
+        {
+            // need a call to just get the kids
+            var getStream = myReceiver.StreamGet(myReceiver.StreamId);
+            myReceiver.Stream = getStream.Stream;
         }
 
         public virtual void CustomMessageHandler(string eventType, SpeckleEventArgs e)
