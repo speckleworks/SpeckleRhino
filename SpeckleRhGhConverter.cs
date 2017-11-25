@@ -118,7 +118,7 @@ namespace SpeckleRhinoConverter
             if (_object.Properties == null)
                 return encodedObject;
 
-            if(encodedObject is GeometryBase)
+            if (encodedObject is GeometryBase)
             {
                 var fullObj = encodedObject as GeometryBase;
                 fullObj.UserDictionary.ReplaceContentsWith(PropertiesToNative(_object.Properties));
@@ -286,127 +286,38 @@ namespace SpeckleRhinoConverter
         /// <returns></returns>
         public static ArchivableDictionary PropertiesToNative(Dictionary<string, object> dict)
         {
-            if (dict == null) return null;
-
-            try
-            {
-                if ((bool)dict["_conversion_visited_flag"] == true)
-                {
-                    throw new Exception("Circular reference in user dictionary. Whopsie.");
-                }
-            }
-            catch { }
-
             ArchivableDictionary myDictionary = new ArchivableDictionary();
-            // Why all this mess? 
-            // Because I can't have a archivabledictionary.set( random type!) so i have to specify the cast...
+            if (dict == null) return myDictionary;
+
             using (var converter = new RhinoConverter())
             {
                 foreach (var key in dict.Keys)
                 {
                     if (dict[key] is Dictionary<string, object>)
+                    {
                         myDictionary.Set(key, PropertiesToNative((Dictionary<string, object>)dict[key]));
-
+                    }
                     else if (dict[key] is SpeckleObject)
                     {
-                        // Thought you had a great day? Well this code is going to make it worse!
-                        switch (((SpeckleObject)dict[key]).Type)
-                        {
-                            case "invalid_object":
-                                myDictionary.Set(key, "Invalid object");
-                                break;
-                            case "Number":
-                                myDictionary.Set(key, (double)((SpeckleNumber)dict[key]).Value);
-                                break;
-                            case "Boolean":
-                                myDictionary.Set(key, (bool)((SpeckleBoolean)dict[key]).Value);
-                                break;
-                            case "Interval":
-                                myDictionary.Set(key, (Interval)converter.ToNative((SpeckleObject)dict[key]));
-                                break;
-                            case "Interval2d":
-                                myDictionary.Set(key, "The Rhino SDK does not support UVIntervals as user params. FML.");
-                                break;
-                            case "String":
-                                myDictionary.Set(key, (string)((SpeckleString)dict[key]).Value);
-                                break;
-                            case "Point":
-                                myDictionary.Set(key, ((SpecklePoint)dict[key]).ToRhino());
-                                break;
-                            case "Vector":
-                                myDictionary.Set(key, ((SpeckleVector)dict[key]).ToRhino());
-                                break;
-                            case "Plane":
-                                myDictionary.Set(key, ((SpecklePlane)dict[key]).ToRhino());
-                                break;
-                            case "Line":
-                                myDictionary.Set(key, ((SpeckleLine)dict[key]).ToRhino());
-                                break;
-                            case "Circle":
-                                myDictionary.Set(key, ((SpeckleCircle)dict[key]).ToRhino());
-                                break;
-                            case "Ellipse":
-                                myDictionary.Set(key, ((SpeckleEllipse)dict[key]).ToRhino());
-                                break;
-                            case "Arc":
-                                myDictionary.Set(key, ((SpeckleArc)dict[key]).ToRhino());
-                                break;
-                            case "Rectangle":
-                                myDictionary.Set(key, (Rectangle)converter.ToNative((SpeckleObject)dict[key]));
-                                break;
-                            case "Box":
-                                myDictionary.Set(key, "The Rhino SDK does not support Boxes as user params. FML.");
-                                break;
-                            case "Polyline":
-                                myDictionary.Set(key, ((SpecklePolyline)dict[key]).ToRhino().ToNurbsCurve());
-                                break;
-                            case "Curve":
-                                myDictionary.Set(key, ((SpeckleCurve)dict[key]).ToRhino());
-                                break;
-                            case "Polycurve":
-                                myDictionary.Set(key, ((SpecklePolycurve)dict[key]).ToRhino());
-                                break;
-                            case "Brep":
-                                myDictionary.Set(key, (Brep)converter.ToNative((SpeckleObject)dict[key]));
-                                break;
-                            case "Mesh":
-                                myDictionary.Set(key, (Mesh)converter.ToNative((SpeckleObject)dict[key]));
-                                break;
-                            case "Annotation":
-                                myDictionary.Set(key, (TextDot)converter.ToNative((SpeckleObject)dict[key]));
-                                myDictionary.Set(key, (TextEntity)converter.ToNative((SpeckleObject)dict[key]));
-                                break;
-                            default:
-                                myDictionary.Set(key, "This is the default statement in a switch, which means something went wrong. Sorry!");
-                                break;
-                        }
+                        var converted = converter.ToNative((SpeckleObject)dict[key]);
+
+                        if (converted is GeometryBase)
+                            myDictionary.Set(key, (GeometryBase)converted);
+                        else if (converted is Interval)
+                            myDictionary.Set(key, (Interval)converted);
+                        else if (converted is Vector3d)
+                            myDictionary.Set(key, (Vector3d)converted);
+                        else if (converted is Plane)
+                            myDictionary.Set(key, (Plane)converted);
                     }
-                    else
-                    {
-                        try
-                        {
-                            myDictionary.Set(key, Convert.ToInt32(dict[key]));
-                        }
-                        catch { }
-
-                        try
-                        {
-                            myDictionary.Set(key, (double)dict[key]);
-                        }
-                        catch { }
-
-                        try
-                        {
-                            myDictionary.Set(key, (bool)dict[key]);
-                        }
-                        catch { }
-
-                        try
-                        {
-                            myDictionary.Set(key, (string)dict[key]);
-                        }
-                        catch { }
-                    }
+                    else if (dict[key] is int)
+                        myDictionary.Set(key, Convert.ToInt32(dict[key]));
+                    else if (dict[key] is double)
+                        myDictionary.Set(key, (double)dict[key]);
+                    else if (dict[key] is bool)
+                        myDictionary.Set(key, (bool)dict[key]);
+                    else if (dict[key] is string)
+                        myDictionary.Set(key, (string)dict[key]);
                 }
 
             }
@@ -576,10 +487,11 @@ namespace SpeckleRhinoConverter
         {
             return new SpeckleRectangle(rect.Corner(0).ToSpeckle(), rect.Corner(1).ToSpeckle(), rect.Corner(2).ToSpeckle(), rect.Corner(3).ToSpeckle());
         }
-        public static Rectangle3d ToRhino(this SpeckleRectangle rect)
+
+        public static NurbsCurve ToRhino(this SpeckleRectangle rect)
         {
             var myPlane = new Plane(rect.A.ToRhino().Location, new Vector3d(rect.B.ToRhino().Location), new Vector3d(rect.C.ToRhino().Location));
-            return new Rectangle3d(myPlane, rect.A.ToRhino().Location, rect.B.ToRhino().Location);
+            return new Rectangle3d(myPlane, rect.A.ToRhino().Location, rect.B.ToRhino().Location).ToNurbsCurve();
         }
 
         // Circle
@@ -618,7 +530,6 @@ namespace SpeckleRhinoConverter
             Ellipse elp = new Ellipse(e.Plane.ToRhino(), (double)e.FirstRadius, (double)e.SecondRadius);
             return elp.ToNurbsCurve();
         }
-
 
         // Box
         public static SpeckleBox ToSpeckle(this Box box)
@@ -659,7 +570,7 @@ namespace SpeckleRhinoConverter
             return myPoly;
         }
 
-        public static Curve ToRhino(this SpecklePolycurve p)
+        public static NurbsCurve ToRhino(this SpecklePolycurve p)
         {
 
             PolyCurve myPolyc = new PolyCurve();
@@ -677,7 +588,7 @@ namespace SpeckleRhinoConverter
                 if (segment.Type == "Polyline")
                     myPolyc.Append(((SpecklePolyline)segment).ToRhino().ToNurbsCurve());
             }
-            return myPolyc;
+            return myPolyc.ToNurbsCurve();
         }
 
         // Curve
