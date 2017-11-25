@@ -238,7 +238,7 @@ namespace SpeckleRhinoConverter
                 }
                 else
                 {
-                    obj = ((Curve)myObject).ToSpeckle();
+                    obj = ((Curve)myObject).ToNurbsCurve().ToSpeckle();
                 }
 
                 obj.Properties = crvProps;
@@ -636,20 +636,39 @@ namespace SpeckleRhinoConverter
         // TODO: Polycurve
 
         // Curve
-        public static SpeckleCurve ToSpeckle(this Curve curve)
+        public static SpeckleCurve ToSpeckle(this NurbsCurve curve)
         {
             Polyline poly;
             curve.ToPolyline(0, 1, 0, 0, 0, 0.1, 0, 0, true).TryGetPolyline(out poly);
 
-            return new SpeckleCurve(RhinoConverter.getBase64(curve), "ON", poly.ToSpeckle(), properties: RhinoConverter.PropertiesToSpeckle(curve.UserDictionary));
+            var x = new SpeckleCurve(poly.ToSpeckle(), properties: RhinoConverter.PropertiesToSpeckle(curve.UserDictionary));
+
+            x.Weights = curve.Points.Select(ctp => ctp.Weight).ToArray();
+            x.Points = curve.Points.Select(ctp => ctp.Location).ToFlatArray();
+            x.Knots = curve.Knots.ToArray();
+            x.Degree = curve.Degree;
+            x.Periodic = curve.IsPeriodic;
+            x.Rational = curve.IsRational;
+            x.Domain = curve.Domain.ToSpeckle();
+
+            return x;
         }
 
-        public static Curve ToRhino(this SpeckleCurve curve)
+        public static NurbsCurve ToRhino(this SpeckleCurve curve)
         {
-            if (curve.Provenance == "ON")
-                return (Curve)Converter.getObjFromString(curve.Base64);
-            else
-                throw new Exception("Unknown curve provenance: " + curve.Provenance + ". Don't know how to convert from one to the other.");
+            var ptsList = curve.Points.ToPoints();
+
+            // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
+            var myCurve = NurbsCurve.Create(curve.Periodic, curve.Degree, new Point3d[curve.Periodic ? ptsList.Length - 2 : ptsList.Length]);
+            myCurve.Domain = curve.Domain.ToRhino();
+
+            for (int i = 0; i < ptsList.Length; i++)
+                myCurve.Points.SetPoint(i, ptsList[i].X, ptsList[i].Y, ptsList[i].Z, curve.Weights[i]);
+
+            for (int i = 0; i < curve.Knots.Length; i++)
+                myCurve.Knots[i] = curve.Knots[i];
+
+            return myCurve;
         }
 
         // Meshes
