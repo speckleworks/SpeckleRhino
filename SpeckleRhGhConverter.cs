@@ -90,6 +90,9 @@ namespace SpeckleRhinoConverter
                 case "Curve":
                     encodedObject = ((SpeckleCurve)_object).ToRhino();
                     break;
+                case "Polycurve":
+                    encodedObject = ((SpecklePolycurve)_object).ToRhino();
+                    break;
                 case "Brep":
                     encodedObject = ((SpeckleBrep)_object).ToRhino();
                     break;
@@ -189,7 +192,6 @@ namespace SpeckleRhinoConverter
             if (myObject is Plane)
                 return ((Plane)myObject).ToSpeckle();
 
-            // I <3 CURVES, where <3 = ballsack
             if (myObject is Curve)
             {
                 var crvProps = PropertiesToSpeckle(((Curve)myObject).UserDictionary);
@@ -198,7 +200,7 @@ namespace SpeckleRhinoConverter
                 if (((Curve)myObject).IsLinear())
                 {
 
-                    obj = new SpeckleString() { Value = "It is a LINE !" };
+                    obj = (new Line(((Curve)myObject).PointAtStart, ((Curve)myObject).PointAtEnd)).ToSpeckle();
 
                 }
                 else if (((Curve)myObject).IsPolyline())
@@ -233,7 +235,7 @@ namespace SpeckleRhinoConverter
                 else if (myObject is PolyCurve)
                 {
 
-                    obj = new SpeckleString() { Value = "It is a polycurve!" };
+                    obj = ((PolyCurve)myObject).ToSpeckle();
 
                 }
                 else
@@ -634,6 +636,42 @@ namespace SpeckleRhinoConverter
         }
 
         // TODO: Polycurve
+
+        public static SpecklePolycurve ToSpeckle(this PolyCurve p)
+        {
+            SpecklePolycurve myPoly = new SpecklePolycurve();
+
+            p.RemoveNesting();
+            var segments = p.Explode();
+
+            using (var rhc = new RhinoConverter())
+            {
+                myPoly.Segments = segments.Select(s => { return rhc.ToSpeckle(s); }).ToArray();
+            }
+
+            return myPoly;
+        }
+
+        public static Curve ToRhino(this SpecklePolycurve p)
+        {
+
+            PolyCurve myPolyc = new PolyCurve();
+            foreach (var segment in p.Segments)
+            {
+                if (segment.Type == "Curve")
+                    myPolyc.Append(((SpeckleCurve)segment).ToRhino());
+
+                if (segment.Type == "Line")
+                    myPolyc.Append(((SpeckleLine)segment).ToRhino());
+
+                if (segment.Type == "Arc")
+                    myPolyc.Append(((SpeckleArc)segment).ToRhino());
+
+                if (segment.Type == "Polyline")
+                    myPolyc.Append(((SpecklePolyline)segment).ToRhino().ToNurbsCurve());
+            }
+            return myPolyc;
+        }
 
         // Curve
         public static SpeckleCurve ToSpeckle(this NurbsCurve curve)
