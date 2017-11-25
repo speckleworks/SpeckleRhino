@@ -554,7 +554,7 @@ namespace SpeckleGrasshopper
                 streamIdCapsule.Render(graphics, myStyle);
                 streamIdCapsule.Dispose();
 
-                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName + (Base.Paused ? " (Paused)" : ""), highlight: 0, radius: 5);
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: "(R) " + Base.NickName + (Base.Paused ? " (Paused)" : ""), highlight: 0, radius: 5);
                 streamNameCapsule.Render(graphics, myStyle);
                 streamNameCapsule.Dispose();
 

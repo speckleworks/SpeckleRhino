@@ -52,7 +52,7 @@ namespace SpeckleGrasshopper
         public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
         public GhSenderClient()
-          : base("Data Sender", "Data Sender",
+          : base("Data Sender", "Anonymous Stream",
               "Sends data to Speckle.",
               "Speckle", "I/O")
         {
@@ -489,7 +489,7 @@ namespace SpeckleGrasshopper
                 streamIdCapsule.Render(graphics, myStyle);
                 streamIdCapsule.Dispose();
 
-                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName, highlight: 0, radius: 5);
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: "(S) " + Base.NickName, highlight: 0, radius: 5);
                 streamNameCapsule.Render(graphics, myStyle);
                 streamNameCapsule.Dispose();
             }
