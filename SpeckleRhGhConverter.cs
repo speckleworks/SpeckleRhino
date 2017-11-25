@@ -72,6 +72,12 @@ namespace SpeckleRhinoConverter
                 case "Circle":
                     encodedObject = ((SpeckleCircle)_object).ToRhino();
                     break;
+                case "Arc":
+                    encodedObject = ((SpeckleArc)_object).ToRhino();
+                    break;
+                case "Ellipse":
+                    encodedObject = ((SpeckleEllipse)_object).ToRhino();
+                    break;
                 case "Rectangle":
                     encodedObject = ((SpeckleRectangle)_object).ToRhino();
                     break;
@@ -112,7 +118,7 @@ namespace SpeckleRhinoConverter
             CommonObject myObj = null;
 
             // polyline special case: force it to be a nurbs curve.
-            if (_object.Type == "Polyline")
+            if (_object.Type == "Polyline") // Add Polycurves, arcs, ellipses, points!!! etc.
                 myObj = ((Polyline)encodedObject).ToNurbsCurve();
             else
                 myObj = encodedObject as CommonObject;
@@ -183,20 +189,52 @@ namespace SpeckleRhinoConverter
             if (myObject is Plane)
                 return ((Plane)myObject).ToSpeckle();
 
+            // I <3 CURVES, where <3 = ballsack
             if (myObject is Curve)
             {
                 var crvProps = PropertiesToSpeckle(((Curve)myObject).UserDictionary);
                 SpeckleObject obj = new SpeckleObject();
 
-                if (((Curve)myObject).IsPolyline())
+                if (((Curve)myObject).IsLinear())
                 {
+
+                    obj = new SpeckleString() { Value = "It is a LINE !" };
+
+                }
+                else if (((Curve)myObject).IsPolyline())
+                {
+
                     Polyline p = null; ((Curve)myObject).TryGetPolyline(out p);
                     obj = p.ToSpeckle();
+
                 }
                 else if (((Curve)myObject).IsCircle())
                 {
-                    Circle c = new Circle(); ((Curve)myObject).TryGetCircle(out c);
+
+                    Circle c = new Circle();
+                    ((Curve)myObject).TryGetCircle(out c);
                     obj = c.ToSpeckle();
+
+                }
+                else if (((Curve)myObject).IsArc())
+                {
+
+                    Arc a = new Arc(); ((Curve)myObject).TryGetArc(out a);
+                    obj = a.ToSpeckle();
+
+                }
+                else if (((Curve)myObject).IsEllipse())
+                {
+
+                    Ellipse a = new Ellipse(); ((Curve)myObject).TryGetEllipse(out a);
+                    obj = a.ToSpeckle();
+
+                }
+                else if (myObject is PolyCurve)
+                {
+
+                    obj = new SpeckleString() { Value = "It is a polycurve!" };
+
                 }
                 else
                 {
@@ -204,8 +242,8 @@ namespace SpeckleRhinoConverter
                 }
 
                 obj.Properties = crvProps;
-                obj.SetFullHash(); // why can't polylines have fucking user dictionaries man this sucks 
-                //obj.properties = crvProps; // <MMMM?WAT
+                obj.SetFullHash();
+
                 return obj;
             }
 
@@ -214,6 +252,16 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Circle)
                 return ((Circle)myObject).ToSpeckle();
+
+            if (myObject is Arc)
+                return ((Arc)myObject).ToSpeckle();
+
+            if (myObject is Ellipse)
+                return ((Ellipse)myObject).ToSpeckle();
+
+            // TODO: Polyline
+            // TODO: Polycurve
+            // TODO: NurbsCurve
 
             if (myObject is Box)
                 return ((Box)myObject).ToSpeckle();
@@ -231,8 +279,11 @@ namespace SpeckleRhinoConverter
 
             if (myObject is TextDot)
                 return ((TextDot)myObject).ToSpeckle();
-            return new SpeckleString(myObject.ToString());
+
+            // worst case, fail in a very stupid way:
+            return new SpeckleString(Newtonsoft.Json.JsonConvert.SerializeObject(myObject));
         }
+
 
         /// <summary>
         /// Converts a Speckle object's properties to a native Rhino UserDictionary (ArchivableDictionary).
@@ -251,7 +302,7 @@ namespace SpeckleRhinoConverter
             catch { }
 
             ArchivableDictionary myDictionary = new ArchivableDictionary();
-
+            // WHY IS THIS HAPPENING? well because I can't have a archivabledictionary.set( random type!) so i have to specify the cast...
             using (var converter = new RhinoConverter())
             {
                 foreach (var key in dict.Keys)
@@ -486,6 +537,7 @@ namespace SpeckleRhinoConverter
         {
             return new SpecklePlane(plane.Origin.ToSpeckle(), plane.Normal.ToSpeckle(), plane.XAxis.ToSpeckle(), plane.YAxis.ToSpeckle());
         }
+
         public static Plane ToRhino(this SpecklePlane plane)
         {
             var returnPlane = new Plane(plane.Origin.ToRhino(), plane.Normal.ToRhino());
@@ -533,6 +585,32 @@ namespace SpeckleRhinoConverter
             return circle.ToNurbsCurve();
         }
 
+        // Arc
+        public static SpeckleArc ToSpeckle(this Arc a)
+        {
+            SpeckleArc arc = new SpeckleArc(a.Plane.ToSpeckle(), a.Radius, a.StartAngle, a.EndAngle, a.Angle);
+            return arc;
+        }
+
+        public static NurbsCurve ToRhino(this SpeckleArc a)
+        {
+            Arc arc = new Arc(a.Plane.ToRhino(), (double)a.Radius, (double)a.AngleRadians);
+            return arc.ToNurbsCurve();
+        }
+
+        //Ellipse
+        public static SpeckleEllipse ToSpeckle(this Ellipse e)
+        {
+            return new SpeckleEllipse(e.Plane.ToSpeckle(), e.Radius1, e.Radius2);
+        }
+
+        public static NurbsCurve ToRhino(this SpeckleEllipse e)
+        {
+            Ellipse elp = new Ellipse(e.Plane.ToRhino(), (double)e.FirstRadius, (double)e.SecondRadius);
+            return elp.ToNurbsCurve();
+        }
+
+
         // Box
         public static SpeckleBox ToSpeckle(this Box box)
         {
@@ -554,6 +632,8 @@ namespace SpeckleRhinoConverter
         {
             return new Polyline(poly.Value.ToPoints());
         }
+
+        // TODO: Polycurve
 
         // Curve
         public static SpeckleCurve ToSpeckle(this Curve curve)
@@ -628,6 +708,7 @@ namespace SpeckleRhinoConverter
             else
                 throw new Exception("Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other.");
         }
+
         // Texts & Annotations
         public static SpeckleAnnotation ToSpeckle(this TextEntity textentity)
         {
