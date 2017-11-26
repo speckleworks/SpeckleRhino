@@ -150,7 +150,10 @@ namespace SpeckleGrasshopper
 
             myReceiver.OnWsMessage += OnWsMessage;
 
-            myReceiver.OnError += OnError;
+            myReceiver.OnError += (sender, e) =>
+            {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventName + ": " + e.EventData);
+            };
 
             expireComponentAction = () => this.ExpireSolution(true);
         }
@@ -165,6 +168,12 @@ namespace SpeckleGrasshopper
              });
 
             GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View stream.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi.Replace("api","view") + @"/?" + StreamId);
+            });
 
             GH_DocumentObject.Menu_AppendItem(menu, "View stream data.", (sender, e) =>
             {
@@ -210,11 +219,6 @@ namespace SpeckleGrasshopper
                 });
             }
 
-        }
-
-        public virtual void OnError(object source, SpeckleEventArgs e)
-        {
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventData);
         }
 
         public virtual void OnWsMessage(object source, SpeckleEventArgs e)
@@ -426,7 +430,7 @@ namespace SpeckleGrasshopper
                             GH_Path myPath = new GH_Path(branchIndexes.ToArray());
 
                             for (int i = 0; i < elCount; i++)
-                                tree.EnsurePath(myPath).Add(subset[subsetCount + i]);
+                                tree.EnsurePath(myPath).Add(new Grasshopper.Kernel.Types.GH_ObjectWrapper(subset[subsetCount + i]));
                             subsetCount += elCount;
                         }
                     }
@@ -554,7 +558,7 @@ namespace SpeckleGrasshopper
                 streamIdCapsule.Render(graphics, myStyle);
                 streamIdCapsule.Dispose();
 
-                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName + (Base.Paused ? " (Paused)" : ""), highlight: 0, radius: 5);
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: "(R) " + Base.NickName + (Base.Paused ? " (Paused)" : ""), highlight: 0, radius: 5);
                 streamNameCapsule.Render(graphics, myStyle);
                 streamNameCapsule.Dispose();
 

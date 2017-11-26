@@ -100,7 +100,7 @@ namespace SpeckleGrasshopper
 
             var cast = myObj as Grasshopper.Kernel.Types.GH_ObjectWrapper;
             var result = c.ToNative((SpeckleObject) cast.Value);
-            DA.SetData(0, result);
+            DA.SetData(0, new Grasshopper.Kernel.Types.GH_ObjectWrapper(result));
         }
 
         /// <summary>

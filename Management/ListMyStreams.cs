@@ -13,7 +13,7 @@ namespace SpeckleGrasshopper.Management
     {
         List<DataStream> OwnedStreams = new List<DataStream>();
         List<DataStream> SharedStreams = new List<DataStream>();
-        BaseSpeckleApiClient Client = new BaseSpeckleApiClient();
+        SpeckleApiClient Client = new SpeckleApiClient();
 
         SpeckleAccount OldAccount;
 

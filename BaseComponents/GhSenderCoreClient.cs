@@ -52,7 +52,7 @@ namespace SpeckleGrasshopper
         public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
         public GhSenderClient()
-          : base("Data Sender", "Data Sender",
+          : base("Data Sender", "Anonymous Stream",
               "Sends data to Speckle.",
               "Speckle", "I/O")
         {
@@ -72,10 +72,15 @@ namespace SpeckleGrasshopper
                     {
                         var formatter = new BinaryFormatter();
                         formatter.Serialize(ms, mySender);
+                        var arr = ms.ToArray();
+                        var arrr = arr;
                         writer.SetByteArray("speckleclient", ms.ToArray());
                     }
             }
-            catch { }
+            catch (Exception err)
+            {
+                throw err;
+            }
             return base.Write(writer);
         }
 
@@ -84,16 +89,21 @@ namespace SpeckleGrasshopper
             try
             {
                 var serialisedClient = reader.GetByteArray("speckleclient");
+                var copy = serialisedClient;
                 using (var ms = new MemoryStream())
                 {
                     ms.Write(serialisedClient, 0, serialisedClient.Length);
                     ms.Seek(0, SeekOrigin.Begin);
                     mySender = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                    var x = mySender;
                     RestApi = mySender.BaseUrl;
                     StreamId = mySender.StreamId;
                 }
             }
-            catch { }
+            catch (Exception err)
+            {
+                throw err;
+            }
             return base.Read(reader);
         }
 
@@ -141,6 +151,12 @@ namespace SpeckleGrasshopper
                 this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
             };
 
+            mySender.OnError += (sender, e) =>
+            {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventName + ": " + e.EventData);
+                this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
+            };
+
             ExpireComponentAction = () => ExpireSolution(true);
 
             ObjectChanged += (sender, e) => UpdateMetadata();
@@ -185,6 +201,12 @@ namespace SpeckleGrasshopper
             });
 
             GH_DocumentObject.Menu_AppendSeparator(menu);
+
+            GH_DocumentObject.Menu_AppendItem(menu, "View stream.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi.Replace("api", "view") + @"/?" + StreamId);
+            });
 
             GH_DocumentObject.Menu_AppendItem(menu, "View stream data.", (sender, e) =>
             {
@@ -292,19 +314,21 @@ namespace SpeckleGrasshopper
             payload.Layers = BucketLayers;
             payload.Name = BucketName;
             payload.Objects = convertedObjects;
-            mySender.StreamUpdateAsync(payload, mySender.StreamId).ContinueWith(tres =>
-            {
-                mySender.BroadcastMessage(new { eventType = "update-global" });
-                int k = 0;
-                foreach (var obj in convertedObjects)
-                {
-                    obj.DatabaseId = tres.Result.Objects[k++];
-                    ObjectCache[obj.Hash] = obj;
-                }
 
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
-                Message = "Data sent\n@" + DateTime.Now.ToString("hh:mm:ss");
-            });
+            var response = mySender.StreamUpdate(payload, mySender.StreamId);
+
+            mySender.BroadcastMessage(new { eventType = "update-global" });
+
+            int k = 0;
+            foreach (var obj in convertedObjects)
+            {
+                obj.DatabaseId = response.Objects[k++];
+                ObjectCache[obj.Hash] = obj;
+            }
+
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
+            Message = "Data sent\n@" + DateTime.Now.ToString("hh:mm:ss");
+
         }
 
         public void UpdateMetadata()
@@ -489,7 +513,7 @@ namespace SpeckleGrasshopper
                 streamIdCapsule.Render(graphics, myStyle);
                 streamIdCapsule.Dispose();
 
-                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: Base.NickName, highlight: 0, radius: 5);
+                var streamNameCapsule = GH_Capsule.CreateTextCapsule(box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: "(S) " + Base.NickName, highlight: 0, radius: 5);
                 streamNameCapsule.Render(graphics, myStyle);
                 streamNameCapsule.Dispose();
             }
