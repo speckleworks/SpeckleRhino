@@ -150,7 +150,10 @@ namespace SpeckleGrasshopper
 
             myReceiver.OnWsMessage += OnWsMessage;
 
-            myReceiver.OnError += OnError;
+            myReceiver.OnError += (sender, e) =>
+            {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventName + ": " + e.EventData);
+            };
 
             expireComponentAction = () => this.ExpireSolution(true);
         }
@@ -210,11 +213,6 @@ namespace SpeckleGrasshopper
                 });
             }
 
-        }
-
-        public virtual void OnError(object source, SpeckleEventArgs e)
-        {
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventData);
         }
 
         public virtual void OnWsMessage(object source, SpeckleEventArgs e)

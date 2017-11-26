@@ -141,6 +141,12 @@ namespace SpeckleGrasshopper
                 this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
             };
 
+            mySender.OnError += (sender, e) =>
+            {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, e.EventName + ": " + e.EventData);
+                this.Log += DateTime.Now.ToString("dd:HH:mm:ss ") + e.EventData + "\n";
+            };
+
             ExpireComponentAction = () => ExpireSolution(true);
 
             ObjectChanged += (sender, e) => UpdateMetadata();
@@ -292,19 +298,21 @@ namespace SpeckleGrasshopper
             payload.Layers = BucketLayers;
             payload.Name = BucketName;
             payload.Objects = convertedObjects;
-            mySender.StreamUpdateAsync(payload, mySender.StreamId).ContinueWith(tres =>
-            {
-                mySender.BroadcastMessage(new { eventType = "update-global" });
-                int k = 0;
-                foreach (var obj in convertedObjects)
-                {
-                    obj.DatabaseId = tres.Result.Objects[k++];
-                    ObjectCache[obj.Hash] = obj;
-                }
 
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
-                Message = "Data sent\n@" + DateTime.Now.ToString("hh:mm:ss");
-            });
+            var response = mySender.StreamUpdate(payload, mySender.StreamId);
+
+            mySender.BroadcastMessage(new { eventType = "update-global" });
+
+            int k = 0;
+            foreach (var obj in convertedObjects)
+            {
+                obj.DatabaseId = response.Objects[k++];
+                ObjectCache[obj.Hash] = obj;
+            }
+
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
+            Message = "Data sent\n@" + DateTime.Now.ToString("hh:mm:ss");
+
         }
 
         public void UpdateMetadata()
