@@ -72,10 +72,15 @@ namespace SpeckleGrasshopper
                     {
                         var formatter = new BinaryFormatter();
                         formatter.Serialize(ms, mySender);
+                        var arr = ms.ToArray();
+                        var arrr = arr;
                         writer.SetByteArray("speckleclient", ms.ToArray());
                     }
             }
-            catch { }
+            catch (Exception err)
+            {
+                throw err;
+            }
             return base.Write(writer);
         }
 
@@ -84,16 +89,21 @@ namespace SpeckleGrasshopper
             try
             {
                 var serialisedClient = reader.GetByteArray("speckleclient");
+                var copy = serialisedClient;
                 using (var ms = new MemoryStream())
                 {
                     ms.Write(serialisedClient, 0, serialisedClient.Length);
                     ms.Seek(0, SeekOrigin.Begin);
                     mySender = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                    var x = mySender;
                     RestApi = mySender.BaseUrl;
                     StreamId = mySender.StreamId;
                 }
             }
-            catch { }
+            catch (Exception err)
+            {
+                throw err;
+            }
             return base.Read(reader);
         }
 

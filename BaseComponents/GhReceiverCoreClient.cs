@@ -424,7 +424,7 @@ namespace SpeckleGrasshopper
                             GH_Path myPath = new GH_Path(branchIndexes.ToArray());
 
                             for (int i = 0; i < elCount; i++)
-                                tree.EnsurePath(myPath).Add(subset[subsetCount + i]);
+                                tree.EnsurePath(myPath).Add(new Grasshopper.Kernel.Types.GH_ObjectWrapper(subset[subsetCount + i]));
                             subsetCount += elCount;
                         }
                     }
