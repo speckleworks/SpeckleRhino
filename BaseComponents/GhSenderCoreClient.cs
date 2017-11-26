@@ -202,6 +202,12 @@ namespace SpeckleGrasshopper
 
             GH_DocumentObject.Menu_AppendSeparator(menu);
 
+            GH_DocumentObject.Menu_AppendItem(menu, "View stream.", (sender, e) =>
+            {
+                if (StreamId == null) return;
+                System.Diagnostics.Process.Start(RestApi.Replace("api", "view") + @"/?" + StreamId);
+            });
+
             GH_DocumentObject.Menu_AppendItem(menu, "View stream data.", (sender, e) =>
             {
                 if (StreamId == null) return;
