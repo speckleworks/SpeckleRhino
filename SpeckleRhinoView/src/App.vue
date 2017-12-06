@@ -1,15 +1,8 @@
 <template>
   <div id="app">
     <v-app dark>
-      <v-tabs dark grow>
-        <v-toolbar class='grey darken-4 white--text' fixed top>
-          <v-toolbar-title>Speckle</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon @click.native='showDev' class='white--text'>
-            <v-icon>code</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <v-tabs-bar class='grey darken-2 white--text' fixed top style='margin-top:60px;'>
+      <v-tabs fixed centered v-model='active'>
+        <v-tabs-bar class='transparent' dark>
           <v-tabs-item key='Clients' href='Clients'>
             Clients
           </v-tabs-item>
@@ -42,6 +35,9 @@
         <v-btn fab dark small color='grey' @click='purgeClients'>
           <v-icon>refresh</v-icon>
         </v-btn>
+        <v-btn fab dark small color='black white--text' @click='showDev'>
+          <v-icon>code</v-icon>
+        </v-btn>
       </v-speed-dial>
     </v-app>
   </div>
@@ -60,7 +56,8 @@ export default {
   },
   data () {
     return {
-      fab: {}
+      fab: {},
+      active: null
     }
   },
   methods: {

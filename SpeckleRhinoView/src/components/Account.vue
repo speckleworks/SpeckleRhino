@@ -1,6 +1,6 @@
 <template>
   <v-card class='account-content'>
-    <v-card-text class="grey darken-4">
+    <v-card-text xxxclass="grey darken-4">
       API Token: <span class='caption'>{{ account.apiToken }}</span>
       <br>
       URL: <span class='caption'>{{ account.restApi }}</span>

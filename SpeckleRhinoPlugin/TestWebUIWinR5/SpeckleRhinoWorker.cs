@@ -109,6 +109,7 @@ namespace SpeckleRhino
             Client.OnReady += Client_OnReady;
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
+            Client.OnError += Client_OnError;
 
             Client.IntializeReceiver((string)payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), (string)payload.account.apiToken);
 
@@ -116,6 +117,12 @@ namespace SpeckleRhino
             Display.Enabled = true;
 
             Objects = new List<SpeckleObject>();
+        }
+
+        private void Client_OnError(object source, SpeckleEventArgs e)
+        {
+            var copy = e;
+            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 
         public virtual void Client_OnLogData(object source, SpeckleEventArgs e)
@@ -150,11 +157,16 @@ namespace SpeckleRhino
                     break;
                 case "update-object":
                     break;
+                case "update-children":
+                    UpdateChildren();
+                    break;
                 default:
                     Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType));
                     break;
             }
         }
+
+
 
         public void UpdateMeta()
         {
@@ -215,6 +227,14 @@ namespace SpeckleRhino
 
         }
 
+        public void UpdateChildren()
+        {
+            var getStream = Client.StreamGet(StreamId);
+            Client.Stream = getStream.Stream;
+
+            Context.NotifySpeckleFrame("client-children", StreamId, Client.Stream.ToJson());
+        }
+
         public void DisplayContents()
         {
             RhinoConverter rhinoConverter = new RhinoConverter();
@@ -224,24 +244,18 @@ namespace SpeckleRhino
             int count = 0;
             foreach (SpeckleObject myObject in Objects)
             {
+                var gb = rhinoConverter.ToNative(myObject);
+
                 Display.Colors.Add(GetColorFromLayer(GetLayerFromIndex(count)));
 
                 Display.VisibleList.Add(true);
 
-                switch (myObject.Type)
+                if (gb is GeometryBase)
                 {
-                    case "Mesh":
-                    case "Brep":
-                    case "Curve":
-                        Display.Geometry.Add((GeometryBase)rhinoConverter.ToNative(myObject));
-                        break;
-                    case "Polyline":
-                        Display.Geometry.Add(((Polyline)rhinoConverter.ToNative(myObject)).ToNurbsCurve());
-                        break;
-                    case "Point":
-                        Point3d conv = (Point3d)rhinoConverter.ToNative(myObject);
-                        Display.Geometry.Add(new Point(conv));
-                        break;
+                    Display.Geometry.Add(gb as GeometryBase);
+                } else
+                {
+                    Display.Geometry.Add(null);
                 }
 
                 count++;
@@ -332,6 +346,7 @@ namespace SpeckleRhino
             Client.OnReady += Client_OnReady;
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
+            Client.OnError += Client_OnError;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)

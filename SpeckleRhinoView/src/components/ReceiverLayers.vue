@@ -41,6 +41,6 @@
   }
 
   .layer:hover {
-    background-color: #2B2B2B;
+    background-color: #CCCCCC;
   }
 </style>

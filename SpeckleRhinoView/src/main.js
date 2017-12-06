@@ -47,6 +47,17 @@ new Vue( {
       this.$store.commit( 'APPEND_LOG', { streamId: streamId, data: JSON.parse( data ) } )
     })
 
+    EventBus.$on( 'client-error', ( streamId, data ) => {
+      console.log( 'client-error', streamId, JSON.parse( data ) )
+      this.$store.commit( 'APPEND_LOG', { streamId: streamId, data: JSON.parse( data ) } )
+      this.$store.commit( 'SET_ERROR', { streamId: streamId, data: JSON.parse( data ) } )
+    })
+
+    EventBus.$on( 'client-children', ( streamId, data ) => {
+      console.log( 'client-children')
+      this.$store.commit( 'SET_CLIENT_CHILDREN', { streamId: streamId, data: JSON.parse( data ) } )
+    })
+
     EventBus.$on( 'client-is-loading', ( streamId, data ) => {
       console.log( 'client-is-loading', streamId, data )
       this.$store.commit( 'SET_LOADING', { streamId: streamId, status: true } )

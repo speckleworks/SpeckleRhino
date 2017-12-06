@@ -59,6 +59,12 @@ export default new Vuex.Store( {
 
       state.clients.unshift( payload.client )
     },
+    SET_CLIENT_CHILDREN( state, payload ) {
+      let client = state.clients.find( c => c.stream.streamId === payload.streamId )
+      if( !client ) return console.warn( 'No client found!' )
+      console.log( payload )
+      client.stream.children = payload.data.children
+    },
     PURGE_CLIENTS( state ) {
       state.clients = []
     },
@@ -74,6 +80,11 @@ export default new Vuex.Store( {
       if( !client.log ) client.log = []
       client.log.unshift( { timestamp: new Date(), message: payload.data } )
       if ( client.log.length > 42 ) log.pop( )
+    },
+    SET_ERROR( state, payload ) {
+      let client = state.clients.find( c => c.stream.streamId === payload.streamId )
+      if( !client ) return console.warn( 'No client found!' )
+      client.error = payload.data
     },
     SET_LOADING( state, payload ) { 
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )

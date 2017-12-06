@@ -49,7 +49,8 @@ namespace SpeckleRhino
             if (null != Geometry)
             {
                 foreach (var obj in Geometry)
-                    bbox.Union(obj.GetBoundingBox(false));
+                    if (obj != null)
+                        bbox.Union(obj.GetBoundingBox(false));
                 e.IncludeBoundingBox(bbox);
             }
 
@@ -61,7 +62,8 @@ namespace SpeckleRhino
             if (null != Geometry)
             {
                 foreach (var obj in Geometry)
-                    bbox.Union(obj.GetBoundingBox(false));
+                    if (obj != null)
+                        bbox.Union(obj.GetBoundingBox(false));
                 e.IncludeBoundingBox(bbox);
             }
         }
@@ -73,28 +75,33 @@ namespace SpeckleRhino
 
             foreach (var obj in Geometry)
             {
-                if (VisibleList[count])
+                if (VisibleList[count] && obj != null)
                     switch (obj.ObjectType)
                     {
                         case Rhino.DocObjects.ObjectType.Point:
                             e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, PointStyle.X, 2, Colors[count]);
                             break;
+
                         case Rhino.DocObjects.ObjectType.Curve:
                             e.Display.DrawCurve((Curve)obj, Colors[count]);
                             break;
+
                         case Rhino.DocObjects.ObjectType.Brep:
                             DisplayMaterial bMaterial = new DisplayMaterial(Colors[count], 0.5);
                             e.Display.DrawBrepShaded((Brep)obj, bMaterial);
                             //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
                             break;
+
                         case Rhino.DocObjects.ObjectType.Mesh:
                             DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Colors[count], Color.Yellow, Color.White, Color.White, 0.1, 0.5);
                             e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
                             //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
                             break;
+
                         case Rhino.DocObjects.ObjectType.TextDot:
                             //todo
                             break;
+
                         case Rhino.DocObjects.ObjectType.Annotation:
                             //todo
                             break;
