@@ -1,18 +1,18 @@
 <template>
-  <v-dialog fullscreen v-model='visible' style='width: 100%' >
-    <v-card class='grey darken-4'>
+  <v-dialog v-model='visible' style='width: 100%' >
+    <v-card class=''>
       <v-card-title>
         Add Receiver
       </v-card-title>        
-      <v-card-text class="grey darken-4">
+      <v-card-text class="grey darken-4" text-center>
         <div class='step-1'>
-          <div class='subheading'>
-            Select an account:
+          <div class='headline grey--text'>
+            1. Select an account:
           </div>
           <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
           <br>
-            <div class='subheading' v-show='selectedAccountValue!=null && !fail'>
-            Existing streams:
+            <div class='headline grey--text' v-show='selectedAccountValue!=null && !fail'>
+            2. Existing streams:
             <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
             Or input a stream id:
             <v-text-field v-model='directStreamId'></v-text-field>
@@ -27,7 +27,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn flat @click.native="visible=false">Cancel</v-btn>
-        <v-btn color='light-blue' flat @click.native='addReceiver'>Add</v-btn>
+        <v-btn color='light-blue' @click.native='addReceiver'>Add</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -42,7 +42,6 @@
     </v-card-actions>
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' class='pa-0'>
-        <!-- <blockquote class='section-title'>Layers:</blockquote> -->
         <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
       </v-card-text>
     </v-slide-y-transition>

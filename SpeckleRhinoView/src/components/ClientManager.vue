@@ -41,6 +41,6 @@ export default {
 
 <style scoped>
   .receiver:last-child{
-    margin-bottom: 100px;
+    /*margin-bottom: 100px;*/
   }
 </style>
