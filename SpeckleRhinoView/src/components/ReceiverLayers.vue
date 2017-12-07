@@ -1,6 +1,5 @@
 <template>
   <v-container fluid class='layer-list'>
-    <br>
     <layer v-for='layer in layers' :key='layer.guid' :layer='layer' :clientId='clientId' class='layer'></layer>
   </v-container>
 </template>
@@ -35,12 +34,15 @@
   }
 
   .layer {
-    padding: 10px 0 10px 0;
-    background-color: rgba(25,25,25,0);
+    padding: 2px 0 2px 0;
+    background-color: rgba(25,25,25,0.3);
+    /*border-left: 2px solid #0080FF;*/
     transition: all .3s ease;
   }
 
   .layer:hover {
-    background-color: #CCCCCC;
+    background-color: rgba(25,25,25,0.5);
+    /*background-color: #CCCCCC;*/
+    /*border-left: 2px solid white;*/
   }
 </style>

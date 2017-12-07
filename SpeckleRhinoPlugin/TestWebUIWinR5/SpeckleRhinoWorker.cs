@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
 using SpeckleRhinoConverter;
@@ -119,6 +120,7 @@ namespace SpeckleRhino
             Objects = new List<SpeckleObject>();
         }
 
+        #region events
         private void Client_OnError(object source, SpeckleEventArgs e)
         {
             var copy = e;
@@ -165,9 +167,9 @@ namespace SpeckleRhino
                     break;
             }
         }
+        #endregion
 
-
-
+        #region updates
         public void UpdateMeta()
         {
             Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Metadata update received."));
@@ -234,7 +236,9 @@ namespace SpeckleRhino
 
             Context.NotifySpeckleFrame("client-children", StreamId, Client.Stream.ToJson());
         }
+        #endregion
 
+        #region display & helpers
         public void DisplayContents()
         {
             RhinoConverter rhinoConverter = new RhinoConverter();
@@ -253,7 +257,8 @@ namespace SpeckleRhino
                 if (gb is GeometryBase)
                 {
                     Display.Geometry.Add(gb as GeometryBase);
-                } else
+                }
+                else
                 {
                     Display.Geometry.Add(null);
                 }
@@ -283,13 +288,6 @@ namespace SpeckleRhino
             return layerColor;
         }
 
-        public void Dispose()
-        {
-            Client.Dispose();
-            Display.Enabled = false;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
-        }
-
         public string GetClientId()
         {
             return Client.ClientId;
@@ -299,6 +297,102 @@ namespace SpeckleRhino
         {
             return ClientRole.Receiver;
         }
+        #endregion
+
+        #region Bake
+
+        public void Bake()
+        {
+            string parent = String.Format("{1} | {0}", Client.Stream.StreamId, Client.Stream.Name);
+
+            var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent, true);
+            if (parentId == -1)
+            {
+                var parentLayer = new Layer()
+                {
+                    Color = System.Drawing.Color.Black,
+                    Name = parent
+                };
+                parentId = Rhino.RhinoDoc.ActiveDoc.Layers.Add(parentLayer);
+            }
+            else
+                foreach (var layer in Rhino.RhinoDoc.ActiveDoc.Layers[parentId].GetChildren())
+                    Rhino.RhinoDoc.ActiveDoc.Layers.Purge(layer.LayerIndex, false);
+
+            foreach (var sLayer in Client.Stream.Layers)
+            {
+                var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + sLayer.Name, true);
+                if (layerId == -1)
+                {
+                    var layer = new Layer()
+                    {
+                        Name = sLayer.Name,
+                        Id = Guid.Parse(sLayer.Guid),
+                        ParentLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[parentId].Id,
+                        Color = GetColorFromLayer(sLayer),
+                        IsVisible = true
+                    };
+                    var index = Rhino.RhinoDoc.ActiveDoc.Layers.Add(layer);
+
+                    for (int i = (int)sLayer.StartIndex; i < sLayer.StartIndex + sLayer.ObjectCount; i++)
+                    {
+                        if (Display.Geometry[i] != null)
+                        {
+                            Rhino.RhinoDoc.ActiveDoc.Objects.Add(Display.Geometry[i], new ObjectAttributes() { LayerIndex = index });
+                        }
+                    }
+                }
+            }
+        }
+
+        public void BakeLayer(string layerId)
+        {
+            SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault(l => l.Guid == layerId);
+
+            // create or get parent
+            string parent = String.Format("{1} | {0}", Client.Stream.StreamId, Client.Stream.Name);
+
+            var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent, true);
+            if (parentId == -1)
+            {
+                var parentLayer = new Layer()
+                {
+                    Color = System.Drawing.Color.Black,
+                    Name = parent
+                };
+                parentId = Rhino.RhinoDoc.ActiveDoc.Layers.Add(parentLayer);
+            } else
+            {
+                int prev = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + myLayer.Name, true);
+                if (prev != -1)
+                    Rhino.RhinoDoc.ActiveDoc.Layers.Purge(prev, true);
+            }
+
+            int theLayerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + myLayer.Name, true);
+            if(theLayerId == -1)
+            {
+                var layer = new Layer()
+                {
+                    Name = myLayer.Name,
+                    Id = Guid.Parse(myLayer.Guid),
+                    ParentLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[parentId].Id,
+                    Color = GetColorFromLayer(myLayer),
+                    IsVisible = true
+                };
+                var index = Rhino.RhinoDoc.ActiveDoc.Layers.Add(layer);
+                for (int i = (int)myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++)
+                {
+                    if (Display.Geometry[i] != null)
+                    {
+                        Rhino.RhinoDoc.ActiveDoc.Objects.Add(Display.Geometry[i], new ObjectAttributes() { LayerIndex = index });
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Toggles
 
         public void TogglePaused(bool status)
         {
@@ -316,7 +410,8 @@ namespace SpeckleRhino
             SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault(l => l.Guid == layerId);
             if (myLayer == null) throw new Exception("Bloopers. Layer not found.");
 
-            if (status) {
+            if (status)
+            {
                 Display.HoverRange = new Interval((double)myLayer.StartIndex, (double)(myLayer.StartIndex + myLayer.ObjectCount));
             }
             else
@@ -329,8 +424,17 @@ namespace SpeckleRhino
             SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault(l => l.Guid == layerId);
             if (myLayer == null) throw new Exception("Bloopers. Layer not found.");
 
-            for(int i = (int) myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++)
+            for (int i = (int)myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++)
                 Display.VisibleList[i] = status;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+        }
+        #endregion
+
+        #region serialisation & end of life
+        public void Dispose()
+        {
+            Client.Dispose();
+            Display.Enabled = false;
             Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
@@ -368,5 +472,6 @@ namespace SpeckleRhino
                 info.AddValue("visible", Visible);
             }
         }
+        #endregion
     }
 }

@@ -216,12 +216,17 @@ namespace SpeckleRhino
 
         public void bakeClient(string clientId)
         {
-            // TODO
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null || myClient is RhinoReceiver)
+                ((RhinoReceiver)myClient).Bake();
+               
         }
 
         public void bakeLayer(string clientId, string layerGuid)
         {
-            // TODO
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null || myClient is RhinoReceiver)
+                ((RhinoReceiver)myClient).BakeLayer(layerGuid);
         }
 
         public void setClientPause(string clientId, bool status)

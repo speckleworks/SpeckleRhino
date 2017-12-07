@@ -4,11 +4,9 @@
     <v-card-title primary-title>
       <div>
         <span class='headline'>
-          {{ client.stream.name }}
+          <v-icon class='grey--text'>cloud_download</v-icon> {{ client.stream.name }}
         </span>
-        <br>
-        <span class='grey--text'><code>{{ client.stream.streamId }}</code> (receiver) </span>
-        <div class='caption'>Last updated at:  <timeago :auto-update='10' :since='client.lastUpdate'></timeago></div>
+        <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:  <timeago :auto-update='10' :since='client.lastUpdate'></timeago></div>
       </div>
     </v-card-title>
     <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
@@ -29,7 +27,7 @@
         <v-icon>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
-      <v-btn icon flat color='yellow xxxlighten-3' small @click.native='bakeClient'>
+      <v-btn icon flat color='' small @click.native='bakeClient'>
         <v-icon>play_for_work</v-icon>
       </v-btn>
       <v-btn icon flat small @click.native='toggleVisibility'>
@@ -43,16 +41,16 @@
       </v-btn>
     </v-card-actions>
     <v-slide-y-transition>
-      <v-card-text v-show='showLayers' xxxclass='grey darken-4'>
-        <blockquote class='section-title'>Layers:</blockquote>
+      <v-card-text v-show='showLayers' class='pa-0'>
+        <!-- <blockquote class='section-title'>Layers:</blockquote> -->
         <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
       </v-card-text>
     </v-slide-y-transition>
     <v-slide-y-transition>
-      <v-card-text v-show='showLog' xxxclass='grey darken-4'>
-        <blockquote class='section-title'>Log</blockquote>
-        <br>
-        <div class='log'>
+      <v-card-text v-show='showLog' class='pa-0'>
+        <!-- <blockquote class='section-title'>Log</blockquote> -->
+        <div class='caption pa-2'>Client id: <code>{{client.ClientId}}</code></div>
+        <div class='log pa-2'>
           <template v-for='log in client.log'> 
             <div class='caption' mb-5>
             <v-divider></v-divider>
@@ -61,7 +59,6 @@
           </template>
         </div>
         <br>
-        <div class='caption'>Client id: <code>{{client.ClientId}}</code></div>
       </v-card-text>
     </v-slide-y-transition>
     <v-slide-y-transition>
@@ -117,7 +114,7 @@
         Interop.setClientVisibility( this.client.ClientId, this.visible )
       },
       bakeClient() {
-        Interop.bakeClient( this.ClientId )
+        Interop.bakeClient( this.client.ClientId )
       },
       toggleLog() {
         if( this.showLog ) return this.showLog = false

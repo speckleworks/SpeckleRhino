@@ -1,16 +1,18 @@
 <template>
   <v-layout @mouseover='mouseOver' @mouseleave='mouseOut' align-center>
-    <v-flex xs2>
+    <v-flex xs4>
       <v-btn icon small xs flat @click.native='visible=!visible' color='grey'>
       <v-icon dark>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
+      </v-btn><v-btn icon small xs flat @click.native='bake' color='grey'>
+      <v-icon dark>play_for_work</v-icon>
       </v-btn>
     </v-flex>
-    <v-flex xs10>
-      <div class='subheading'>{{ layer.name }}</div>
-      <div class="caption grey--text"> Object count: {{layer.objectCount }} </div>
+    <v-flex xs6 class='layername'>
+      <span class='subheading'>{{ layer.name }}</span>
+      <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>
     </v-flex>
     <v-flex>
-      <v-icon dark :style='{ color: layerColor.hex }'>fiber_manual_record</v-icon>
+      <v-icon dark :style='{ color: layerColor.hex }' class='make-me-small'>fiber_manual_record</v-icon>
     </v-flex>
   </v-layout>
 </template>
@@ -48,6 +50,9 @@
       },
       mouseOut() {
         Interop.setLayerHover( this.clientId, this.layer.guid, false )
+      },
+      bake() {
+        Interop.bakeLayer( this.clientId, this.layer.guid )
       }
     },
     mounted() {
@@ -56,5 +61,13 @@
 </script>
 
 <style lang='scss'>
-    
+  .make-me-small{
+    font-size: 14px !important;
+  }
+  .layername{
+    text-overflow: ellipsis;
+    /* Required for text-overflow to do anything */
+    white-space: nowrap;
+    overflow: hidden;
+  }
 </style>
