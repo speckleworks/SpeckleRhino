@@ -22,6 +22,8 @@ namespace SpeckleRhino
 
         public List<bool> VisibleList { get; set; }
 
+        public Interval? HoverRange { get; set; }
+
         public SpeckleDisplayConduit()
         {
             Geometry = new List<GeometryBase>();
@@ -113,9 +115,12 @@ namespace SpeckleRhino
         protected override void DrawOverlay(DrawEventArgs e)
         {
             base.DrawOverlay(e);
-            foreach (var obj in Geometry)
+            if (HoverRange == null) return;
+
+            for(int i = (int)HoverRange.Value.T0; i < HoverRange.Value.T1; i++)
             {
-                //e.Display.DrawBoxCorners(((GeometryBase)obj).GetBoundingBox(false), Color.Yellow);
+                if(Geometry[i]!=null)
+                    e.Display.DrawBoxCorners(((GeometryBase)Geometry[i]).GetBoundingBox(false), Color.Yellow);
             }
         }
     }

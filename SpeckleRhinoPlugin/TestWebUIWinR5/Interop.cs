@@ -219,6 +219,11 @@ namespace SpeckleRhino
             // TODO
         }
 
+        public void bakeLayer(string clientId, string layerGuid)
+        {
+            // TODO
+        }
+
         public void setClientPause(string clientId, bool status)
         {
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
@@ -249,7 +254,9 @@ namespace SpeckleRhino
 
         public void setLayerHover(string clientId, string layerId, bool status)
         {
-
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                myClient.ToggleLayerHover(layerId, status);
         }
 
         public void setObjectHover(string clientId, string layerId, bool status)

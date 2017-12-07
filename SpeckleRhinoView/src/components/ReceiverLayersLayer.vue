@@ -44,10 +44,10 @@
     },
     methods: {
       mouseOver() {
-        // console.log('in')
+        Interop.setLayerHover( this.clientId, this.layer.guid, true )
       },
       mouseOut() {
-        // console.log('out')
+        Interop.setLayerHover( this.clientId, this.layer.guid, false )
       }
     },
     mounted() {

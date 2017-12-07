@@ -56,7 +56,7 @@
           <template v-for='log in client.log'> 
             <div class='caption' mb-5>
             <v-divider></v-divider>
-            <timeago :since='log.timestamp'></timeago>: {{ log.message }}
+            {{ log.timestamp }}: {{ log.message }}
             </div>
           </template>
         </div>

@@ -26,7 +26,7 @@ namespace SpeckleRhino
 
         void ToggleLayerVisibility(string layerId, bool status);
 
-        void ToggleHover(bool status);
+        void ToggleLayerHover(string layerId, bool status);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ namespace SpeckleRhino
             throw new NotImplementedException();
         }
 
-        public void ToggleHover(bool status)
+        public void ToggleLayerHover(string layerId, bool status)
         {
             throw new NotImplementedException();
         }
@@ -311,9 +311,17 @@ namespace SpeckleRhino
             Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
-        public void ToggleHover(bool status)
+        public void ToggleLayerHover(string layerId, bool status)
         {
-            throw new NotImplementedException();
+            SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault(l => l.Guid == layerId);
+            if (myLayer == null) throw new Exception("Bloopers. Layer not found.");
+
+            if (status) {
+                Display.HoverRange = new Interval((double)myLayer.StartIndex, (double)(myLayer.StartIndex + myLayer.ObjectCount));
+            }
+            else
+                Display.HoverRange = null;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         public void ToggleLayerVisibility(string layerId, bool status)
