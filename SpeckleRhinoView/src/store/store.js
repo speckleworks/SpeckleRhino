@@ -113,10 +113,10 @@ export default new Vuex.Store( {
       client.expired = false
     },
     SET_SELECTION( state, payload ) {
-      console.log( payload )
       state.selection = []
+      console.log( payload )
       for(const key in payload.selectionInfo )
-        state.selection.push( { layer: key, objectCount: payload.selectionInfo[ key ] } )
+        state.selection.push( { layer: key, objectCount: payload.selectionInfo[ key ].objectCount, objectGuids: payload.selectionInfo[ key ].ObjectGuids, objectTypes: payload.selectionInfo[ key ].ObjectTypes, color: payload.selectionInfo[ key ].color } )
     }
   }
 } )

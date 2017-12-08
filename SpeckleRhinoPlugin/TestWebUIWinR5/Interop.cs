@@ -14,6 +14,7 @@ using SpeckleRhinoConverter;
 using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
+using System.Dynamic;
 
 namespace SpeckleRhino
 {
@@ -312,22 +313,48 @@ namespace SpeckleRhino
         public string getSelection()
         {
             var SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
-            Dictionary<string, int> layerCounts = new Dictionary<string, int>();
 
+            Dictionary<string, SpeckleLayerInfo> layerInfo = new Dictionary<string, SpeckleLayerInfo>();
+            
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 
             foreach (var obj in SelectedObjects)
             {
                 var layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
-                if (layerCounts.ContainsKey(layer.Name))
-                    layerCounts[layer.Name]++;
+
+                if (layerInfo.ContainsKey(layer.FullPath))
+                {
+                    var copy = layerInfo[layer.FullPath];
+                    copy.objectCount++ ;
+                    copy.ObjectGuids.Add(obj.Id.ToString());
+                    copy.ObjectTypes.Add(obj.Geometry.GetType().ToString());
+                    layerInfo[layer.FullPath] = copy;
+
+                }
                 else
-                    layerCounts[layer.Name] = 1;
+                {
+                    layerInfo[layer.FullPath] = new SpeckleLayerInfo() {
+                        objectCount = 1,
+                        color = System.Drawing.ColorTranslator.ToHtml(layer.Color),
+                        ObjectGuids = new List<string>(new string[] { obj.Id.ToString()}),
+                        ObjectTypes = new List<string>( new string[] { obj.Geometry.GetType().ToString()})
+                    };
+                }
             }
 
-            return JsonConvert.SerializeObject(layerCounts);
+            return JsonConvert.SerializeObject(layerInfo);
         }
 
         #endregion
+    }
+
+    [Serializable]
+    public struct SpeckleLayerInfo
+    {
+        public string layerName;
+        public int objectCount;
+        public string color;
+        public List<string> ObjectGuids;
+        public List<string> ObjectTypes;
     }
 }

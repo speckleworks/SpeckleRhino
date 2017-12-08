@@ -11,12 +11,12 @@
           </v-tabs-item>
           <v-menu open-on-hover transition="slide-x-transition" bottom right offset-y offset-left>
             <v-tabs-item slot='activator'>
-                <v-icon>settings</v-icon>
+                <v-icon style='font-size: 14px;'>settings</v-icon>
             </v-tabs-item>
-            <v-list>
-              <v-list-tile @click='purgeClients'><v-icon>refresh</v-icon></v-list-tile>
-              <v-list-tile @click='showDev'><v-icon>code</v-icon></v-list-tile>
-            </v-list>
+            <div>
+              <v-btn small fab  @click='purgeClients'><v-icon style='font-size: 14px;'>refresh</v-icon></v-btn small fab >
+              <v-btn small fab  @click='showDev'><v-icon style='font-size: 14px;'>code</v-icon></v-btn small fab >
+            </div>
           </v-menu>
           <v-tabs-slider color='light-blue'></v-tabs-slider>
         </v-tabs-bar>

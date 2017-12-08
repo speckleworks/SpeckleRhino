@@ -10,14 +10,14 @@
           <v-select label="Account" required v-bind:items='userAccounts' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='userAccounts'></v-select>
            <v-text-field label="Stream name" v-model="streamName" required></v-text-field>
           </v-form>
-          <v-card v-if='objectSelection.length > 0' class='elevation-4 pa-2'>
-            <p class='caption'>The following objects will be sent:</p>
+          <div v-if='objectSelection.length > 0' class='pa-1'>
+            <p class='caption'>The following layers will be created:</p>
             <template v-for='sel in objectSelection'>
-              <div class='caption'>
-                <v-chip small>{{sel.objectCount}} obj</v-chip> on {{sel.layer}}
+              <div class='caption'> 
+                <v-chip small :style='{ color: sel.color }' class='eliptic'>{{sel.layer}}</v-chip> with {{sel.objectCount}} obj
               </div>
             </template>
-          </v-card>
+          </div>
           <v-card v-else class='light-pink elevation-4 pa-2'>
             <v-icon>warning</v-icon>
             <span class='caption'>No selection found. Select some objects now to automatically populate your stream!</span>
@@ -96,6 +96,12 @@ export default {
 </script>
 
 <style lang="scss">
+  .eliptic {
+    width: 150px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
   .list__tile__title, .input-group__selections__comma {
     white-space: nowrap;
 }

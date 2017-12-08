@@ -15,68 +15,6 @@ using System.Threading.Tasks;
 
 namespace SpeckleRhino
 {
-    public interface ISpeckleRhinoClient : IDisposable, ISerializable
-    {
-        SpeckleCore.ClientRole GetRole();
-
-        string GetClientId();
-
-        void TogglePaused(bool status);
-
-        void ToggleVisibility(bool status);
-
-        void ToggleLayerVisibility(string layerId, bool status);
-
-        void ToggleLayerHover(string layerId, bool status);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    [Serializable]
-    public class RhinoSender : ISpeckleRhinoClient
-    {
-        public SpeckleCore.ClientRole GetRole()
-        {
-            return ClientRole.Sender;
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetClientId()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void TogglePaused(bool status)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ToggleVisibility(bool status)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ToggleLayerHover(string layerId, bool status)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ToggleLayerVisibility(string layerId, bool status)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     /// <summary>
     /// Class that holds a rhino receiver client warpped around the
     /// SpeckleApiClient.
@@ -363,7 +301,8 @@ namespace SpeckleRhino
                     Name = parent
                 };
                 parentId = Rhino.RhinoDoc.ActiveDoc.Layers.Add(parentLayer);
-            } else
+            }
+            else
             {
                 int prev = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + myLayer.Name, true);
                 if (prev != -1)
@@ -371,7 +310,7 @@ namespace SpeckleRhino
             }
 
             int theLayerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + myLayer.Name, true);
-            if(theLayerId == -1)
+            if (theLayerId == -1)
             {
                 var layer = new Layer()
                 {
