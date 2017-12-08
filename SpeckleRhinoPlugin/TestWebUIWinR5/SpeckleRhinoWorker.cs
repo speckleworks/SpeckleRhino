@@ -276,7 +276,7 @@ namespace SpeckleRhino
 
         public System.Drawing.Color GetColorFromLayer(SpeckleLayer layer)
         {
-            System.Drawing.Color layerColor = System.Drawing.Color.Chartreuse;
+            System.Drawing.Color layerColor = System.Drawing.ColorTranslator.FromHtml("#AEECFD");
             try
             {
                 layerColor = System.Drawing.ColorTranslator.FromHtml(layer.Properties.Color.Hex);

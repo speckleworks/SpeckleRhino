@@ -77,6 +77,11 @@ new Vue( {
       console.log( 'client-ws-message', streamId, JSON.parse( data ) )
     })
 
+    EventBus.$on( 'object-selection', ( streamId, data ) => {
+      console.log( 'object-selection', data )
+      this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
+    })
+
     // tell .net that the app is ± ready.
     Interop.appReady()
   }

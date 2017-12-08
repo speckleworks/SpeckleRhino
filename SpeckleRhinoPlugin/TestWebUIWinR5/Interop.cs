@@ -31,6 +31,8 @@ namespace SpeckleRhino
 
         public Dictionary<string, SpeckleObject> ObjectCache;
 
+        public bool SpeckleIsReady = false;
+
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
             Browser = _originalBrowser;
@@ -54,7 +56,7 @@ namespace SpeckleRhino
             RhinoDoc.EndOpenDocument += (sender, e) =>
             {
                 // this seems to cover the copy paste issues
-                if (e.Merge) return; 
+                if (e.Merge) return;
                 // purge clients from ui
                 NotifySpeckleFrame("client-purge", "", "");
                 // purge clients from here
@@ -67,6 +69,24 @@ namespace SpeckleRhino
             {
                 Debug.WriteLine("BEGIN SAVE DOC");
                 SaveFileClients();
+            };
+
+            RhinoDoc.SelectObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getSelection());
+            };
+
+            RhinoDoc.DeselectObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getSelection());
+            };
+
+            RhinoDoc.DeselectAllObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getSelection());
             };
         }
 
@@ -96,6 +116,7 @@ namespace SpeckleRhino
         /// </summary>
         public void AppReady()
         {
+            SpeckleIsReady = true;
             InstantiateFileClients();
         }
 
@@ -223,7 +244,7 @@ namespace SpeckleRhino
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
             if (myClient != null || myClient is RhinoReceiver)
                 ((RhinoReceiver)myClient).Bake();
-               
+
         }
 
         public void bakeLayer(string clientId, string layerGuid)
@@ -285,17 +306,17 @@ namespace SpeckleRhino
         }
 
         #endregion
-        
+
         #region Sender Helpers
 
         public string getSelection()
         {
-            var SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false,false).ToList();
+            var SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
             Dictionary<string, int> layerCounts = new Dictionary<string, int>();
 
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 
-            foreach(var obj in SelectedObjects)
+            foreach (var obj in SelectedObjects)
             {
                 var layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
                 if (layerCounts.ContainsKey(layer.Name))

@@ -30,7 +30,7 @@
       layerColor() {
         if( this.layer.properties && this.layer.properties.color )
           return this.layer.properties.color
-        return { hex: '#00FF00', alpha: 1 }
+        return { hex: '#AEECFD', alpha: 1 }
       }
     },
     watch: {

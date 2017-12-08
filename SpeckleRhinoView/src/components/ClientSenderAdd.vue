@@ -7,13 +7,21 @@
       <v-card-text class="grey darken-4" text-center>
         <div class='step-1'>
           <v-form>
-          <v-select label="Account" required v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
-           <v-text-field
-              label="Stream name"
-              v-model="streamName"
-              required
-            ></v-text-field>
+          <v-select label="Account" required v-bind:items='userAccounts' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='userAccounts'></v-select>
+           <v-text-field label="Stream name" v-model="streamName" required></v-text-field>
           </v-form>
+          <v-card v-if='objectSelection.length > 0' class='elevation-4 pa-2'>
+            <p class='caption'>The following objects will be sent:</p>
+            <template v-for='sel in objectSelection'>
+              <div class='caption'>
+                <v-chip small>{{sel.objectCount}} obj</v-chip> on {{sel.layer}}
+              </div>
+            </template>
+          </v-card>
+          <v-card v-else class='light-pink elevation-4 pa-2'>
+            <v-icon>warning</v-icon>
+            <span class='caption'>No selection found. Select some objects now to automatically populate your stream!</span>
+          </v-card>
           <v-alert color='error' :value='fail' icon='error'>
             Failed to contact server.
             <br>
@@ -40,9 +48,10 @@ export default {
     accounts() { 
       return this.$store.getters.accounts
     },
-    selectItems() {
+    userAccounts() {
       return this.$store.getters.accounts.map( a => a.serverName )
-    }
+    },
+    objectSelection() { return this.$store.getters.selection }
   },
   watch: {
     selectedAccountValue( value ) {
@@ -51,40 +60,26 @@ export default {
       API.getStreams( this.selectedAccount )
       .then( res => {
         this.fail = false
-        this.streams = res.streams
-        this.selectedStream = null
       })
       .catch( err => {
-        this.streams = []
         this.fail = true
         this.error = err.toString()
       })
     },
     visible( value ) {
-      if( value ) {
-        Interop.getSelection()
-         .then(res=>{
-          console.log( res) 
-         })
-        return
-      }
+      if( value ) return
       this.selectedAccountValue = null
       this.selectedAccount = null
-      this.selectedStream = null
-      this.directStreamId = null
-      this.streams = []
     }
   },
   data() {
     return {
       visible: false,
-      separator: ' | ',
-      deleteDialog: false,
       selectedAccountValue: null,
       selectedAccount: null,
       fail: false,
       error: null,
-      streamName: null
+      streamName: null,
     }
   },
   methods: {

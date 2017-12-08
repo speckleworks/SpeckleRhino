@@ -6,11 +6,13 @@ Vue.use( Vuex )
 export default new Vuex.Store( {
   state: {
     accounts: [ ],
-    clients: [ ]
+    clients: [ ],
+    selection: [ ]
   },
   getters: {
     accounts: state => state.accounts,
-    clients: state => state.clients
+    clients: state => state.clients,
+    selection: state => state.selection
   },
   actions: {
     getUserAccounts( context ) {
@@ -79,7 +81,9 @@ export default new Vuex.Store( {
       if( !client ) return console.warn( 'No client found!' )
       if( !client.log ) client.log = []
       client.log.unshift( { timestamp: new Date(), message: payload.data } )
-      if ( client.log.length > 42 ) log.pop( )
+      if ( client.log.length > 5 ) { 
+        client.log.pop( )
+      }
     },
     SET_ERROR( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
@@ -108,5 +112,11 @@ export default new Vuex.Store( {
       client.lastUpdate = new Date()
       client.expired = false
     },
+    SET_SELECTION( state, payload ) {
+      console.log( payload )
+      state.selection = []
+      for(const key in payload.selectionInfo )
+        state.selection.push( { layer: key, objectCount: payload.selectionInfo[ key ] } )
+    }
   }
 } )
