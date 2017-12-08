@@ -47,7 +47,7 @@
           </v-tooltip>
           <v-tooltip left>
             <span>New Sender</span>
-            <v-btn fab dark color='pink' slot='activator' @click=''>
+            <v-btn fab dark color='pink' slot='activator' @click='addSender'>
               <v-icon>cloud_upload</v-icon>
             </v-btn>
           </v-tooltip>
@@ -99,6 +99,9 @@ export default {
     },
     addReceiver() {
       EventBus.$emit('show-add-receiver-dialog')
+    },
+    addSender() {
+      EventBus.$emit('show-add-sender-dialog')
     },
     saveClients() {
       Interop.saveFileClients()

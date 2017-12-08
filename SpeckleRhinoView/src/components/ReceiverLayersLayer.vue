@@ -1,6 +1,6 @@
 <template>
   <v-layout @mouseover='mouseOver' @mouseleave='mouseOut' align-center>
-    <v-flex xs4>
+    <v-flex>
       <v-btn icon small xs flat @click.native='visible=!visible' color='grey'>
       <v-icon dark>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
       </v-btn><v-btn icon small xs flat @click.native='bake' color='grey'>
@@ -11,7 +11,7 @@
       <span class='subheading'>{{ layer.name }}</span>
       <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>
     </v-flex>
-    <v-flex>
+    <v-flex style='text-align: center;'>
       <v-icon dark :style='{ color: layerColor.hex }' class='make-me-small'>fiber_manual_record</v-icon>
     </v-flex>
   </v-layout>

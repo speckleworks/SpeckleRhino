@@ -1,6 +1,7 @@
 <template>
   <v-container fluid pa-0>
     <receiver-add></receiver-add>
+    <sender-add></sender-add>
     <v-layout wrap column>
       <v-flex xs12 v-for='client in clients' :key='client.restApi' flat class='receiver'>
         <receiver v-if='client.Role === 1' :client='client'></receiver>
@@ -11,6 +12,7 @@
 
 <script>
 import ReceiverAdd from './ClientReceiverAdd.vue'
+import SenderAdd from './ClientSenderAdd.vue'
 import Receiver from './Receiver.vue'
 import { EventBus } from '../event-bus'
 
@@ -18,6 +20,7 @@ export default {
   name: 'AccountsManager',
   components: {
     ReceiverAdd,
+    SenderAdd,
     Receiver
   },
   computed: {

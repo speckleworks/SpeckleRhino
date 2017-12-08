@@ -343,6 +343,8 @@ namespace SpeckleRhino
                     }
                 }
             }
+
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         public void BakeLayer(string layerId)
@@ -388,6 +390,7 @@ namespace SpeckleRhino
                     }
                 }
             }
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
         }
 
         #endregion

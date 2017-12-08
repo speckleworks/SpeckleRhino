@@ -46,12 +46,15 @@ namespace SpeckleRhino
 
             RhinoDoc.NewDocument += (sender, e) =>
             {
+                Debug.WriteLine("NEW DOC");
                 NotifySpeckleFrame("purge-clients", "", "");
                 RemoveAllClients();
             };
 
             RhinoDoc.EndOpenDocument += (sender, e) =>
             {
+                // this seems to cover the copy paste issues
+                if (e.Merge) return; 
                 // purge clients from ui
                 NotifySpeckleFrame("client-purge", "", "");
                 // purge clients from here
@@ -62,6 +65,7 @@ namespace SpeckleRhino
 
             RhinoDoc.BeginSaveDocument += (sender, e) =>
             {
+                Debug.WriteLine("BEGIN SAVE DOC");
                 SaveFileClients();
             };
         }
@@ -278,6 +282,29 @@ namespace SpeckleRhino
                     ((RhinoReceiver)myClient).UpdateGlobal();
                 }
                 catch { throw new Exception("Refresh client was not a receiver. whoopsie poopsiee."); }
+        }
+
+        #endregion
+        
+        #region Sender Helpers
+
+        public string getSelection()
+        {
+            var SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false,false).ToList();
+            Dictionary<string, int> layerCounts = new Dictionary<string, int>();
+
+            SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
+
+            foreach(var obj in SelectedObjects)
+            {
+                var layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
+                if (layerCounts.ContainsKey(layer.Name))
+                    layerCounts[layer.Name]++;
+                else
+                    layerCounts[layer.Name] = 1;
+            }
+
+            return JsonConvert.SerializeObject(layerCounts);
         }
 
         #endregion
