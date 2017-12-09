@@ -97,7 +97,14 @@ export default {
   },
   methods: {
     addSender() {
-      
+      let payload = { account: this.selectedAccount, streamName: this.streamName }
+      if( this.objectSelection.length == 0 ) {
+        // BY LAYERS
+      } else {
+        // BY SELECTION
+        payload.selection = this.objectSelection
+        Interop.addSenderClientFromSelection( JSON.stringify( payload ) )
+      }
     }
   }, 
   mounted () {

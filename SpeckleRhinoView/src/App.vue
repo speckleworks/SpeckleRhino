@@ -9,14 +9,10 @@
           <v-tabs-item key='accounts' href='accounts'>
             Accounts
           </v-tabs-item>
-          <v-menu open-on-hover transition="slide-x-transition" bottom right offset-y offset-left>
+          <v-menu open-on-hover transition="slide-x-transition" @click.native='showDev'>
             <v-tabs-item slot='activator'>
-                <v-icon style='font-size: 14px;'>settings</v-icon>
+                <v-icon style='font-size: 14px;'>code</v-icon>
             </v-tabs-item>
-            <div>
-              <v-btn small fab  @click='purgeClients'><v-icon style='font-size: 14px;'>refresh</v-icon></v-btn small fab >
-              <v-btn small fab  @click='showDev'><v-icon style='font-size: 14px;'>code</v-icon></v-btn small fab >
-            </div>
           </v-menu>
           <v-tabs-slider color='light-blue'></v-tabs-slider>
         </v-tabs-bar>

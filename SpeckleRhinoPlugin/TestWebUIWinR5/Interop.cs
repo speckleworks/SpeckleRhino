@@ -96,6 +96,7 @@ namespace SpeckleRhino
             {
                 Debug.WriteLine("MODIFY obj attributes");
             };
+
             RhinoDoc.ReplaceRhinoObject += (sender, e) =>
             {
                 Debug.WriteLine("REPLACE Rhino Object {0}", e.ObjectId);
@@ -239,7 +240,7 @@ namespace SpeckleRhino
 
         public bool AddSenderClientFromSelection(string _payload)
         {
-            // TODO
+            var mySender = new RhinoSender(_payload, this, SenderType.BySelection);
             return true;
         }
 
