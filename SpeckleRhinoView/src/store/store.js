@@ -110,7 +110,8 @@ export default new Vuex.Store( {
 
       client.stream.name = payload.stream.name
       client.stream.layers = payload.stream.layers
-
+      client.stream.objects = payload.stream.objects
+      
       client.lastUpdate = new Date()
       client.expired = false
     },

@@ -5,6 +5,7 @@
     <v-layout wrap column>
       <v-flex xs12 v-for='client in clients' :key='client.restApi' flat class='receiver'>
         <receiver v-if='client.Role === 1' :client='client'></receiver>
+        <sender v-else :client='client'></sender>
       </v-flex>
     </v-layout>
   </v-container>
@@ -14,6 +15,7 @@
 import ReceiverAdd from './ClientReceiverAdd.vue'
 import SenderAdd from './ClientSenderAdd.vue'
 import Receiver from './Receiver.vue'
+import Sender from './Sender.vue'
 import { EventBus } from '../event-bus'
 
 export default {
@@ -21,7 +23,8 @@ export default {
   components: {
     ReceiverAdd,
     SenderAdd,
-    Receiver
+    Receiver,
+    Sender
   },
   computed: {
     clients() { 

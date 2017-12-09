@@ -219,7 +219,7 @@ namespace SpeckleRhino
             Client.Stream.Layers = pLayers;
             Client.Stream.Objects = pObjects.Select(o => o.ApplicationId).ToList();
 
-
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
         }
 
         private void MetadataSender_Elapsed(object sender, ElapsedEventArgs e)
