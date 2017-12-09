@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
@@ -50,6 +51,20 @@ namespace SpeckleRhino
             Client.OnReady += Client_OnReady;
 
             Client.IntializeSender((string)payload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid());
+
+            RhinoDoc.AddRhinoObject += RhinoDoc_AddRhinoObject;
+            RhinoApp.Idle += RhinoApp_Idle;
+            
+        }
+
+        private void RhinoApp_Idle(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void Client_OnReady(object source, SpeckleEventArgs e)

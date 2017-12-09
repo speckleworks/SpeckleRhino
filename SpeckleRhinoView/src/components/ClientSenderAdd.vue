@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model='visible' style='width: 100%' >
+  <v-dialog xxxfullscreen v-model='visible' style='width: 100%' >
     <v-card class=''>
       <v-card-title>
         Add Sender
@@ -10,17 +10,24 @@
           <v-select label="Account" required v-bind:items='userAccounts' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='userAccounts'></v-select>
            <v-text-field label="Stream name" v-model="streamName" required></v-text-field>
           </v-form>
-          <div v-if='objectSelection.length > 0' class='pa-1'>
-            <p class='caption'>The following layers will be created:</p>
+          <v-card v-if='objectSelection.length > 0' class='elevation-4 pa-2'>
+            <div class='pa-2'>Stream will be created based on your object selection:</div>
             <template v-for='sel in objectSelection'>
               <div class='caption'> 
-                <v-chip small :style='{ color: sel.color }' class='eliptic'>{{sel.layer}}</v-chip> with {{sel.objectCount}} obj
+                <v-chip xxxsmall class='eliptic' color='' style='text-align: left;'>
+                  <v-avatar :style='{ backgroundColor: sel.color }'>{{sel.objectCount}}</v-avatar>
+                  {{sel.layerName}}
+                </v-chip>
               </div>
             </template>
-          </div>
-          <v-card v-else class='light-pink elevation-4 pa-2'>
-            <v-icon>warning</v-icon>
-            <span class='caption'>No selection found. Select some objects now to automatically populate your stream!</span>
+          </v-card>
+          <v-card v-else class='elevation-4 pa-2'>
+            <div class='pa-2'>No selection found. Please select the layers you want this stream to be attached to:</div>
+            <div class='caption pa-1'>
+            <template v-for='layer, index in layerSelectionMap'>
+                <v-checkbox small v-model='layer.selected' :label='layer.layerName + " | " + layer.objectCount + " objs"' class='layer-selector' color='grey lighten-4'></v-checkbox>
+            </template>
+            </div>
           </v-card>
           <v-alert color='error' :value='fail' icon='error'>
             Failed to contact server.
@@ -45,13 +52,10 @@ import { EventBus } from '../event-bus'
 export default {
   name: 'ClientSenderAdd',
   computed: {
-    accounts() { 
-      return this.$store.getters.accounts
-    },
-    userAccounts() {
-      return this.$store.getters.accounts.map( a => a.serverName )
-    },
-    objectSelection() { return this.$store.getters.selection }
+    accounts() { return this.$store.getters.accounts },
+    userAccounts() { return this.$store.getters.accounts.map( a => a.serverName ) },
+    objectSelection() { return this.$store.getters.selection },
+    layerInfo() { return this.$store.getters.layerInfo },
   },
   watch: {
     selectedAccountValue( value ) {
@@ -67,7 +71,14 @@ export default {
       })
     },
     visible( value ) {
-      if( value ) return
+      if( value ) { 
+        Interop.getLayersAndObjectsInfo( true )
+        .then( res => {
+          this.$store.commit( 'SET_LAYERINFO', JSON.parse( res ) )
+          this.layerSelectionMap = this.layerInfo.map( layer => { return { selected: false, layerName: layer.layerName, objectCount: layer.objectCount } } )
+        })
+        return
+      }
       this.selectedAccountValue = null
       this.selectedAccount = null
     }
@@ -80,6 +91,8 @@ export default {
       fail: false,
       error: null,
       streamName: null,
+      layerSelectionMap: [],
+      layerSelection: null
     }
   },
   methods: {
@@ -96,13 +109,24 @@ export default {
 </script>
 
 <style lang="scss">
+  .layer-selector label {
+    font-size: 12px !important;
+  }
+
+  .layer-selector .input-group__details {
+    display: none;
+  }
+
   .eliptic {
-    width: 150px;
+    max-width: 100%;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
   .list__tile__title, .input-group__selections__comma {
     white-space: nowrap;
-}
+  }
+  // .input-group__details {
+  //   display: none;
+  // }
 </style>

@@ -7,12 +7,14 @@ export default new Vuex.Store( {
   state: {
     accounts: [ ],
     clients: [ ],
-    selection: [ ]
+    selection: [ ],
+    layerInfo: [ ]
   },
   getters: {
     accounts: state => state.accounts,
     clients: state => state.clients,
-    selection: state => state.selection
+    selection: state => state.selection,
+    layerInfo: state => state.layerInfo
   },
   actions: {
     getUserAccounts( context ) {
@@ -113,10 +115,11 @@ export default new Vuex.Store( {
       client.expired = false
     },
     SET_SELECTION( state, payload ) {
-      state.selection = []
+      state.selection = payload.selectionInfo
+    },
+    SET_LAYERINFO( state, payload ) {
+      state.layerInfo = payload
       console.log( payload )
-      for(const key in payload.selectionInfo )
-        state.selection.push( { layer: key, objectCount: payload.selectionInfo[ key ].objectCount, objectGuids: payload.selectionInfo[ key ].ObjectGuids, objectTypes: payload.selectionInfo[ key ].ObjectTypes, color: payload.selectionInfo[ key ].color } )
     }
   }
 } )

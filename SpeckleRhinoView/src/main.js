@@ -78,7 +78,7 @@ new Vue( {
     })
 
     EventBus.$on( 'object-selection', ( streamId, data ) => {
-      console.log( 'object-selection', data )
+      console.log( 'object-selection' )
       this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
     })
 

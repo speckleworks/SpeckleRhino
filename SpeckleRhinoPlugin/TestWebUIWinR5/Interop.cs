@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
 using System.Dynamic;
+using Rhino.DocObjects;
 
 namespace SpeckleRhino
 {
@@ -72,22 +73,52 @@ namespace SpeckleRhino
                 SaveFileClients();
             };
 
+            // selection stuff
             RhinoDoc.SelectObjects += (sender, e) =>
             {
                 if (SpeckleIsReady)
-                    NotifySpeckleFrame("object-selection", "", this.getSelection());
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
             };
 
             RhinoDoc.DeselectObjects += (sender, e) =>
             {
                 if (SpeckleIsReady)
-                    NotifySpeckleFrame("object-selection", "", this.getSelection());
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
             };
 
             RhinoDoc.DeselectAllObjects += (sender, e) =>
             {
                 if (SpeckleIsReady)
-                    NotifySpeckleFrame("object-selection", "", this.getSelection());
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
+            };
+
+            RhinoDoc.ModifyObjectAttributes += (sender, e) =>
+            {
+                Debug.WriteLine("MODIFY obj attributes");
+            };
+            RhinoDoc.ReplaceRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("REPLACE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.DeleteRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("DELETE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.AddRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("ADD Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.UndeleteRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("UNDELETE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.LayerTableEvent += (sender, e) =>
+            {
+                Debug.WriteLine("LAYER TABLE EVENT Rhino Object {0} " + e.EventType.ToString());
             };
         }
 
@@ -200,7 +231,13 @@ namespace SpeckleRhino
             return true;
         }
 
-        public bool AddSenderClient(string _payload)
+        public bool AddSenderClientFromLayers(string _payload)
+        {
+            // TODO
+            return true;
+        }
+
+        public bool AddSenderClientFromSelection(string _payload)
         {
             // TODO
             return true;
@@ -310,46 +347,65 @@ namespace SpeckleRhino
 
         #region Sender Helpers
 
-        public string getSelection()
+        public string getLayersAndObjectsInfo(bool ignoreSelection = false)
         {
-            var SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
+            List<RhinoObject> SelectedObjects;
+            List<SpeckleLayerInfo> layerInfoList = new List<SpeckleLayerInfo>();
+            if (!ignoreSelection)
+            {
+                SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
+            }
+            else
+            {
+                SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
+                foreach(Layer ll in RhinoDoc.ActiveDoc.Layers)
+                {
+                    layerInfoList.Add(new SpeckleLayerInfo()
+                    {
+                        objectCount = 0,
+                        layerName = ll.FullPath,
+                        color = System.Drawing.ColorTranslator.ToHtml(ll.Color),
+                        ObjectGuids = new List<string>(),
+                        ObjectTypes = new List<string>()
+                    });
+                }
+            }
 
-            Dictionary<string, SpeckleLayerInfo> layerInfo = new Dictionary<string, SpeckleLayerInfo>();
-            
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 
             foreach (var obj in SelectedObjects)
             {
                 var layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
+                var myLInfo = layerInfoList.FirstOrDefault(l => l.layerName == layer.FullPath);
 
-                if (layerInfo.ContainsKey(layer.FullPath))
+                if (myLInfo != null)
                 {
-                    var copy = layerInfo[layer.FullPath];
-                    copy.objectCount++ ;
-                    copy.ObjectGuids.Add(obj.Id.ToString());
-                    copy.ObjectTypes.Add(obj.Geometry.GetType().ToString());
-                    layerInfo[layer.FullPath] = copy;
-
+                    myLInfo.objectCount++;
+                    myLInfo.ObjectGuids.Add(obj.Id.ToString());
+                    myLInfo.ObjectTypes.Add(obj.Geometry.GetType().ToString());
                 }
                 else
                 {
-                    layerInfo[layer.FullPath] = new SpeckleLayerInfo() {
+                    var myNewLinfo = new SpeckleLayerInfo()
+                    {
                         objectCount = 1,
+                        layerName = layer.FullPath,
                         color = System.Drawing.ColorTranslator.ToHtml(layer.Color),
-                        ObjectGuids = new List<string>(new string[] { obj.Id.ToString()}),
-                        ObjectTypes = new List<string>( new string[] { obj.Geometry.GetType().ToString()})
+                        ObjectGuids = new List<string>(new string[] { obj.Id.ToString() }),
+                        ObjectTypes = new List<string>(new string[] { obj.Geometry.GetType().ToString() })
                     };
+                    layerInfoList.Add(myNewLinfo);
                 }
             }
 
-            return JsonConvert.SerializeObject(layerInfo);
+            return JsonConvert.SerializeObject(layerInfoList);
         }
 
         #endregion
     }
 
     [Serializable]
-    public struct SpeckleLayerInfo
+    public class SpeckleLayerInfo
     {
         public string layerName;
         public int objectCount;
