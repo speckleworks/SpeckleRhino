@@ -45,28 +45,69 @@ namespace SpeckleRhino
 
         public SenderType Type;
 
-        public dynamic InitPayload;
-
         System.Timers.Timer DataSender, MetadataSender;
-
 
         public List<string> TrackedObjects = new List<string>();
 
+        public List<string> TrackedLayers = new List<string>();
+
+        public string StreamName;
 
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
             Context = _Context;
             Type = _Type;
 
-            InitPayload = JsonConvert.DeserializeObject<ExpandoObject>(_payload);
+            dynamic InitPayload = JsonConvert.DeserializeObject<ExpandoObject>(_payload);
 
             Client = new SpeckleApiClient((string)InitPayload.account.restApi, new RhinoConverter(), true);
+
+            StreamName = (string)InitPayload.streamName;
 
             SetClientEvents();
             SetRhinoEvents();
             SetTimers();
 
-            Client.IntializeSender((string)InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid());
+            Client.IntializeSender((string)InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid()).ContinueWith(res =>
+            {
+                StreamId = Client.Stream.StreamId;
+                Client.Stream.Name = StreamName;
+
+                Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
+                Context.UserClients.Add(this);
+
+                InitTrackedObjects(InitPayload);
+                SendUpdate(CreateUpdatePayload());
+
+            });
+
+        }
+
+        public void InitTrackedObjects(dynamic payload)
+        {
+            if (StreamId == null) Debug.WriteLine("WHOOT WE GONNA FAIL");
+            switch (Type)
+            {
+                case SenderType.BySelection:
+                    foreach (var layer in payload.selection)
+                        foreach (string guid in layer.ObjectGuids)
+                        {
+                            RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
+                            TrackedObjects.Add(guid);
+                        }
+                    break;
+
+                case SenderType.ByLayers:
+                    Debug.WriteLine("TODO SenderType.byLayers");
+                    break;
+            }
+        }
+
+        public void AddTrackedObjects() { }
+
+        public void AddTrackedLayers()
+        {
+
         }
 
         public void SetRhinoEvents()
@@ -96,101 +137,110 @@ namespace SpeckleRhino
             DataSender.Elapsed += DataSender_Elapsed;
         }
 
-        public void Trigger()
-        {
-            // By selection:
-            // Parse scene objects, get only those with StreamId as property.
-            // Do global update with:
-            // new stream object list
-            // new stream layer list
-        }
-
         private void Client_OnReady(object source, SpeckleEventArgs e)
         {
-            // By selection:
-            // attach StreamId as prop to all objects in InitPayload.selection
-            // create layers
-            // convert and send objects / do global update
-
-            // By layer:
-            // get all objects from the layers and attach StreamId
-
-            // Finally:
-            // Do a full update with:
-            // StreamName
-            // StreamLayers
-            // StreamObjects
-
-            this.StreamId = Client.Stream.StreamId;
-
-            Client.Stream.Name = InitPayload.streamName;
-
-            switch (Type)
-            {
-                case SenderType.BySelection:
-                    foreach (var layer in InitPayload.selection)
-                        foreach (string guid in layer.ObjectGuids)
-                            RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
-
-                    DataSender.Start();
-                    break;
-                case SenderType.ByLayers:
-                    Debug.WriteLine("TODO SenderType.byLayers");
-                    break;
-            }
-
-            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
-            // notifiy speckle frame > add client
-            // context.add client
-
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Ready Event."));
         }
 
         private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
         {
-            PayloadStreamUpdate payload = new PayloadStreamUpdate()
-            {
-                Name = Client.Stream.Name
-            };
+            SendUpdate(CreateUpdatePayload());
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Update Sent."));
+        }
 
-            var converter = new RhinoConverter();
+        private void MetadataSender_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // TODO
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Update Sent."));
+        }
+
+        private void Client_OnWsMessage(object source, SpeckleEventArgs e)
+        {
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("WS message received and ignored."));
+        }
+
+        private void Client_OnLogData(object source, SpeckleEventArgs e)
+        {
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData));
+        }
+
+        private void Client_OnError(object source, SpeckleEventArgs e)
+        {
+            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
+        }
+
+        public void SendUpdate(PayloadStreamUpdate payload)
+        {
+            Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
+            var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
+            Client.BroadcastMessage(new { eventType = "update-global" });
+
+            // commit to cache
+            int k = 0;
+            foreach (var obj in payload.Objects)
+            {
+                obj.DatabaseId = response.Objects[k++];
+                Context.ObjectCache[obj.Hash] = obj;
+            }
+
+            Client.Stream.Layers = payload.Layers.ToList();
+            Client.Stream.Objects = payload.Objects.Select(o => o.ApplicationId).ToList();
+
+            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
+            Context.NotifySpeckleFrame("client-done-loading", StreamId, "");
+        }
+
+        /// <summary>
+        /// This one just looks through the rinho object and pulls in any objects with a matching streamid property. 
+        /// </summary>
+        /// <returns></returns>
+        public PayloadStreamUpdate CreateUpdatePayload()
+        {
+            PayloadStreamUpdate payload = new PayloadStreamUpdate() { Name = StreamName };
 
             var pLayers = new List<SpeckleLayer>();
             var pObjects = new List<SpeckleObject>();
 
-            var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + this.StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
-
-            int lindex = -1, count = 0;
-            foreach (var obj in objs)
+            using (var converter = new RhinoConverter())
             {
-                if (lindex != obj.Attributes.LayerIndex)
+                var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + this.StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
+
+                // Assemble layers and objects
+                int lindex = -1, count = 0;
+                foreach (var obj in objs)
                 {
                     Layer layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
-                    var spkLayer = new SpeckleLayer()
+                    if (lindex != obj.Attributes.LayerIndex)
                     {
-                        Name = layer.Name,
-                        Guid = layer.Id.ToString(),
-                        ObjectCount = 1,
-                        StartIndex = count,
-                        OrderIndex = obj.Attributes.LayerIndex,
-                        Properties = new SpeckleLayerProperties()
+                        var spkLayer = new SpeckleLayer()
                         {
-                            Color = new SpeckleCore.Color() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml(layer.Color) },
-                        }
-                    };
-                    pLayers.Add(spkLayer);
-                    lindex = obj.Attributes.LayerIndex;
-                }
-                else
-                {
-                    pLayers[obj.Attributes.LayerIndex].ObjectCount++;
-                }
+                            Name = layer.FullPath,
+                            Guid = layer.Id.ToString(),
+                            ObjectCount = 1,
+                            StartIndex = count,
+                            OrderIndex = obj.Attributes.LayerIndex,
+                            Properties = new SpeckleLayerProperties()
+                            {
+                                Color = new SpeckleCore.Color() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml(layer.Color) },
+                            }
+                        };
+                        pLayers.Add(spkLayer);
+                        lindex = obj.Attributes.LayerIndex;
+                    }
+                    else
+                    {
+                        var spkl = pLayers.FirstOrDefault(pl => pl.OrderIndex == obj.Attributes.LayerIndex);
+                        spkl.ObjectCount++;
+                    }
 
-                pObjects.Add(converter.ToSpeckle(obj.Geometry));
-                pObjects[pObjects.Count - 1].ApplicationId = obj.Id.ToString();
+                    pObjects.Add(converter.ToSpeckle(obj.Geometry));
+                    pObjects[pObjects.Count - 1].ApplicationId = obj.Id.ToString();
 
-                count++;
+                    count++;
+                }
             }
 
+            // Go through cache
             payload.Layers = pLayers;
             payload.Objects = pObjects.Select(obj =>
             {
@@ -199,47 +249,14 @@ namespace SpeckleRhino
                 return obj;
             });
 
+            // Add some base properties
             var baseProps = new Dictionary<string, object>();
             baseProps["units"] = RhinoDoc.ActiveDoc.ModelUnitSystem.ToString();
-            baseProps["precision"] = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+            baseProps["tolerance"] = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+            baseProps["angleTolerance"] = RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
             payload.BaseProperties = baseProps;
 
-            var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
-            var copy2 = response;
-
-            Client.BroadcastMessage(new { eventType = "update-global" });
-
-            int k = 0;
-            foreach (var obj in payload.Objects)
-            {
-                obj.DatabaseId = response.Objects[k++];
-                Context.ObjectCache[obj.Hash] = obj;
-            }
-
-            Client.Stream.Layers = pLayers;
-            Client.Stream.Objects = pObjects.Select(o => o.ApplicationId).ToList();
-
-            Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
-        }
-
-        private void MetadataSender_Elapsed(object sender, ElapsedEventArgs e)
-        {
-
-        }
-
-        private void Client_OnWsMessage(object source, SpeckleEventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void Client_OnLogData(object source, SpeckleEventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private void Client_OnError(object source, SpeckleEventArgs e)
-        {
-            //throw new NotImplementedException();
+            return payload;
         }
 
         public SpeckleCore.ClientRole GetRole()
@@ -247,14 +264,9 @@ namespace SpeckleRhino
             return ClientRole.Sender;
         }
 
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
         public string GetClientId()
         {
-            throw new NotImplementedException();
+            return Client.ClientId;
         }
 
         public void TogglePaused(bool status)
@@ -277,9 +289,76 @@ namespace SpeckleRhino
             throw new NotImplementedException();
         }
 
+        public void Dispose()
+        {
+            //var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
+
+            //foreach(var o in objs)
+            //{
+            //    o.Attributes.SetUserString("spk_" + StreamId, null);
+            //}
+
+            Client.Dispose();
+        }
+
+
+        public void CompleteDeserialisation(Interop _Context)
+        {
+            Context = _Context;
+
+            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
+            Context.UserClients.Add(this);
+        }
+
+        protected RhinoSender(SerializationInfo info, StreamingContext context)
+        {
+            byte[] serialisedClient = Convert.FromBase64String((string)info.GetString("client"));
+
+            using (var ms = new MemoryStream())
+            {
+                ms.Write(serialisedClient, 0, serialisedClient.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                Client = (SpeckleApiClient)new BinaryFormatter().Deserialize(ms);
+                StreamId = Client.StreamId;
+            }
+
+            SetClientEvents();
+            SetRhinoEvents();
+            SetTimers();
+
+            Type = (SenderType)info.GetInt16("type"); // check for exceptions
+            if (Type == SenderType.BySelection)
+                TrackedObjects = info.GetValue("trackedobjects", typeof(List<string>)) as List<string>;
+            else
+                TrackedLayers = info.GetValue("trackedlayers", typeof(List<string>)) as List<string>;
+
+            var copy = TrackedObjects;
+
+            
+
+            // Extra TODOS: 
+            // get tracked objects & layers based on type
+            // do i need to reinit, ie, or how do i check if things were updated in the meantime???
+            // or just actually send a fucking update ANYWAYS
+
+        }
+
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            throw new NotImplementedException();
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, Client);
+                info.AddValue("client", Convert.ToBase64String(ms.ToArray()));
+                info.AddValue("paused", Paused);
+                info.AddValue("visible", Visible);
+
+                info.AddValue("type", Type);
+                if (Type == SenderType.BySelection)
+                    info.AddValue("trackedobjects", TrackedObjects);
+                else
+                    info.AddValue("trackedlayers", TrackedLayers);
+            }
         }
     }
 }

@@ -187,6 +187,21 @@ namespace SpeckleRhino
                     // faster than the context get set?
                 }
             }
+
+            string[] senderKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
+
+            foreach(string sen in senderKeys)
+            {
+                byte[] serialisedClient = Convert.FromBase64String(RhinoDoc.ActiveDoc.Strings.GetValue("speckle-client-senders", sen));
+
+                using (var ms = new MemoryStream())
+                {
+                    ms.Write(serialisedClient, 0, serialisedClient.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    RhinoSender client = (RhinoSender)new BinaryFormatter().Deserialize(ms);
+                    client.CompleteDeserialisation(this);
+                }
+            }
         }
         #endregion
 

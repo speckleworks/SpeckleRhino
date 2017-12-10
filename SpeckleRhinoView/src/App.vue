@@ -9,9 +9,11 @@
           <v-tabs-item key='accounts' href='accounts'>
             Accounts
           </v-tabs-item>
-          <v-menu open-on-hover transition="slide-x-transition" @click.native='showDev'>
-            <v-tabs-item slot='activator'>
-                <v-icon style='font-size: 14px;'>code</v-icon>
+          <v-menu open-on-hover transition="slide-x-transition" >
+            <v-tabs-item slot='activator' @click.native='showDev'>
+              <v-icon style='font-size: 14px;'>code</v-icon>
+            </v-tabs-item> <v-tabs-item slot='activator' @click.native='purgeClients'>
+              <v-icon style='font-size: 14px;'>refresh</v-icon>
             </v-tabs-item>
           </v-menu>
           <v-tabs-slider color='light-blue'></v-tabs-slider>
@@ -21,12 +23,12 @@
             <v-card flat>
               <client-manager></client-manager>
             </v-card>
-          </v-tabs-content>        
+          </v-tabs-content>
           <v-tabs-content id='accounts' key='accounts'>
             <v-card flat>
               <accounts-manager></accounts-manager>
             </v-card>
-          </v-tabs-content>        
+          </v-tabs-content>
         </v-tabs-items>
       </v-tabs>
       <v-slide-y-transition>
@@ -48,8 +50,8 @@
             </v-btn>
           </v-tooltip>
         </v-speed-dial>
-    </v-slide-y-transition>
-    <v-slide-y-transition>
+      </v-slide-y-transition>
+      <v-slide-y-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="accounts"'>
           <v-btn slot='activator' fab v-model='fab' color='purple xxxlighten-2'>
             <v-icon>add</v-icon>
@@ -67,11 +69,10 @@
             </v-btn>
           </v-tooltip>
         </v-speed-dial>
-    </v-slide-y-transition>
+      </v-slide-y-transition>
     </v-app>
   </div>
 </template>
-
 <script>
 import AccountsManager from './components/AccountsManager.vue'
 import ClientManager from './components/ClientManager.vue'
@@ -83,7 +84,7 @@ export default {
     AccountsManager,
     ClientManager
   },
-  data () {
+  data( ) {
     return {
       fab: {},
       active: null
@@ -91,32 +92,29 @@ export default {
   },
   methods: {
     showDev( ) {
-      Interop.showDev()
+      Interop.showDev( )
     },
-    addReceiver() {
-      EventBus.$emit('show-add-receiver-dialog')
+    addReceiver( ) {
+      EventBus.$emit( 'show-add-receiver-dialog' )
     },
-    addSender() {
-      EventBus.$emit('show-add-sender-dialog')
+    addSender( ) {
+      EventBus.$emit( 'show-add-sender-dialog' )
     },
-    saveClients() {
-      Interop.saveFileClients()
+    saveClients( ) {
+      Interop.saveFileClients( )
     },
-    readClients() {
-      Interop.getFileStreams()
+    readClients( ) {
+      Interop.getFileStreams( )
     },
-    purgeClients() {
-      Interop.removeAllClients()
-      .then( res => {})
-      .catch( res => {})
+    purgeClients( ) {
+      Interop.removeAllClients( )
+        .then( res => {} )
+        .catch( res => {} )
     }
   }
 }
 </script>
-
 <style>
-body{
-}
-#app {
-}
+body {}
+#app {}
 </style>

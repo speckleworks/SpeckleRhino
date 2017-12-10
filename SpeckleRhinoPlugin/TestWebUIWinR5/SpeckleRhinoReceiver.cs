@@ -61,7 +61,6 @@ namespace SpeckleRhino
         #region events
         private void Client_OnError(object source, SpeckleEventArgs e)
         {
-            var copy = e;
             Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 

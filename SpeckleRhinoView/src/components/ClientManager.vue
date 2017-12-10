@@ -8,9 +8,9 @@
         <sender v-else :client='client'></sender>
       </v-flex>
     </v-layout>
+    
   </v-container>
 </template>
-
 <script>
 import ReceiverAdd from './ClientReceiverAdd.vue'
 import SenderAdd from './ClientSenderAdd.vue'
@@ -27,26 +27,23 @@ export default {
     Sender
   },
   computed: {
-    clients() { 
+    clients( ) {
       return this.$store.getters.clients
     }
   },
-  data() {
+  data( ) {
     return {
       addClientDialog: false
     }
   },
   methods: {
-    getFileClients() {
-    }
+    getFileClients( ) {}
   },
-  mounted () {
-  }
+  mounted( ) {}
 }
 </script>
-
 <style scoped>
-  .receiver:last-child{
-    /*margin-bottom: 100px;*/
-  }
+.receiver:last-child {
+  /*margin-bottom: 100px;*/
+}
 </style>
