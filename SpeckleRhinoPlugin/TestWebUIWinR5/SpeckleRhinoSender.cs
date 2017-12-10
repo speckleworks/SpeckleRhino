@@ -112,12 +112,64 @@ namespace SpeckleRhino
 
         public void SetRhinoEvents()
         {
-            // layer table events: layer name change, layer colour
-            // object events: 
-            // ModifyAttributes
-            // Delete
-            // Add
-            // Undelete
+            RhinoDoc.ModifyObjectAttributes += RhinoDoc_ModifyObjectAttributes;
+            RhinoDoc.DeleteRhinoObject += RhinoDoc_DeleteRhinoObject;
+            RhinoDoc.AddRhinoObject += RhinoDoc_AddRhinoObject;
+            RhinoDoc.UndeleteRhinoObject += RhinoDoc_UndeleteRhinoObject;
+            RhinoDoc.LayerTableEvent += RhinoDoc_LayerTableEvent;
+
+            // Note: Replace is followed by a delete and one or more add events
+        }
+
+        private void RhinoDoc_LayerTableEvent(object sender, Rhino.DocObjects.Tables.LayerTableEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            if (DataSender.Enabled) return;
+            if(TrackedObjects.Contains(e.ObjectId.ToString()))
+            {
+                DataSender.Start();
+            }
+        }
+
+        private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            if (DataSender.Enabled)
+            {
+                TrackedObjects.Add(e.ObjectId.ToString());
+                return;
+            }
+            if (e.TheObject.Attributes.GetUserString("spk_"+StreamId)!=null)
+            {
+                DataSender.Start();
+                TrackedObjects.Add(e.ObjectId.ToString());
+            }
+        }
+
+        private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
+        {
+            if(DataSender.Enabled)
+            {
+                TrackedObjects.Remove(e.ObjectId.ToString());
+                return;
+            }
+            if (TrackedObjects.Contains(e.ObjectId.ToString()))
+            {
+                DataSender.Start();
+                TrackedObjects.Remove(e.ObjectId.ToString());
+            }
+        }
+
+        private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
+        {
+            if (DataSender.Enabled) return;
+            if (TrackedObjects.Contains(e.RhinoObject.Id.ToString()))
+            {
+                DataSender.Start();
+            }
         }
 
         public void SetClientEvents()
