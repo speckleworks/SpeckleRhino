@@ -6,11 +6,15 @@ Vue.use( Vuex )
 export default new Vuex.Store( {
   state: {
     accounts: [ ],
-    clients: [ ]
+    clients: [ ],
+    selection: [ ],
+    layerInfo: [ ]
   },
   getters: {
     accounts: state => state.accounts,
-    clients: state => state.clients
+    clients: state => state.clients,
+    selection: state => state.selection,
+    layerInfo: state => state.layerInfo
   },
   actions: {
     getUserAccounts( context ) {
@@ -61,7 +65,7 @@ export default new Vuex.Store( {
     },
     SET_CLIENT_CHILDREN( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
       console.log( payload )
       client.stream.children = payload.data.children
     },
@@ -76,37 +80,47 @@ export default new Vuex.Store( {
     },
     APPEND_LOG( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
       if( !client.log ) client.log = []
       client.log.unshift( { timestamp: new Date(), message: payload.data } )
-      if ( client.log.length > 42 ) log.pop( )
+      if ( client.log.length > 5 ) { 
+        client.log.pop( )
+      }
     },
     SET_ERROR( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
       client.error = payload.data
     },
     SET_LOADING( state, payload ) { 
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
 
       client.isLoading = payload.status
     },
     SET_EXPIRED( state, payload ) { 
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
 
       client.expired = payload.status
     },
     SET_METADATA( state, payload ) { 
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
-      if( !client ) return console.warn( 'No client found!' )
+      if( !client ) return console.warn( 'No client found! ' + payload.streamId )
 
       client.stream.name = payload.stream.name
       client.stream.layers = payload.stream.layers
+      client.stream.objects = payload.stream.objects
 
       client.lastUpdate = new Date()
       client.expired = false
     },
+    SET_SELECTION( state, payload ) {
+      state.selection = payload.selectionInfo
+    },
+    SET_LAYERINFO( state, payload ) {
+      state.layerInfo = payload
+      console.log( payload )
+    }
   }
 } )

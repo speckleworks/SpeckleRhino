@@ -1,22 +1,17 @@
 <template>
-  <v-dialog fullscreen v-model='visible' style='width: 100%' >
-    <v-card class='grey darken-4'>
+  <v-dialog v-model='visible' style='width: 100%' >
+    <v-card class=''>
       <v-card-title>
         Add Receiver
       </v-card-title>        
-      <v-card-text class="grey darken-4">
+      <v-card-text class="grey darken-4" text-center>
         <div class='step-1'>
-          <div class='subheading'>
-            Select an account:
-          </div>
-          <v-select v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
+          <v-select required label='Account' v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
           <br>
-            <div class='subheading' v-show='selectedAccountValue!=null && !fail'>
-            Existing streams:
-            <v-select v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
-            Or input a stream id:
-            <v-text-field v-model='directStreamId'></v-text-field>
-          </div>
+            <div class='headline grey--text' v-show='selectedAccountValue!=null && !fail'>
+            <v-select label='Existing streams' v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
+            <v-text-field label='Stream Id Direct Input' v-model='directStreamId'></v-text-field>
+            </div>
           <v-alert color='error' :value='fail' icon='error'>
             Failed to contact server.
             <br>
@@ -27,7 +22,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn flat @click.native="visible=false">Cancel</v-btn>
-        <v-btn color='light-blue' flat @click.native='addReceiver'>Add</v-btn>
+        <v-btn color='light-blue' @click.native='addReceiver'>Add</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -44,7 +39,7 @@ export default {
       return this.$store.getters.accounts
     },
     selectItems() {
-      return this.$store.getters.accounts.map( a => a.serverName + this.separator + a.email )
+      return this.$store.getters.accounts.map( a => a.serverName )
     },
     streamsMap: {
       get() {
@@ -58,8 +53,7 @@ export default {
   watch: {
     selectedAccountValue( value ) {
       if( !value ) return
-      let acDet = value.split( this.separator )
-      this.selectedAccount = this.accounts.find( ac => ac.serverName === acDet[ 0 ] && ac.email === acDet[ 1 ])
+      this.selectedAccount = this.accounts.find( ac => ac.serverName === value )
       API.getStreams( this.selectedAccount )
       .then( res => {
         this.fail = false
