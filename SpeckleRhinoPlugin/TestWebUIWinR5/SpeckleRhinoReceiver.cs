@@ -372,6 +372,14 @@ namespace SpeckleRhino
         #endregion
 
         #region serialisation & end of life
+
+        public void Dispose(bool delete = false)
+        {
+            Client.Dispose(delete);
+            Display.Enabled = false;
+            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+        }
+
         public void Dispose()
         {
             Client.Dispose();

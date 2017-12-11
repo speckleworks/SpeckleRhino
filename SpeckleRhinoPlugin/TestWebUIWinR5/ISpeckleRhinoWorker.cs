@@ -31,5 +31,7 @@ namespace SpeckleRhino
         void ToggleLayerVisibility(string layerId, bool status);
 
         void ToggleLayerHover(string layerId, bool status);
+
+        void Dispose(bool delete = false);
     }
 }

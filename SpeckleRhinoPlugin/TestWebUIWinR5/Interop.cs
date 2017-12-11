@@ -266,7 +266,7 @@ namespace SpeckleRhino
 
             RhinoDoc.ActiveDoc.Strings.Delete(myClient.GetRole() == ClientRole.Receiver ? "speckle-client-receivers" : "speckle-client-senders", myClient.GetClientId());
 
-            myClient.Dispose();
+            myClient.Dispose(true);
 
             return UserClients.Remove(myClient);
         }

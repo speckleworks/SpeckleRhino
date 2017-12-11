@@ -117,8 +117,15 @@ namespace SpeckleRhino
             RhinoDoc.AddRhinoObject += RhinoDoc_AddRhinoObject;
             RhinoDoc.UndeleteRhinoObject += RhinoDoc_UndeleteRhinoObject;
             RhinoDoc.LayerTableEvent += RhinoDoc_LayerTableEvent;
+        }
 
-            // Note: Replace is followed by a delete and one or more add events
+        public void UnsetRhinoEvents()
+        {
+            RhinoDoc.ModifyObjectAttributes -= RhinoDoc_ModifyObjectAttributes;
+            RhinoDoc.DeleteRhinoObject -= RhinoDoc_DeleteRhinoObject;
+            RhinoDoc.AddRhinoObject -= RhinoDoc_AddRhinoObject;
+            RhinoDoc.UndeleteRhinoObject -= RhinoDoc_UndeleteRhinoObject;
+            RhinoDoc.LayerTableEvent -= RhinoDoc_LayerTableEvent;
         }
 
         private void RhinoDoc_LayerTableEvent(object sender, Rhino.DocObjects.Tables.LayerTableEventArgs e)
@@ -197,7 +204,6 @@ namespace SpeckleRhino
         private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
         {
             Debug.WriteLine("Boing! Boing!");
-            return;
             DataSender.Stop();
             SendUpdate(CreateUpdatePayload());
             Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Update Sent."));
@@ -205,7 +211,8 @@ namespace SpeckleRhino
 
         private void MetadataSender_Elapsed(object sender, ElapsedEventArgs e)
         {
-            // TODO
+            Debug.WriteLine("Ping! Ping!");
+            MetadataSender.Stop();
             Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Update Sent."));
         }
 
@@ -246,10 +253,6 @@ namespace SpeckleRhino
             Context.NotifySpeckleFrame("client-done-loading", StreamId, "");
         }
 
-        /// <summary>
-        /// This one just looks through the rinho object and pulls in any objects with a matching streamid property. 
-        /// </summary>
-        /// <returns></returns>
         public PayloadStreamUpdate CreateUpdatePayload()
         {
             PayloadStreamUpdate payload = new PayloadStreamUpdate() { Name = StreamName };
@@ -350,19 +353,28 @@ namespace SpeckleRhino
             throw new NotImplementedException();
         }
 
-        public void Dispose()
+        public void Dispose(bool delete = false)
         {
-            //var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
+            if (delete)
+            {
+                var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + StreamId, "*", false);
+                foreach (var o in objs)
+                    o.Attributes.SetUserString("spk_" + StreamId, null);
+            }
 
-            //foreach(var o in objs)
-            //{
-            //    o.Attributes.SetUserString("spk_" + StreamId, null);
-            //}
             DataSender.Dispose();
             MetadataSender.Dispose();
-            Client.Dispose();
+            UnsetRhinoEvents();
+            Client.Dispose(delete);
         }
 
+        public void Dispose()
+        {
+            DataSender.Dispose();
+            MetadataSender.Dispose();
+            UnsetRhinoEvents();
+            Client.Dispose();
+        }
 
         public void CompleteDeserialisation(Interop _Context)
         {
@@ -389,20 +401,8 @@ namespace SpeckleRhino
             SetTimers();
 
             Type = (SenderType)info.GetInt16("type"); // check for exceptions
-            if (Type == SenderType.BySelection)
-                TrackedObjects = info.GetValue("trackedobjects", typeof(List<string>)) as List<string>;
-            else
-                TrackedLayers = info.GetValue("trackedlayers", typeof(List<string>)) as List<string>;
-
-            var copy = TrackedObjects;
-
-
-
-            // Extra TODOS: 
-            // get tracked objects & layers based on type
-            // do i need to reinit, ie, or how do i check if things were updated in the meantime???
-            // or just actually send a fucking update ANYWAYS
-
+            TrackedObjects = info.GetValue("trackedobjects", typeof(List<string>)) as List<string>;
+            TrackedLayers = info.GetValue("trackedlayers", typeof(List<string>)) as List<string>;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
