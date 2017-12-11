@@ -135,4 +135,7 @@ export default {
 }
 </script>
 <style lang='scss'>
+.make-me-small {
+  font-size: 15px !important;
+}
 </style>

@@ -107,7 +107,7 @@ namespace SpeckleRhino
 
         public void AddTrackedLayers()
         {
-
+            // 
         }
 
         public void SetRhinoEvents()
@@ -196,6 +196,9 @@ namespace SpeckleRhino
 
         private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
         {
+            Debug.WriteLine("Boing! Boing!");
+            return;
+            DataSender.Stop();
             SendUpdate(CreateUpdatePayload());
             Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Update Sent."));
         }
@@ -223,6 +226,7 @@ namespace SpeckleRhino
 
         public void SendUpdate(PayloadStreamUpdate payload)
         {
+            Debug.WriteLine("Sending update " + DateTime.Now);
             Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
             var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
             Client.BroadcastMessage(new { eventType = "update-global" });
@@ -354,7 +358,8 @@ namespace SpeckleRhino
             //{
             //    o.Attributes.SetUserString("spk_" + StreamId, null);
             //}
-
+            DataSender.Dispose();
+            MetadataSender.Dispose();
             Client.Dispose();
         }
 
