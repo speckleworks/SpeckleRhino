@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class='pl-4 pr-3'>
     <template v-for='layer in layers'>
       <v-layout>
         <v-flex>

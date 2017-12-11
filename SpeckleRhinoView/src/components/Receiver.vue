@@ -153,7 +153,8 @@ export default {
 }
 </script>
 <style lang='scss'>
-  .xs-actions {
+
+.xs-actions {
     font-size: 14px !important;
   }
 .section-title {

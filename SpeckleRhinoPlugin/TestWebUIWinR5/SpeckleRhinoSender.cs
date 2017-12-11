@@ -85,7 +85,6 @@ namespace SpeckleRhino
 
         public void InitTrackedObjects(dynamic payload)
         {
-            if (StreamId == null) Debug.WriteLine("WHOOT WE GONNA FAIL");
             switch (Type)
             {
                 case SenderType.BySelection:
@@ -135,8 +134,7 @@ namespace SpeckleRhino
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if (DataSender.Enabled) return;
-            if (TrackedObjects.Contains(e.ObjectId.ToString()))
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
             }
@@ -144,36 +142,23 @@ namespace SpeckleRhino
 
         private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if (DataSender.Enabled)
-            {
-                TrackedObjects.Add(e.ObjectId.ToString());
-                return;
-            }
-            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != null)
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
-                TrackedObjects.Add(e.ObjectId.ToString());
             }
         }
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if (DataSender.Enabled)
-            {
-                TrackedObjects.Remove(e.ObjectId.ToString());
-                return;
-            }
-            if (TrackedObjects.Contains(e.ObjectId.ToString()))
+            if(e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
-                TrackedObjects.Remove(e.ObjectId.ToString());
             }
         }
 
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
-            if (DataSender.Enabled) return;
-            if (TrackedObjects.Contains(e.RhinoObject.Id.ToString()))
+            if (e.RhinoObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
             }
