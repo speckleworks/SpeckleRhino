@@ -1,11 +1,11 @@
 <template>
-  <v-card class='receiver-content' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
-    <v-divider></v-divider>
+  <v-card class='receiver-content' @mouseover='mouseOver' @mouseleave='mouseOut'>
+    <!-- <v-divider></v-divider> -->
     <v-card-title primary-title class='pb-0 pt-3'>
       <div>
         <div class='headline mb-1'>
-          <v-btn icon small class='deep-purple ma-0 elevation-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_download</v-icon> </v-btn>
-            {{ client.stream.name }}
+          <v-btn icon small class='teal ma-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_upload</v-icon></v-btn>
+           {{ client.stream.name }}
         </div>
         <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
           <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
@@ -25,33 +25,27 @@
     </v-alert>
     <v-slide-y-transition>
       <v-card-actions v-show='true' class='pl-2'>
-        <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
+        <v-btn icon @click.native='toggleLayers' small>
           <v-icon class='make-me-small'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon @click.native='toggleLog' small>
+        <v-btn icon @click.native='toggleLog' small>
           <v-icon class='make-me-small'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
+        <v-btn icon @click.native='toggleChildren' small>
           <v-icon class='make-me-small'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon flat color='' small @click.native='bakeClient'>
-          <v-icon class='make-me-small'>play_for_work</v-icon>
-        </v-btn>
         <v-spacer></v-spacer>
-        <v-btn class='xs-actions' icon flat small @click.native='toggleVisibility'>
-          <v-icon class='make-me-small'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
+        <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
           <v-icon class='make-me-small'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon flat color='red xxxlighten-3' small @click.native='removeClient'>
+        <v-btn icon flat color='red xxxlighten-3' small @click.native='removeClient'>
           <v-icon class='make-me-small'>close</v-icon>
         </v-btn>
       </v-card-actions>
     </v-slide-y-transition>
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' class='pa-0'>
-        <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
+        <sender-layers :layers='client.stream.layers' :objects='client.stream.objects'></sender-layers>
       </v-card-text>
     </v-slide-y-transition>
     <v-slide-y-transition>
@@ -88,39 +82,32 @@
   </v-card>
 </template>
 <script>
-import ReceiverLayers from './ReceiverLayers.vue'
+import SenderLayers from './SenderLayers.vue'
 
 export default {
-  name: 'Receiver',
-  components: {
-    ReceiverLayers
-  },
+  name: 'Sender',
   props: {
     client: Object
+  },
+  components: {
+    SenderLayers
   },
   computed: {},
   data( ) {
     return {
-      enableRefresh: false,
       showLayers: false,
       showLog: false,
       showChildren: false,
-      visible: true,
-      paused: false,
-      showMenu: false
+      showMenu: false,
+      paused: false
     }
   },
   methods: {
-    togglePause( ) {
-      this.paused = !this.paused
-      Interop.setClientPause( this.client.ClientId, this.paused )
+    mouseOver() {
+      this.showMenu = true
     },
-    toggleVisibility( ) {
-      this.visible = !this.visible
-      Interop.setClientVisibility( this.client.ClientId, this.visible )
-    },
-    bakeClient( ) {
-      Interop.bakeClient( this.client.ClientId )
+    mouseOut() {
+      this.showMenu = false
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false
@@ -142,35 +129,13 @@ export default {
     },
     removeClient( ) {
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
-    },
-    refreshStream( ) {
-      Interop.refreshClient( this.client.ClientId )
     }
   },
-  mounted( ) {
-
-  }
+  mounted( ) {}
 }
 </script>
 <style lang='scss'>
-
-.xs-actions {
-    font-size: 14px !important;
-  }
-.section-title {
-  padding: 2px 0 2px 24px;
-}
-
-.receiver-content {
-  transition: all .3s ease;
-}
-
-.receiver-content:hover {
-  /*background-color: #E6E6E6;*/
-}
-
-.log {
-  max-height: 210px;
-  overflow: auto;
+.make-me-small {
+  font-size: 15px !important;
 }
 </style>

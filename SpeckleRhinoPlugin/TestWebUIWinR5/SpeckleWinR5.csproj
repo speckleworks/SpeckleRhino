@@ -98,7 +98,9 @@
     <Compile Include="SpeckleCommand.cs" />
     <Compile Include="SpeckleDisplayConduit.cs" />
     <Compile Include="SpecklePlugIn.cs" />
-    <Compile Include="SpeckleRhinoWorker.cs" />
+    <Compile Include="ISpeckleRhinoWorker.cs" />
+    <Compile Include="SpeckleRhinoReceiver.cs" />
+    <Compile Include="SpeckleRhinoSender.cs" />
     <Compile Include="SpeckleTestObject.cs" />
     <Compile Include="WinForm.cs">
       <SubType>Form</SubType>

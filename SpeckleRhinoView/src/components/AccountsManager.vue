@@ -39,7 +39,7 @@ export default {
 </script>
 
 <style scoped>
-.account{
+.account {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

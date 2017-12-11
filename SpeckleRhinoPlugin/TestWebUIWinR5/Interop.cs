@@ -14,6 +14,8 @@ using SpeckleRhinoConverter;
 using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
+using System.Dynamic;
+using Rhino.DocObjects;
 
 namespace SpeckleRhino
 {
@@ -31,6 +33,8 @@ namespace SpeckleRhino
 
         public Dictionary<string, SpeckleObject> ObjectCache;
 
+        public bool SpeckleIsReady = false;
+
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
             Browser = _originalBrowser;
@@ -46,12 +50,15 @@ namespace SpeckleRhino
 
             RhinoDoc.NewDocument += (sender, e) =>
             {
+                Debug.WriteLine("NEW DOC");
                 NotifySpeckleFrame("purge-clients", "", "");
                 RemoveAllClients();
             };
 
             RhinoDoc.EndOpenDocument += (sender, e) =>
             {
+                // this seems to cover the copy paste issues
+                if (e.Merge) return;
                 // purge clients from ui
                 NotifySpeckleFrame("client-purge", "", "");
                 // purge clients from here
@@ -62,7 +69,57 @@ namespace SpeckleRhino
 
             RhinoDoc.BeginSaveDocument += (sender, e) =>
             {
+                Debug.WriteLine("BEGIN SAVE DOC");
                 SaveFileClients();
+            };
+
+            // selection stuff
+            RhinoDoc.SelectObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
+            };
+
+            RhinoDoc.DeselectObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
+            };
+
+            RhinoDoc.DeselectAllObjects += (sender, e) =>
+            {
+                if (SpeckleIsReady)
+                    NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
+            };
+
+            RhinoDoc.ModifyObjectAttributes += (sender, e) =>
+            {
+                Debug.WriteLine("MODIFY obj attributes");
+            };
+
+            RhinoDoc.ReplaceRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("REPLACE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.DeleteRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("DELETE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.AddRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("ADD Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.UndeleteRhinoObject += (sender, e) =>
+            {
+                Debug.WriteLine("UNDELETE Rhino Object {0}", e.ObjectId);
+            };
+
+            RhinoDoc.LayerTableEvent += (sender, e) =>
+            {
+                Debug.WriteLine("LAYER TABLE EVENT Rhino Object {0} " + e.EventType.ToString());
             };
         }
 
@@ -92,6 +149,7 @@ namespace SpeckleRhino
         /// </summary>
         public void AppReady()
         {
+            SpeckleIsReady = true;
             InstantiateFileClients();
         }
 
@@ -127,6 +185,21 @@ namespace SpeckleRhino
                     client.Context = this;
                     // is there maybe a race condition here, where on ready is triggered 
                     // faster than the context get set?
+                }
+            }
+
+            string[] senderKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
+
+            foreach(string sen in senderKeys)
+            {
+                byte[] serialisedClient = Convert.FromBase64String(RhinoDoc.ActiveDoc.Strings.GetValue("speckle-client-senders", sen));
+
+                using (var ms = new MemoryStream())
+                {
+                    ms.Write(serialisedClient, 0, serialisedClient.Length);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    RhinoSender client = (RhinoSender)new BinaryFormatter().Deserialize(ms);
+                    client.CompleteDeserialisation(this);
                 }
             }
         }
@@ -174,9 +247,15 @@ namespace SpeckleRhino
             return true;
         }
 
-        public bool AddSenderClient(string _payload)
+        public bool AddSenderClientFromLayers(string _payload)
         {
             // TODO
+            return true;
+        }
+
+        public bool AddSenderClientFromSelection(string _payload)
+        {
+            var mySender = new RhinoSender(_payload, this, SenderType.BySelection);
             return true;
         }
 
@@ -187,7 +266,7 @@ namespace SpeckleRhino
 
             RhinoDoc.ActiveDoc.Strings.Delete(myClient.GetRole() == ClientRole.Receiver ? "speckle-client-receivers" : "speckle-client-senders", myClient.GetClientId());
 
-            myClient.Dispose();
+            myClient.Dispose(true);
 
             return UserClients.Remove(myClient);
         }
@@ -219,7 +298,7 @@ namespace SpeckleRhino
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
             if (myClient != null || myClient is RhinoReceiver)
                 ((RhinoReceiver)myClient).Bake();
-               
+
         }
 
         public void bakeLayer(string clientId, string layerGuid)
@@ -281,5 +360,73 @@ namespace SpeckleRhino
         }
 
         #endregion
+
+        #region Sender Helpers
+
+        public string getLayersAndObjectsInfo(bool ignoreSelection = false)
+        {
+            List<RhinoObject> SelectedObjects;
+            List<SpeckleLayerInfo> layerInfoList = new List<SpeckleLayerInfo>();
+            if (!ignoreSelection)
+            {
+                SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
+            }
+            else
+            {
+                SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
+                foreach(Layer ll in RhinoDoc.ActiveDoc.Layers)
+                {
+                    layerInfoList.Add(new SpeckleLayerInfo()
+                    {
+                        objectCount = 0,
+                        layerName = ll.FullPath,
+                        color = System.Drawing.ColorTranslator.ToHtml(ll.Color),
+                        ObjectGuids = new List<string>(),
+                        ObjectTypes = new List<string>()
+                    });
+                }
+            }
+
+            SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
+
+            foreach (var obj in SelectedObjects)
+            {
+                var layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
+                var myLInfo = layerInfoList.FirstOrDefault(l => l.layerName == layer.FullPath);
+
+                if (myLInfo != null)
+                {
+                    myLInfo.objectCount++;
+                    myLInfo.ObjectGuids.Add(obj.Id.ToString());
+                    myLInfo.ObjectTypes.Add(obj.Geometry.GetType().ToString());
+                }
+                else
+                {
+                    var myNewLinfo = new SpeckleLayerInfo()
+                    {
+                        objectCount = 1,
+                        layerName = layer.FullPath,
+                        color = System.Drawing.ColorTranslator.ToHtml(layer.Color),
+                        ObjectGuids = new List<string>(new string[] { obj.Id.ToString() }),
+                        ObjectTypes = new List<string>(new string[] { obj.Geometry.GetType().ToString() })
+                    };
+                    layerInfoList.Add(myNewLinfo);
+                }
+            }
+
+            return JsonConvert.SerializeObject(layerInfoList);
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    public class SpeckleLayerInfo
+    {
+        public string layerName;
+        public int objectCount;
+        public string color;
+        public List<string> ObjectGuids;
+        public List<string> ObjectTypes;
     }
 }
