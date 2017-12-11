@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# script/bootstrap: Resolve all dependencies that the application requires to
+#                   run.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "==> Checking for dependent projects..."
+echo
+
+[ -d ../SpeckleAccountManager ] || (echo "../SpeckleAccountManager missing" && exit 1)
+[ -d ../SpeckleCore ] || (echo "../SpeckleCore missing" && exit 1)
+[ -d ../SpeckleRhinoConverter ] || (echo "../SpeckleRhinoConverter missing" && exit 1)
+[ -d ../SpeckleUserDataUtils ] || (echo "../SpeckleUserDataUtils missing" && exit 1)
+
+echo "All there!"
+
+nuget="script/bin/nuget"
+
+echo
+echo "==> Installing SpeckleGrasshopper dependencies..."
+echo
+
+# $nuget restore packages.config -packagesdirectory packages
+$nuget restore SpeckleGrasshopper.sln
+
+echo
+echo "==> Installing SpeckleAccountManager dependencies..."
+echo
+
+$nuget restore ../SpeckleAccountManager/packages.config -packagesdirectory ../packages
+
+echo
+echo "==> Installing SpeckleCore dependencies..."
+echo
+
+$nuget restore ../SpeckleCore/SpeckleCore/packages.config -packagesdirectory ../SpeckleCore/SpeckleCore/packages
+
+echo
+echo "==> Installing SpeckleRhinoConverter dependencies..."
+echo
+
+$nuget restore ../SpeckleRhinoConverter/packages.config -packagesdirectory ../SpeckleRhinoConverter/packages
+
+echo
+echo "==> Installing SpeckleUserDataUtils dependencies..."
+echo
+
+$nuget restore ../SpeckleUserDataUtils/packages.config -packagesdirectory ../SpeckleUserDataUtils/packages
+
+echo
+echo "==> Ensure SpeckleSenderReceiver directory exists..."
+
+mkdir -p $HOME/AppData/Roaming/Grasshopper/Libraries/SpeckleSendReceive
