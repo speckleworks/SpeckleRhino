@@ -12,7 +12,7 @@
     <ProjectGuid>{A8591174-0599-433C-9B01-2A51C2B877AE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SpeckleWindowsR5</RootNamespace>
+    <RootNamespace>SpeckleRhino</RootNamespace>
     <AssemblyName>SpeckleWindowsR5</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
