@@ -129,7 +129,7 @@ namespace SpeckleRhino
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
             if (DataSender.Enabled) return;
-            if(TrackedObjects.Contains(e.ObjectId.ToString()))
+            if (TrackedObjects.Contains(e.ObjectId.ToString()))
             {
                 DataSender.Start();
             }
@@ -142,7 +142,7 @@ namespace SpeckleRhino
                 TrackedObjects.Add(e.ObjectId.ToString());
                 return;
             }
-            if (e.TheObject.Attributes.GetUserString("spk_"+StreamId)!=null)
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != null)
             {
                 DataSender.Start();
                 TrackedObjects.Add(e.ObjectId.ToString());
@@ -151,7 +151,7 @@ namespace SpeckleRhino
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if(DataSender.Enabled)
+            if (DataSender.Enabled)
             {
                 TrackedObjects.Remove(e.ObjectId.ToString());
                 return;
@@ -258,7 +258,7 @@ namespace SpeckleRhino
                 var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + this.StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
 
                 // Assemble layers and objects
-                int lindex = -1, count = 0;
+                int lindex = -1, count = 0, orderIndex = 0;
                 foreach (var obj in objs)
                 {
                     Layer layer = RhinoDoc.ActiveDoc.Layers[obj.Attributes.LayerIndex];
@@ -270,7 +270,7 @@ namespace SpeckleRhino
                             Guid = layer.Id.ToString(),
                             ObjectCount = 1,
                             StartIndex = count,
-                            OrderIndex = obj.Attributes.LayerIndex,
+                            OrderIndex = orderIndex++,
                             Properties = new SpeckleLayerProperties()
                             {
                                 Color = new SpeckleCore.Color() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml(layer.Color) },
@@ -292,8 +292,13 @@ namespace SpeckleRhino
                 }
             }
 
-            // Go through cache
+            foreach (var layer in pLayers)
+            {
+                layer.Topology = "0-" + layer.ObjectCount + " ";
+            }
+
             payload.Layers = pLayers;
+            // Go through cache
             payload.Objects = pObjects.Select(obj =>
             {
                 if (Context.ObjectCache.ContainsKey(obj.Hash))
@@ -386,7 +391,7 @@ namespace SpeckleRhino
 
             var copy = TrackedObjects;
 
-            
+
 
             // Extra TODOS: 
             // get tracked objects & layers based on type
@@ -406,10 +411,8 @@ namespace SpeckleRhino
                 info.AddValue("visible", Visible);
 
                 info.AddValue("type", Type);
-                if (Type == SenderType.BySelection)
-                    info.AddValue("trackedobjects", TrackedObjects);
-                else
-                    info.AddValue("trackedlayers", TrackedLayers);
+                info.AddValue("trackedobjects", TrackedObjects);
+                info.AddValue("trackedlayers", TrackedLayers);
             }
         }
     }
