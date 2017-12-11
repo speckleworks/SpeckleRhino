@@ -1,2 +1,5 @@
+# directories
 packages/
 .vs/
+bin/
+obj/
