@@ -1,16 +1,23 @@
 <template>
-  <v-card class='receiver-content' @mouseover='mouseOver' @mouseleave='mouseOut'>
-    <!-- <v-divider></v-divider> -->
-    <v-card-title primary-title class='pb-0 pt-3'>
-      <div>
-        <div class='headline mb-1'>
-          <v-btn icon small class='teal ma-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_upload</v-icon></v-btn>
+  <v-card class='receiver-content'>
+    <v-card-title primary-title class='pb-0 pt-3' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
+      <v-layout>
+        <v-flex class='headline mb-1 xs12'>
+          <v-speed-dial small fab class='ma-0'>
+            <v-icon class='red--text xxxxs-actions'>
+              cloud_upload
+            </v-icon>
+          </v-speed-dial>
+          <span>
            {{ client.stream.name }}
-        </div>
-        <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
+         </span>
+        </v-flex>
+      </v-layout>
+      <v-layout>
+        <v-flex class='caption xs12'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
           <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
-        </div>
-      </div>
+        </v-flex>
+      </v-layout>
     </v-card-title>
     <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <v-alert color='info' v-model='client.expired'>
@@ -23,31 +30,34 @@
         </v-flex>
       </v-layout>
     </v-alert>
-    <v-slide-y-transition>
+    <!-- standard actions -->
+    <v-scale-transition>
       <v-card-actions v-show='true' class='pl-2'>
         <v-btn icon @click.native='toggleLayers' small>
-          <v-icon class='make-me-small'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
         <v-btn icon @click.native='toggleLog' small>
-          <v-icon class='make-me-small'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn>
         <v-btn icon @click.native='toggleChildren' small>
-          <v-icon class='make-me-small'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
         <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='make-me-small'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+          <v-icon class='xs-actions'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
         </v-btn>
         <v-btn icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='make-me-small'>close</v-icon>
+          <v-icon class='xs-actions'>close</v-icon>
         </v-btn>
       </v-card-actions>
-    </v-slide-y-transition>
+    </v-scale-transition>
+    <!-- layers -->
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' class='pa-0'>
         <sender-layers :layers='client.stream.layers' :objects='client.stream.objects'></sender-layers>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- log -->
     <v-slide-y-transition>
       <v-card-text v-show='showLog' class='pa-0'>
         <!-- <blockquote class='section-title'>Log</blockquote> -->
@@ -63,6 +73,7 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
         <blockquote class='section-title'>Children:</blockquote>
@@ -103,11 +114,8 @@ export default {
     }
   },
   methods: {
-    mouseOver() {
-      this.showMenu = true
-    },
-    mouseOut() {
-      this.showMenu = false
+    togglePause( ) {
+      this.paused = !this.paused
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false

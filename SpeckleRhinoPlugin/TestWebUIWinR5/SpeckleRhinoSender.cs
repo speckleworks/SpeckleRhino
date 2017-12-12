@@ -273,7 +273,7 @@ namespace SpeckleRhino
                     }
                     else
                     {
-                        var spkl = pLayers.FirstOrDefault(pl => pl.OrderIndex == obj.Attributes.LayerIndex);
+                        var spkl = pLayers.FirstOrDefault(pl => pl.Name == layer.FullPath);
                         spkl.ObjectCount++;
                     }
 

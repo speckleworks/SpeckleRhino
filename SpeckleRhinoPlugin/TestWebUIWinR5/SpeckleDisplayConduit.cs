@@ -95,7 +95,7 @@ namespace SpeckleRhino
                             break;
 
                         case Rhino.DocObjects.ObjectType.Mesh:
-                            DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Colors[count], Color.Yellow, Color.White, Color.White, 0.1, 0.5);
+                            DisplayMaterial mMaterial = new DisplayMaterial(Colors[count], 0.5);
                             e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
                             //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
                             break;
@@ -122,37 +122,40 @@ namespace SpeckleRhino
                 if (Geometry[i] != null)
                 {
                     var obj = Geometry[i];
-                    //switch (obj.ObjectType)
-                    //{
-                    //    case Rhino.DocObjects.ObjectType.Point:
-                    //        e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, PointStyle.X, 3, Color.Yellow );
-                    //        break;
 
-                    //    case Rhino.DocObjects.ObjectType.Curve:
-                    //        e.Display.DrawCurve((Curve)obj, Color.Yellow, 3);
-                    //        break;
+                    switch (obj.ObjectType)
+                    {
+                        case Rhino.DocObjects.ObjectType.Point:
+                            e.Display.DrawPoint(((Rhino.Geometry.Point)obj).Location, PointStyle.X, 4, Color.Orange);
+                            break;
 
-                    //    case Rhino.DocObjects.ObjectType.Brep:
-                    //        DisplayMaterial bMaterial = new DisplayMaterial(Color.Yellow, 0.5);
-                    //        e.Display.DrawBrepShaded((Brep)obj, bMaterial);
-                    //        //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
-                    //        break;
+                        case Rhino.DocObjects.ObjectType.Curve:
+                            e.Display.DrawCurve((Curve)obj, Color.Orange);
+                            break;
 
-                    //    case Rhino.DocObjects.ObjectType.Mesh:
-                    //        DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial(Color.Yellow, Color.Yellow, Color.White, Color.White, 0.1, 0.5);
-                    //        e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
-                    //        //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
-                    //        break;
+                        case Rhino.DocObjects.ObjectType.Brep:
+                            DisplayMaterial bMaterial = new DisplayMaterial(Color.Orange, 0.5);
+                            e.Display.DrawBrepShaded((Brep)obj, bMaterial);
+                            //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
+                            break;
 
-                    //    case Rhino.DocObjects.ObjectType.TextDot:
-                    //        //todo
-                    //        break;
+                        case Rhino.DocObjects.ObjectType.Mesh:
+                            DisplayMaterial mMaterial = new DisplayMaterial(Color.Orange, 0.5);
+                            e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                            //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
+                            break;
 
-                    //    case Rhino.DocObjects.ObjectType.Annotation:
-                    //        //todo
-                    //        break;
-                    //}
-                    e.Display.DrawBoxCorners(((GeometryBase)Geometry[i]).GetBoundingBox(false), Color.Yellow);
+                        case Rhino.DocObjects.ObjectType.TextDot:
+                            //todo
+                            break;
+
+                        case Rhino.DocObjects.ObjectType.Annotation:
+                            //todo
+                            break;
+                    }
+
+                    var bbox = ((GeometryBase)Geometry[i]).GetBoundingBox(false); bbox.Inflate(5);
+                    e.Display.DrawBoxCorners(bbox, Color.Orange, 5, 1);
                 }
 
             }

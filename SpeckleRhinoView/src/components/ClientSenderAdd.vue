@@ -30,8 +30,7 @@
             </div>
           </v-card>
           <v-alert color='error' :value='fail' icon='error'>
-            Failed to contact server.
-            <br> {{ error }}
+            {{ error }}
           </v-alert>
         </div>
       </v-card-text>
@@ -97,10 +96,12 @@ export default {
     addSender( ) {
       if ( this.selectedAccount == null ) {
         this.error = 'Please select an account.'
+        this.fail = true
         return
       }
-      if ( !str || /^\s*$/.test( str ) ) {
+      if ( !this.streamName || /^\s*$/.test( this.streamName ) ) {  
         this.error = 'Please input a stream name.'
+        this.fail = true
         return
       }
       let payload = { account: this.selectedAccount, streamName: this.streamName }

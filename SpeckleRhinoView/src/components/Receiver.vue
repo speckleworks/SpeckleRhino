@@ -1,10 +1,9 @@
 <template>
   <v-card class='receiver-content' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
-    <v-divider></v-divider>
     <v-card-title primary-title class='pb-0 pt-3'>
       <div>
         <div class='headline mb-1'>
-          <v-btn icon small class='deep-purple ma-0 elevation-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_download</v-icon> </v-btn>
+          <v-btn fab small class=' ma-0'><v-icon class='cyan--text xxxxs-actions'>cloud_download</v-icon> </v-btn>
             {{ client.stream.name }}
         </div>
         <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
@@ -23,37 +22,40 @@
         </v-flex>
       </v-layout>
     </v-alert>
+    <!-- card actions -->
     <v-slide-y-transition>
       <v-card-actions v-show='true' class='pl-2'>
         <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
-          <v-icon class='make-me-small'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
-          <v-icon class='make-me-small'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn>
         <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
-          <v-icon class='make-me-small'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
+          <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
         <v-btn class='xs-actions' icon flat color='' small @click.native='bakeClient'>
-          <v-icon class='make-me-small'>play_for_work</v-icon>
+          <v-icon class='xs-actions'>play_for_work</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
         <v-btn class='xs-actions' icon flat small @click.native='toggleVisibility'>
-          <v-icon class='make-me-small'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
+          <v-icon class='xs-actions'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
         </v-btn>
         <v-btn class='xs-actions' icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='make-me-small'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+          <v-icon class='xs-actions'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
         </v-btn>
         <v-btn class='xs-actions' icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='make-me-small'>close</v-icon>
+          <v-icon class='xs-actions'>close</v-icon>
         </v-btn>
       </v-card-actions>
     </v-slide-y-transition>
+    <!-- layers -->
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' class='pa-0'>
         <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- log -->
     <v-slide-y-transition>
       <v-card-text v-show='showLog' class='pa-0'>
         <!-- <blockquote class='section-title'>Log</blockquote> -->
@@ -69,6 +71,7 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
         <blockquote class='section-title'>Children:</blockquote>
@@ -154,15 +157,13 @@ export default {
 </script>
 <style lang='scss'>
 
-.xs-actions {
-    font-size: 14px !important;
-  }
 .section-title {
   padding: 2px 0 2px 24px;
 }
 
 .receiver-content {
   transition: all .3s ease;
+  /*border-bottom: 1px solid #6D6D6D;*/
 }
 
 .receiver-content:hover {

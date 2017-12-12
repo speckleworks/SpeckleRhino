@@ -53,14 +53,12 @@ export default new Vuex.Store( {
     },
     ADD_CLIENT( state, payload ) {  
       payload.client.stream = payload.stream
-      
-      // extra props
+      // extra props for the ui
       payload.client.log = [ { timestamp: new Date(), message: 'Client added.' } ]
       payload.client.isLoading = false
       payload.client.error = null
       payload.client.expired = false
       payload.client.lastUpdate = new Date()
-
       state.clients.unshift( payload.client )
     },
     SET_CLIENT_CHILDREN( state, payload ) {

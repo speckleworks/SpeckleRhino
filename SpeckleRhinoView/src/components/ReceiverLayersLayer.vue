@@ -1,18 +1,20 @@
 <template>
   <v-layout @mouseover='mouseOver' @mouseleave='mouseOut' align-center>
-    <v-flex>
-      <v-btn icon small xs flat @click.native='visible=!visible' color='grey'>
-        <v-icon dark>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
-      </v-btn>
-      <v-btn icon small xs flat @click.native='bake' color='grey'>
-        <v-icon dark>play_for_work</v-icon>
+    <v-flex class='xs1'>
+      <v-btn icon small flat @click.native='visible=!visible' color='grey' class='ma-0'>
+        <v-icon dark class='xs-actions'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
       </v-btn>
     </v-flex>
-    <v-flex xs6 class='layername'>
-      <span class='subheading'>{{ layer.name }}</span>
+    <v-flex class='xs1'>
+      <v-btn icon small xs flat @click.native='bake' color='grey' class='ma-0'>
+        <v-icon dark class='xs-actions'>play_for_work</v-icon>
+      </v-btn>
+    </v-flex>
+    <v-flex class='xs8 text-xs-left layername'>
+      <span class=''>{{ layer.name }}</span>
       <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>
     </v-flex>
-    <v-flex style='text-align: center;'>
+    <v-flex class=' text-xs-center'>
       <v-icon dark :style='{ color: layerColor.hex }' class='make-me-small'>fiber_manual_record</v-icon>
     </v-flex>
   </v-layout>
@@ -34,7 +36,6 @@ export default {
   },
   watch: {
     visible( value ) {
-      console.log( this.clientId, this.layer.guid, value )
       Interop.setLayerVisibility( this.clientId, this.layer.guid, value )
     }
   },
@@ -63,6 +64,7 @@ export default {
 }
 
 .layername {
+  max-width: 50%;
   text-overflow: ellipsis;
   /* Required for text-overflow to do anything */
   white-space: nowrap;
