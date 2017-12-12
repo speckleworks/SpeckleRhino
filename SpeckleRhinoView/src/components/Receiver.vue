@@ -15,7 +15,7 @@
           <v-btn fab small class='yellow darken-3' @click.native='bakeClient'>
             <v-icon>play_for_work</v-icon>
           </v-btn>
-          <v-btn fab small class='red'>
+          <v-btn fab small class='red' @click.native='confirmDelete=true'>
             <v-icon>delete</v-icon>
           </v-btn>
         </v-speed-dial>
@@ -49,7 +49,7 @@
         <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
           <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
-<!--         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
+        <!--         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
           <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn> -->
         <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
@@ -96,6 +96,17 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <v-dialog v-model='confirmDelete'>
+      <v-card>
+        <v-card-title class='headline'>Are you sure you want to delete this receiver?</v-card-title>
+        <v-card-text>This is a premanent change.</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native='confirmDelete=false'>Cancel</v-btn>
+          <v-btn color='red' class='' @click.native='removeClient'>Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -120,7 +131,8 @@ export default {
       visible: true,
       paused: false,
       showMenu: false,
-      fadeMenu: false
+      fadeMenu: false,
+      confirmDelete: false
     }
   },
   methods: {
@@ -154,6 +166,7 @@ export default {
       this.showChildren = true
     },
     removeClient( ) {
+      this.confirmDelete = false
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
     },
     refreshStream( ) {
