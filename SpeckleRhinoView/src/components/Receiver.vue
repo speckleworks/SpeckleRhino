@@ -1,16 +1,36 @@
 <template>
-  <v-card class='receiver-content' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
-    <v-card-title primary-title class='pb-0 pt-3'>
-      <div>
-        <div class='headline mb-1'>
-          <v-btn fab small class=' ma-0'><v-icon class='cyan--text xxxxs-actions'>cloud_download</v-icon> </v-btn>
+  <v-card class='receiver-content'>
+    <v-layout>
+      <v-flex class='xs2'>
+        <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
+          <v-btn fab small class='ma-0 cyan darken-3' slot='activator' v-model='fab'>
+            <v-icon xxxclass='cyan--text xxxxs-actions'>
+              cloud_download
+            </v-icon>
+            <v-icon>close</v-icon>
+          </v-btn>
+          <v-btn fab small @click.native='togglePause'>
+            <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+          </v-btn>
+          <v-btn fab small class='yellow darken-3' @click.native='bakeClient'>
+            <v-icon>play_for_work</v-icon>
+          </v-btn>
+          <v-btn fab small class='red'>
+            <v-icon>delete</v-icon>
+          </v-btn>
+        </v-speed-dial>
+      </v-flex>
+      <v-flex>
+        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
+          <p class='headline mb-1'>
             {{ client.stream.name }}
-        </div>
-        <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
-          <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
-        </div>
-      </div>
-    </v-card-title>
+          </p>
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> Last updated:
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+          </div>
+        </v-card-title>
+      </v-flex>
+    </v-layout>
     <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <v-alert color='info' v-model='client.expired'>
       <v-layout align-center>
@@ -24,28 +44,16 @@
     </v-alert>
     <!-- card actions -->
     <v-slide-y-transition>
-      <v-card-actions v-show='true' class='pl-2'>
+      <v-card-actions v-show='true' class='pl-2' :class='{ faded: fab }' style='transition: all .3s ease'>
+        <v-spacer></v-spacer>
         <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
           <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon @click.native='toggleLog' small>
+<!--         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
           <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
-        </v-btn>
+        </v-btn> -->
         <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
           <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='' small @click.native='bakeClient'>
-          <v-icon class='xs-actions'>play_for_work</v-icon>
-        </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn class='xs-actions' icon flat small @click.native='toggleVisibility'>
-          <v-icon class='xs-actions'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='xs-actions'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='xs-actions'>close</v-icon>
         </v-btn>
       </v-card-actions>
     </v-slide-y-transition>
@@ -104,13 +112,15 @@ export default {
   computed: {},
   data( ) {
     return {
+      fab: false,
       enableRefresh: false,
       showLayers: false,
       showLog: false,
       showChildren: false,
       visible: true,
       paused: false,
-      showMenu: false
+      showMenu: false,
+      fadeMenu: false
     }
   },
   methods: {
@@ -156,6 +166,9 @@ export default {
 }
 </script>
 <style lang='scss'>
+.faded {
+  opacity: 0.2
+}
 
 .section-title {
   padding: 2px 0 2px 24px;
@@ -163,11 +176,6 @@ export default {
 
 .receiver-content {
   transition: all .3s ease;
-  /*border-bottom: 1px solid #6D6D6D;*/
-}
-
-.receiver-content:hover {
-  /*background-color: #E6E6E6;*/
 }
 
 .log {

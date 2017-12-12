@@ -1,5 +1,6 @@
 <template>
   <div class='pl-4 pr-3'>
+    <!-- <v-btn icon> -->
     <template v-for='layer in layers'>
       <v-layout>
         <v-flex>

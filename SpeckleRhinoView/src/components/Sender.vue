@@ -3,11 +3,21 @@
     <v-card-title primary-title class='pb-0 pt-3' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
       <v-layout>
         <v-flex class='headline mb-1 xs12'>
-          <v-speed-dial small fab class='ma-0'>
-            <v-icon class='red--text xxxxs-actions'>
-              cloud_upload
+          <v-btn fab small :flat='!showMenu' class='ma-0 light-blue' @click.native='showAddDialog=showMenu'>
+            <v-icon :style=' { color: !showMenu ? "#FA7187" : "" } '>
+              {{ !showMenu ? "cloud_upload" : "add" }}
             </v-icon>
-          </v-speed-dial>
+          </v-btn>
+          <v-slide-x-transition>
+            <div v-show='showMenu' class='stream-menu'>
+              <v-btn fab small class='ma-0 pink' @click.native='showRemoveDialog=true'>
+                <v-icon>remove</v-icon>
+              </v-btn>
+              <v-btn fab small class='ma-0' @click.native='showRemoveDialog=true'>
+                <v-icon>open_in_new</v-icon>
+              </v-btn>
+            </div>
+          </v-slide-x-transition>
           <span>
            {{ client.stream.name }}
          </span>
@@ -90,6 +100,49 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- dialog -->
+    <v-dialog v-model='showAddDialog'>
+      <v-card v-if='objectSelection.length > 0'>
+        <v-card-title class="headline">Add {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} to the stream?</v-card-title>
+        <div>
+          <v-layout class='text-xs-center pa-0 ma-0'>
+            <v-flex>
+              <v-tooltip bottom>
+                <span>You can still edit your selection.</span>
+                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='addObjectsToStream'>Yes!</v-btn>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
+        </div>
+      </v-card>
+      <v-card v-else class='elevation-4 pa-2'>
+        <div class='pa-2 subheading'>
+          <v-icon>warning</v-icon>
+          No selection found. Please select some objects to add or remove!
+        </div>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model='showRemoveDialog'>
+      <v-card v-if='objectSelection.length > 0'>
+        <v-card-title class="headline">Remove {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} from the stream?</v-card-title>
+        <div>
+          <v-layout class='text-xs-center pa-0 ma-0'>
+            <v-flex>
+              <v-tooltip bottom>
+                <span>You can still edit your selection.</span>
+                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='removeObjectsFromStream'>Yes!</v-btn>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
+        </div>
+      </v-card>
+      <v-card v-else class='elevation-4 pa-2'>
+        <div class='pa-2 subheading'>
+          <v-icon>warning</v-icon>
+          No selection found. Please select some objects to add or remove!
+        </div>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -103,17 +156,33 @@ export default {
   components: {
     SenderLayers
   },
-  computed: {},
+  computed: {
+    objectSelection( ) { return this.$store.getters.selection },
+    selectionObjectCount( ) {
+      let sum = 0
+      this.objectSelection.forEach( l => sum += l.objectCount )
+      return sum
+    },
+    layerInfo( ) { return this.$store.getters.layerInfo },
+  },
   data( ) {
     return {
       showLayers: false,
       showLog: false,
       showChildren: false,
       showMenu: false,
+      showAddDialog: false,
+      showRemoveDialog: false,
       paused: false
     }
   },
   methods: {
+    addObjectsToStream( ) {
+      this.showAddDialog = false
+    },
+    removeObjectsFromStream( ) {
+      this.showRemoveDialog = false
+    },
     togglePause( ) {
       this.paused = !this.paused
     },
@@ -143,6 +212,14 @@ export default {
 }
 </script>
 <style lang='scss'>
+.stream-menu {
+  position: absolute;
+}
+
+.fat-one {
+  /*width:100%;*/
+}
+
 .make-me-small {
   font-size: 15px !important;
 }
