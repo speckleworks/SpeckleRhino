@@ -1,6 +1,8 @@
 <template>
   <v-card class='receiver-content'>
+    <!-- header - menu and title -->
     <v-layout>
+      <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
           <v-btn fab small class='ma-0 cyan darken-3' slot='activator' v-model='fab'>
@@ -20,6 +22,7 @@
           </v-btn>
         </v-speed-dial>
       </v-flex>
+      <!-- title -->
       <v-flex>
         <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
           <p class='headline mb-1'>
@@ -31,7 +34,9 @@
         </v-card-title>
       </v-flex>
     </v-layout>
-    <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
+    <!-- misc -->
+    <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'>
+    </v-progress-linear>
     <v-alert color='info' v-model='client.expired'>
       <v-layout align-center>
         <v-flex>There are updates available.</v-flex>
@@ -96,10 +101,10 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- confirm delete dialog -->
     <v-dialog v-model='confirmDelete'>
       <v-card>
         <v-card-title class='headline'>Are you sure you want to delete this receiver?</v-card-title>
-        <v-card-text>This is a premanent change.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn flat @click.native='confirmDelete=false'>Cancel</v-btn>
@@ -174,7 +179,7 @@ export default {
     }
   },
   mounted( ) {
-
+    // does nothing
   }
 }
 </script>

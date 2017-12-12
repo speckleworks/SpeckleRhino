@@ -1,34 +1,39 @@
 <template>
   <v-card class='receiver-content'>
-    <v-card-title primary-title class='pb-0 pt-3' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
-      <v-layout>
-        <v-flex class='headline mb-1 xs12'>
-          <v-btn fab small :flat='!showMenu' class='ma-0 light-blue' @click.native='showAddDialog=showMenu'>
-            <v-icon :style=' { color: !showMenu ? "#FA7187" : "" } '>
-              {{ !showMenu ? "cloud_upload" : "add" }}
+    <!-- header - menu and title -->
+    <v-layout>
+      <!-- speed dial menu -->
+      <v-flex class='xs2'>
+        <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
+          <v-btn fab small class='ma-0 pink darken-3' slot='activator' v-model='fab'>
+            <v-icon xxxclass='pink--text xxxxs-actions'>
+              cloud_download
             </v-icon>
+            <v-icon>close</v-icon>
           </v-btn>
-          <v-slide-x-transition>
-            <div v-show='showMenu' class='stream-menu'>
-              <v-btn fab small class='ma-0 pink' @click.native='showRemoveDialog=true'>
-                <v-icon>remove</v-icon>
-              </v-btn>
-              <v-btn fab small class='ma-0' @click.native='showRemoveDialog=true'>
-                <v-icon>open_in_new</v-icon>
-              </v-btn>
-            </div>
-          </v-slide-x-transition>
-          <span>
-           {{ client.stream.name }}
-         </span>
-        </v-flex>
-      </v-layout>
-      <v-layout>
-        <v-flex class='caption xs12'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
-          <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
-        </v-flex>
-      </v-layout>
-    </v-card-title>
+          <v-btn fab small class='light-blue'>
+            <v-icon>swap_horiz</v-icon>
+          </v-btn>
+          <v-btn fab small @click.native='togglePause'>
+            <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+          </v-btn>
+          <v-btn fab small class='red' @click.native='confirmDelete=true'>
+            <v-icon>delete</v-icon>
+          </v-btn>
+        </v-speed-dial>
+      </v-flex>
+      <!-- title -->
+      <v-flex>
+        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
+          <p class='headline mb-1'>
+            {{ client.stream.name }}
+          </p>
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+          </div>
+        </v-card-title>
+      </v-flex>
+    </v-layout>
     <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <v-alert color='info' v-model='client.expired'>
       <v-layout align-center>
@@ -43,22 +48,22 @@
     <!-- standard actions -->
     <v-scale-transition>
       <v-card-actions v-show='true' class='pl-2'>
+        <v-spacer></v-spacer>
         <v-btn icon @click.native='toggleLayers' small>
           <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
-        <v-btn icon @click.native='toggleLog' small>
+        <!-- <v-btn icon @click.native='toggleLog' small>
           <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
-        </v-btn>
+        </v-btn> -->
         <v-btn icon @click.native='toggleChildren' small>
           <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
+        <!-- <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
           <v-icon class='xs-actions'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
         </v-btn>
         <v-btn icon flat color='red xxxlighten-3' small @click.native='removeClient'>
           <v-icon class='xs-actions'>close</v-icon>
-        </v-btn>
+        </v-btn> -->
       </v-card-actions>
     </v-scale-transition>
     <!-- layers -->
@@ -143,6 +148,17 @@
         </div>
       </v-card>
     </v-dialog>
+    <!-- confirm delete dialog -->
+    <v-dialog v-model='confirmDelete'>
+      <v-card>
+        <v-card-title class='headline'>Are you sure you want to delete this sender?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native='confirmDelete=false'>Cancel</v-btn>
+          <v-btn color='red' class='' @click.native='removeClient'>Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -167,6 +183,8 @@ export default {
   },
   data( ) {
     return {
+      fab: false,
+      confirmDelete: false,
       showLayers: false,
       showLog: false,
       showChildren: false,
