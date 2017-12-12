@@ -135,7 +135,7 @@ namespace SpeckleGrasshopper
                 catch { }
 
                 if (controller != null)
-                    switch (param.type)
+                    switch ((string)param.type)
                     {
                         case "TextPanel":
                             GH_Panel panel = controller as GH_Panel;
@@ -186,7 +186,7 @@ namespace SpeckleGrasshopper
         public override void OnWsMessage(object source, SpeckleEventArgs e)
         {
             base.OnWsMessage(source, e);
-            switch (e.EventObject.args.eventType)
+            switch ((string)e.EventObject.args.eventType)
             {
                 case "get-defintion-io":
 
