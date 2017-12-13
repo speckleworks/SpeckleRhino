@@ -40,13 +40,15 @@
     <!-- misc -->
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'>
     </v-progress-linear>
-    <v-alert color='info' v-model='client.expired'>
-      <v-layout align-center>
-        <v-flex>There are updates available.</v-flex>
-        <v-flex>
-          <v-btn dark small fab @click.native='refreshStream'>
-            <v-icon>refresh</v-icon>
-          </v-btn>
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0'>
+      <v-layout>
+        <v-flex class='text-xs-center'>Stream is outdated.
+          <v-tooltip left>
+            Force refresh.
+            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
+              <v-icon>refresh</v-icon>
+            </v-btn>
+          </v-tooltip>
         </v-flex>
       </v-layout>
     </v-alert>

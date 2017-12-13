@@ -53,6 +53,8 @@ namespace SpeckleRhino
 
         public string StreamName;
 
+        PayloadStreamUpdate QueuedUpdate;
+
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
             Context = _Context;
@@ -134,6 +136,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -142,6 +149,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -150,7 +162,12 @@ namespace SpeckleRhino
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if(e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
             }
@@ -158,6 +175,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.RhinoObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -216,8 +238,20 @@ namespace SpeckleRhino
             Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 
-        public void SendUpdate(PayloadStreamUpdate payload)
+        public void ForceUpdate()
         {
+            SendUpdate(CreateUpdatePayload(), true);
+        }
+
+        public void SendUpdate(PayloadStreamUpdate payload, bool force = false)
+        {
+            if(Paused && !force)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                QueuedUpdate = payload;
+                return;
+            }
+
             Debug.WriteLine("Sending update " + DateTime.Now);
             Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
             var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
@@ -320,7 +354,7 @@ namespace SpeckleRhino
 
         public void TogglePaused(bool status)
         {
-            this.Paused = status;
+            Paused = status;
         }
 
         public void ToggleVisibility(bool status)

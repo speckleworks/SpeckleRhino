@@ -331,6 +331,17 @@ namespace SpeckleRhino
                 catch { throw new Exception("Refresh client was not a receiver. whoopsie poopsiee."); }
         }
 
+        public void forceSend(string clientId)
+        {
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                try
+                {
+                    ((RhinoSender)myClient).ForceUpdate();
+                }
+                catch { throw new Exception("Force send client was not a sender. whoopsie poopsiee."); }
+        }
+
         #endregion
 
         #region Sender Helpers

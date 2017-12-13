@@ -18,7 +18,7 @@
             </v-btn>
           </v-tooltip>
           <v-btn fab small @click.native='togglePause'>
-            <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+            <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
           </v-btn>
           <v-btn fab small class='red' @click.native='confirmDelete=true'>
             <v-icon>delete</v-icon>
@@ -40,16 +40,20 @@
     </v-layout>
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <!-- expired alert -->
-    <v-alert color='info' v-model='client.expired'>
-      <v-layout align-center>
-        <v-flex>There are updates available.</v-flex>
-        <v-flex>
-          <v-btn dark small fab @click.native='refreshStream'>
+    <v-slide-y-transition>
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0'>
+      <v-layout>
+        <v-flex class='text-xs-center'>Stream is outdated.
+          <v-tooltip left>
+            Force refresh.
+          <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
             <v-icon>refresh</v-icon>
           </v-btn>
+        </v-tooltip>
         </v-flex>
       </v-layout>
     </v-alert>
+  </v-slide-y-transition>
     <!-- error alert -->
     <v-alert color='error' v-model='hasError' dismissible>
       <v-layout align-center>
@@ -203,6 +207,8 @@ export default {
     },
     togglePause( ) {
       this.paused = !this.paused
+      Interop.setClientPause( this.client.ClientId, this.paused )
+      console.log( "ADSfasfd")
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false
@@ -224,6 +230,9 @@ export default {
     },
     removeClient( ) {
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
+    },
+    refreshStream() {
+      Interop.forceSend( this.client.ClientId )
     }
   },
   mounted( ) {}
