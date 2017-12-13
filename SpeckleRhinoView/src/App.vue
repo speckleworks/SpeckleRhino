@@ -17,11 +17,11 @@
               <v-icon style='font-size: 14px;'>refresh</v-icon>
             </v-tabs-item>
           </v-menu>
-          <v-tabs-slider color='light-blue'></v-tabs-slider>
+          <v-tabs-slider color='grey'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
           <v-tabs-content id='clients' key='clients'>
-            <v-card flat>
+            <v-card flat class='transparent'>
               <client-manager></client-manager>
             </v-card>
           </v-tabs-content>

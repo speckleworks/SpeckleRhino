@@ -1,5 +1,5 @@
 <template>
-  <v-layout @mouseover='mouseOver' @mouseleave='mouseOut' align-center>
+  <v-layout @mouseover='mouseOver' @mouseleave='mouseOut' align-center style='border-top: 1px dashed grey'>
     <v-flex class='xs8 text-xs-left layername pl-4'>
       <span class=''>{{ layer.name }}</span>
       <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>

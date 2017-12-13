@@ -5,17 +5,20 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small class='ma-0 teal' slot='activator' v-model='fab'>
+          <v-btn flat fab small class='ma-0 teal' slot='activator' v-model='fab'>
             <v-icon xxxclass='cyan--text xxxxs-actions'>
-              cloud_download
+              arrow_downward
             </v-icon>
             <v-icon>close</v-icon>
           </v-btn>
+          <v-tooltip bottom>
+            Bake the geometry into Rhino.
+            <v-btn fab small class='yellow darken-3' @click.native='bakeClient' slot='activator'>
+              <v-icon>play_for_work</v-icon>
+            </v-btn>
+          </v-tooltip>
           <v-btn fab small @click.native='togglePause'>
             <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
-          </v-btn>
-          <v-btn fab small class='yellow darken-3' @click.native='bakeClient'>
-            <v-icon>play_for_work</v-icon>
           </v-btn>
           <v-btn fab small class='red' @click.native='confirmDelete=true'>
             <v-icon>delete</v-icon>

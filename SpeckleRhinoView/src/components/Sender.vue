@@ -3,17 +3,20 @@
     <!-- header - menu and title -->
     <v-layout>
       <!-- speed dial menu -->
-      <v-flex class='xs2'>
-        <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small class='ma-0 purple' slot='activator' v-model='fab'>
+        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+          <v-btn fab small flat class='ma-0 light-blue' slot='activator' v-model='fab'>
             <v-icon xxxclass='pink--text xxxxs-actions'>
-              cloud_download
+              <!-- cloud_upload -->
+              arrow_upward
             </v-icon>
             <v-icon>close</v-icon>
           </v-btn>
-          <v-btn fab small class='light-blue'>
-            <v-icon>swap_horiz</v-icon>
-          </v-btn>
+          <v-tooltip bottom>
+            Add or remove objects from the stream.
+            <v-btn fab small class='light-blue' slot='activator'>
+              <v-icon>swap_horiz</v-icon>
+            </v-btn>
+          </v-tooltip>
           <v-btn fab small @click.native='togglePause'>
             <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
           </v-btn>
@@ -21,10 +24,11 @@
             <v-icon>delete</v-icon>
           </v-btn>
         </v-speed-dial>
-      </v-flex>
+      <!-- <v-flex class='xs2'>
+      </v-flex> -->
       <!-- title -->
       <v-flex>
-        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
+        <v-card-title primary-title class='pb-0 pt-3 ml-5' :class='{ faded: fab }' style='transition: all .3s ease;'>
           <p class='headline mb-1'>
             {{ client.stream.name }}
           </p>
@@ -90,7 +94,7 @@
     <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
-       History: todo
+        History: todo
       </v-card-text>
     </v-slide-y-transition>
     <!-- add objects dialog -->
@@ -160,6 +164,12 @@ export default {
   },
   components: {
     SenderLayers
+  },
+  watch: {
+    'client.error' ( value ) {
+      console.log( "ERRRR" )
+      this.hasError = true
+    }
   },
   computed: {
     objectSelection( ) { return this.$store.getters.selection },
