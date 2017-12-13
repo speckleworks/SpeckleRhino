@@ -364,9 +364,9 @@ namespace SpeckleRhino
 
         public void ToggleLayerHover(string layerId, bool status)
         {
-            if(!status)
+            Display.Geometry = new List<GeometryBase>();
+            if (!status)
             {
-                Display.Geometry = new List<GeometryBase>();
                 Display.HoverRange = new Interval(0, 0);
                 RhinoDoc.ActiveDoc.Views.Redraw();
                 return;

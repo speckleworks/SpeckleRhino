@@ -3,27 +3,27 @@
     <!-- header - menu and title -->
     <v-layout>
       <!-- speed dial menu -->
-        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small flat class='ma-0 light-blue' slot='activator' v-model='fab'>
-            <v-icon xxxclass='pink--text xxxxs-actions'>
-              <!-- cloud_upload -->
-              arrow_upward
-            </v-icon>
-            <v-icon>close</v-icon>
+      <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+        <v-btn fab small flat class='ma-0 light-blue' slot='activator' v-model='fab'>
+          <v-icon xxxclass='pink--text xxxxs-actions'>
+            <!-- cloud_upload -->
+            arrow_upward
+          </v-icon>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-tooltip bottom>
+          Add or remove objects from the stream.
+          <v-btn fab small class='light-blue' slot='activator'>
+            <v-icon>swap_horiz</v-icon>
           </v-btn>
-          <v-tooltip bottom>
-            Add or remove objects from the stream.
-            <v-btn fab small class='light-blue' slot='activator'>
-              <v-icon>swap_horiz</v-icon>
-            </v-btn>
-          </v-tooltip>
-          <v-btn fab small @click.native='togglePause'>
-            <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
-          </v-btn>
-          <v-btn fab small class='red' @click.native='confirmDelete=true'>
-            <v-icon>delete</v-icon>
-          </v-btn>
-        </v-speed-dial>
+        </v-tooltip>
+        <v-btn fab small @click.native='togglePause'>
+          <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
+        </v-btn>
+        <v-btn fab small class='red' @click.native='confirmDelete=true'>
+          <v-icon>delete</v-icon>
+        </v-btn>
+      </v-speed-dial>
       <!-- <v-flex class='xs2'>
       </v-flex> -->
       <!-- title -->
@@ -40,24 +40,27 @@
     </v-layout>
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <!-- expired alert -->
-    <v-slide-y-transition>
-    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0'>
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
       <v-layout>
         <v-flex class='text-xs-center'>Stream is outdated.
           <v-tooltip left>
             Force refresh.
-          <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
-            <v-icon>refresh</v-icon>
-          </v-btn>
-        </v-tooltip>
+            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
+              <v-icon>refresh</v-icon>
+            </v-btn>
+          </v-tooltip>
         </v-flex>
       </v-layout>
     </v-alert>
-  </v-slide-y-transition>
     <!-- error alert -->
-    <v-alert color='error' v-model='hasError' dismissible>
+    <v-alert color='error' v-model='hasError' class='mt-4'>
       <v-layout align-center>
-        <v-flex>Error: {{ client.error }}</v-flex>
+        <v-flex>Error: {{ client.error }}
+          <v-btn dark small @click.native='killError' slot='activator' class='ma-0 '>
+            <!-- <v-icon>close</v-icon> -->
+            dismiss
+          </v-btn>
+        </v-flex>
       </v-layout>
     </v-alert>
     <!-- standard actions -->
@@ -171,8 +174,7 @@ export default {
   },
   watch: {
     'client.error' ( value ) {
-      console.log( "ERRRR" )
-      this.hasError = true
+      console.log( "ERRRR", value )
     }
   },
   computed: {
@@ -183,6 +185,7 @@ export default {
       return sum
     },
     layerInfo( ) { return this.$store.getters.layerInfo },
+    hasError( ) { return this.client.error != "" && this.client.error != null }
   },
   data( ) {
     return {
@@ -195,7 +198,6 @@ export default {
       showAddDialog: false,
       showRemoveDialog: false,
       paused: false,
-      hasError: true
     }
   },
   methods: {
@@ -208,7 +210,7 @@ export default {
     togglePause( ) {
       this.paused = !this.paused
       Interop.setClientPause( this.client.ClientId, this.paused )
-      console.log( "ADSfasfd")
+      console.log( "ADSfasfd" )
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false
@@ -231,8 +233,12 @@ export default {
     removeClient( ) {
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
     },
-    refreshStream() {
+    refreshStream( ) {
+      this.client.expired = false
       Interop.forceSend( this.client.ClientId )
+    },
+    killError() {
+      this.client.error = null
     }
   },
   mounted( ) {}

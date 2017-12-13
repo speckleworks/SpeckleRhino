@@ -18,7 +18,7 @@
             </v-btn>
           </v-tooltip>
           <v-btn fab small @click.native='togglePause'>
-            <v-icon>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
+            <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
           </v-btn>
           <v-btn fab small class='red' @click.native='confirmDelete=true'>
             <v-icon>delete</v-icon>
@@ -31,7 +31,7 @@
           <p class='headline mb-1'>
             {{ client.stream.name }}
           </p>
-          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> Last updated:
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
         </v-card-title>
@@ -40,7 +40,7 @@
     <!-- misc -->
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'>
     </v-progress-linear>
-    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0'>
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
       <v-layout>
         <v-flex class='text-xs-center'>Stream is outdated.
           <v-tooltip left>
