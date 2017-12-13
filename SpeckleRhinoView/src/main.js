@@ -6,6 +6,8 @@ import VueTimeago from 'vue-timeago'
 import App from './App.vue'
 import Store from './store/store.js'
 
+window.Store = Store
+
 import { EventBus } from './event-bus'
 
 Vue.use( Vuex )
@@ -88,6 +90,11 @@ new Vue( {
 
     EventBus.$on( 'client-ws-message', ( streamId, data ) => {
       console.log( 'client-ws-message', streamId, JSON.parse( data ) )
+    } )
+
+    EventBus.$on( 'client-error', ( streamId, data ) => {
+      console.log( 'client-error', streamId, JSON.parse( data ) )
+      this.$store.commit( 'SET_ERROR', { streamId: streamId, data: JSON.parse( data ) } )
     } )
 
     EventBus.$on( 'object-selection', ( streamId, data ) => {

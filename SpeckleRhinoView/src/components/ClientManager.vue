@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid pa-0>
+  <v-container fluid pa-0 class='transparent'>
     <receiver-add></receiver-add>
     <sender-add></sender-add>
     <v-layout wrap column>
@@ -44,6 +44,6 @@ export default {
 </script>
 <style scoped>
 .receiver:last-child {
-  /*margin-bottom: 100px;*/
+  margin-bottom: 100px;
 }
 </style>

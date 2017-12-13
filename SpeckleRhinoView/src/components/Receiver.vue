@@ -1,59 +1,79 @@
 <template>
-  <v-card class='receiver-content' @mouseover='showMenu=true' @mouseleave='showMenu=false'>
-    <v-divider></v-divider>
-    <v-card-title primary-title class='pb-0 pt-3'>
-      <div>
-        <div class='headline mb-1'>
-          <v-btn icon small class='deep-purple ma-0 elevation-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_download</v-icon> </v-btn>
-            {{ client.stream.name }}
-        </div>
-        <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
-          <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
-        </div>
-      </div>
-    </v-card-title>
-    <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
-    <v-alert color='info' v-model='client.expired'>
-      <v-layout align-center>
-        <v-flex>There are updates available.</v-flex>
-        <v-flex>
-          <v-btn dark small fab @click.native='refreshStream'>
-            <v-icon>refresh</v-icon>
+  <v-card class='receiver-content'>
+    <!-- header - menu and title -->
+    <v-layout>
+      <!-- speed dial menu -->
+      <v-flex class='xs2'>
+        <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
+          <v-btn flat fab small class='ma-0 teal' slot='activator' v-model='fab'>
+            <v-icon xxxclass='cyan--text xxxxs-actions'>
+              arrow_downward
+            </v-icon>
+            <v-icon>close</v-icon>
           </v-btn>
+          <v-tooltip bottom>
+            Bake the geometry into Rhino.
+            <v-btn fab small class='yellow darken-3' @click.native='bakeClient' slot='activator'>
+              <v-icon>play_for_work</v-icon>
+            </v-btn>
+          </v-tooltip>
+          <v-btn fab small @click.native='togglePause'>
+            <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
+          </v-btn>
+          <v-btn fab small class='red' @click.native='confirmDelete=true'>
+            <v-icon>delete</v-icon>
+          </v-btn>
+        </v-speed-dial>
+      </v-flex>
+      <!-- title -->
+      <v-flex>
+        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
+          <p class='headline mb-1'>
+            {{ client.stream.name }}
+          </p>
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+          </div>
+        </v-card-title>
+      </v-flex>
+    </v-layout>
+    <!-- misc -->
+    <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'>
+    </v-progress-linear>
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
+      <v-layout>
+        <v-flex class='text-xs-center'>Stream is outdated.
+          <v-tooltip left>
+            Force refresh.
+            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
+              <v-icon>refresh</v-icon>
+            </v-btn>
+          </v-tooltip>
         </v-flex>
       </v-layout>
     </v-alert>
+    <!-- card actions -->
     <v-slide-y-transition>
-      <v-card-actions v-show='true' class='pl-2'>
-        <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
-          <v-icon class='make-me-small'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon @click.native='toggleLog' small>
-          <v-icon class='make-me-small'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
-          <v-icon class='make-me-small'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='' small @click.native='bakeClient'>
-          <v-icon class='make-me-small'>play_for_work</v-icon>
-        </v-btn>
+      <v-card-actions v-show='true' class='pl-2' :class='{ faded: fab }' style='transition: all .3s ease'>
         <v-spacer></v-spacer>
-        <v-btn class='xs-actions' icon flat small @click.native='toggleVisibility'>
-          <v-icon class='make-me-small'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
+        <v-btn class='xs-actions' icon @click.native='toggleLayers' small>
+          <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
         </v-btn>
-        <v-btn class='xs-actions' icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='make-me-small'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
-        </v-btn>
-        <v-btn class='xs-actions' icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='make-me-small'>close</v-icon>
+        <!--         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
+          <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
+        </v-btn> -->
+        <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
+          <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
       </v-card-actions>
     </v-slide-y-transition>
+    <!-- layers -->
     <v-slide-y-transition>
       <v-card-text v-show='showLayers' class='pa-0'>
         <receiver-layers :layers='client.stream.layers' :clientId='client.ClientId'></receiver-layers>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- log -->
     <v-slide-y-transition>
       <v-card-text v-show='showLog' class='pa-0'>
         <!-- <blockquote class='section-title'>Log</blockquote> -->
@@ -69,6 +89,7 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
         <blockquote class='section-title'>Children:</blockquote>
@@ -85,6 +106,17 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- confirm delete dialog -->
+    <v-dialog v-model='confirmDelete'>
+      <v-card>
+        <v-card-title class='headline'>Are you sure you want to delete this receiver?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native='confirmDelete=false'>Cancel</v-btn>
+          <v-btn color='red' class='' @click.native='removeClient'>Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -101,13 +133,16 @@ export default {
   computed: {},
   data( ) {
     return {
+      fab: false,
       enableRefresh: false,
       showLayers: false,
       showLog: false,
       showChildren: false,
       visible: true,
       paused: false,
-      showMenu: false
+      showMenu: false,
+      fadeMenu: false,
+      confirmDelete: false
     }
   },
   methods: {
@@ -141,6 +176,7 @@ export default {
       this.showChildren = true
     },
     removeClient( ) {
+      this.confirmDelete = false
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
     },
     refreshStream( ) {
@@ -148,25 +184,21 @@ export default {
     }
   },
   mounted( ) {
-
+    // does nothing
   }
 }
 </script>
 <style lang='scss'>
+.faded {
+  opacity: 0.2
+}
 
-.xs-actions {
-    font-size: 14px !important;
-  }
 .section-title {
   padding: 2px 0 2px 24px;
 }
 
 .receiver-content {
   transition: all .3s ease;
-}
-
-.receiver-content:hover {
-  /*background-color: #E6E6E6;*/
 }
 
 .log {

@@ -1,53 +1,88 @@
 <template>
-  <v-card class='receiver-content' @mouseover='mouseOver' @mouseleave='mouseOut'>
-    <!-- <v-divider></v-divider> -->
-    <v-card-title primary-title class='pb-0 pt-3'>
-      <div>
-        <div class='headline mb-1'>
-          <v-btn icon small class='teal ma-0'><v-icon class='grey--text text--lighten-3 make-me-small'>cloud_upload</v-icon></v-btn>
-           {{ client.stream.name }}
-        </div>
-        <div class='caption'> <span class='grey--text'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code></span> Last updated:
-          <timeago :auto-update='10' :since='client.lastUpdate'></timeago>
-        </div>
-      </div>
-    </v-card-title>
-    <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
-    <v-alert color='info' v-model='client.expired'>
+  <v-card class='receiver-content'>
+    <!-- header - menu and title -->
+    <v-layout>
+      <!-- speed dial menu -->
+      <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+        <v-btn fab small flat class='ma-0 light-blue' slot='activator' v-model='fab'>
+          <v-icon xxxclass='pink--text xxxxs-actions'>
+            <!-- cloud_upload -->
+            arrow_upward
+          </v-icon>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-tooltip bottom>
+          Add or remove objects from the stream.
+          <v-btn fab small class='light-blue' slot='activator'>
+            <v-icon>swap_horiz</v-icon>
+          </v-btn>
+        </v-tooltip>
+        <v-btn fab small @click.native='togglePause'>
+          <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
+        </v-btn>
+        <v-btn fab small class='red' @click.native='confirmDelete=true'>
+          <v-icon>delete</v-icon>
+        </v-btn>
+      </v-speed-dial>
+      <!-- <v-flex class='xs2'>
+      </v-flex> -->
+      <!-- title -->
+      <v-flex>
+        <v-card-title primary-title class='pb-0 pt-3 ml-5' :class='{ faded: fab }' style='transition: all .3s ease;'>
+          <p class='headline mb-1'>
+            {{ client.stream.name }}
+          </p>
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+          </div>
+        </v-card-title>
+      </v-flex>
+    </v-layout>
+    <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
+    <!-- expired alert -->
+    <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
+      <v-layout>
+        <v-flex class='text-xs-center'>Stream is outdated.
+          <v-tooltip left>
+            Force refresh.
+            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0 '>
+              <v-icon>refresh</v-icon>
+            </v-btn>
+          </v-tooltip>
+        </v-flex>
+      </v-layout>
+    </v-alert>
+    <!-- error alert -->
+    <v-alert color='error' v-model='hasError' class='mt-4'>
       <v-layout align-center>
-        <v-flex>There are updates available.</v-flex>
-        <v-flex>
-          <v-btn dark small fab @click.native='refreshStream'>
-            <v-icon>refresh</v-icon>
+        <v-flex>Error: {{ client.error }}
+          <v-btn dark small @click.native='killError' slot='activator' class='ma-0 '>
+            <!-- <v-icon>close</v-icon> -->
+            dismiss
           </v-btn>
         </v-flex>
       </v-layout>
     </v-alert>
+    <!-- standard actions -->
+    <v-card-actions v-show='true' class='pl-2'>
+      <v-spacer></v-spacer>
+      <v-btn icon @click.native='toggleLayers' small>
+        <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
+      </v-btn>
+      <!-- <v-btn icon @click.native='toggleLog' small>
+          <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
+        </v-btn> -->
+      <v-btn icon @click.native='toggleChildren' small>
+        <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
+      </v-btn>
+    </v-card-actions>
+    <!-- layers -->
     <v-slide-y-transition>
-      <v-card-actions v-show='true' class='pl-2'>
-        <v-btn icon @click.native='toggleLayers' small>
-          <v-icon class='make-me-small'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
-        </v-btn>
-        <v-btn icon @click.native='toggleLog' small>
-          <v-icon class='make-me-small'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
-        </v-btn>
-        <v-btn icon @click.native='toggleChildren' small>
-          <v-icon class='make-me-small'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
-        </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='make-me-small'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
-        </v-btn>
-        <v-btn icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='make-me-small'>close</v-icon>
-        </v-btn>
-      </v-card-actions>
+      <div v-show='showLayers' class='pa-0'>
+        <sender-layers :layers='client.stream.layers' :objects='client.stream.objects' :clientId='client.ClientId'></sender-layers>
+      </div>
     </v-slide-y-transition>
-    <v-slide-y-transition>
-      <v-card-text v-show='showLayers' class='pa-0'>
-        <sender-layers :layers='client.stream.layers' :objects='client.stream.objects'></sender-layers>
-      </v-card-text>
-    </v-slide-y-transition>
+    <!-- log -->
     <v-slide-y-transition>
       <v-card-text v-show='showLog' class='pa-0'>
         <!-- <blockquote class='section-title'>Log</blockquote> -->
@@ -63,22 +98,67 @@
         <br>
       </v-card-text>
     </v-slide-y-transition>
+    <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
-        <blockquote class='section-title'>Children:</blockquote>
-        <br> {{ client.stream.children.length == 0 ? 'Stream has no children.' : '' }}
-        <template v-for='kid in client.stream.children'>
-          <v-btn small block>
-            {{kid}}
-          </v-btn>
-        </template>
-        <br>
-        <blockquote class='section-title'>Parent:</blockquote>
-        <br> {{ client.stream.parent ? client.stream.parent : 'Stream is a root element.'}}
-        <v-btn v-if='client.stream.parent' small block> {{client.stream.parent}} </v-btn>
-        <br>
+        History: todo
       </v-card-text>
     </v-slide-y-transition>
+    <!-- add objects dialog -->
+    <v-dialog v-model='showAddDialog'>
+      <v-card v-if='objectSelection.length > 0'>
+        <v-card-title class="headline">Add {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} to the stream?</v-card-title>
+        <div>
+          <v-layout class='text-xs-center pa-0 ma-0'>
+            <v-flex>
+              <v-tooltip bottom>
+                <span>You can still edit your selection.</span>
+                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='addObjectsToStream'>Yes!</v-btn>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
+        </div>
+      </v-card>
+      <v-card v-else class='elevation-4 pa-2'>
+        <div class='pa-2 subheading'>
+          <v-icon>warning</v-icon>
+          No selection found. Please select some objects to add or remove!
+        </div>
+      </v-card>
+    </v-dialog>
+    <!-- remove objects dialog -->
+    <v-dialog v-model='showRemoveDialog'>
+      <v-card v-if='objectSelection.length > 0'>
+        <v-card-title class="headline">Remove {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} from the stream?</v-card-title>
+        <div>
+          <v-layout class='text-xs-center pa-0 ma-0'>
+            <v-flex>
+              <v-tooltip bottom>
+                <span>You can still edit your selection.</span>
+                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='removeObjectsFromStream'>Yes!</v-btn>
+              </v-tooltip>
+            </v-flex>
+          </v-layout>
+        </div>
+      </v-card>
+      <v-card v-else class='elevation-4 pa-2'>
+        <div class='pa-2 subheading'>
+          <v-icon>warning</v-icon>
+          No selection found. Please select some objects to add or remove!
+        </div>
+      </v-card>
+    </v-dialog>
+    <!-- confirm delete dialog -->
+    <v-dialog v-model='confirmDelete'>
+      <v-card>
+        <v-card-title class='headline'>Are you sure you want to delete this sender?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native='confirmDelete=false'>Cancel</v-btn>
+          <v-btn color='red' class='' @click.native='removeClient'>Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
@@ -92,22 +172,45 @@ export default {
   components: {
     SenderLayers
   },
-  computed: {},
+  watch: {
+    'client.error' ( value ) {
+      console.log( "ERRRR", value )
+    }
+  },
+  computed: {
+    objectSelection( ) { return this.$store.getters.selection },
+    selectionObjectCount( ) {
+      let sum = 0
+      this.objectSelection.forEach( l => sum += l.objectCount )
+      return sum
+    },
+    layerInfo( ) { return this.$store.getters.layerInfo },
+    hasError( ) { return this.client.error != "" && this.client.error != null }
+  },
   data( ) {
     return {
+      fab: false,
+      confirmDelete: false,
       showLayers: false,
       showLog: false,
       showChildren: false,
       showMenu: false,
-      paused: false
+      showAddDialog: false,
+      showRemoveDialog: false,
+      paused: false,
     }
   },
   methods: {
-    mouseOver() {
-      this.showMenu = true
+    addObjectsToStream( ) {
+      this.showAddDialog = false
     },
-    mouseOut() {
-      this.showMenu = false
+    removeObjectsFromStream( ) {
+      this.showRemoveDialog = false
+    },
+    togglePause( ) {
+      this.paused = !this.paused
+      Interop.setClientPause( this.client.ClientId, this.paused )
+      console.log( "ADSfasfd" )
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false
@@ -129,12 +232,31 @@ export default {
     },
     removeClient( ) {
       this.$store.dispatch( 'removeClient', { clientId: this.client.ClientId } )
+    },
+    refreshStream( ) {
+      this.client.expired = false
+      Interop.forceSend( this.client.ClientId )
+    },
+    killError() {
+      this.client.error = null
     }
   },
   mounted( ) {}
 }
 </script>
 <style lang='scss'>
+.faded {
+  opacity: 0.2
+}
+
+.stream-menu {
+  position: absolute;
+}
+
+.fat-one {
+  /*width:100%;*/
+}
+
 .make-me-small {
   font-size: 15px !important;
 }

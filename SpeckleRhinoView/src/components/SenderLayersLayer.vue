@@ -4,18 +4,12 @@
       <span class=''>{{ layer.name }}</span>
       <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>
     </v-flex>
-    <v-flex class='xs1 text-xs-center'>
-      <v-btn icon small flat @click.native='visible=!visible' color='grey' xxclass='ma-0'>
-        <v-icon dark class='xs-actions'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
-      </v-btn>
-    </v-flex>
-    <v-flex class='xs1 text-xs-center'>
-      <v-btn icon small xs flat @click.native='bake' color='grey' xxclass='ma-0'>
-        <v-icon dark class='xs-actions'>play_for_work</v-icon>
-      </v-btn>
-    </v-flex>
+    <v-flex class='xs1 text-xs-center'></v-flex>
+    <v-flex class='xs1 text-xs-center'></v-flex>
     <v-flex class=' text-xs-center'>
-      <v-icon dark :style='{ color: layerColor.hex }' class='make-me-small'>fiber_manual_record</v-icon>
+      <v-btn icon>
+        <v-icon dark :style='{ color: layerColor.hex }' class='make-me-small'>fiber_manual_record</v-icon>
+      </v-btn>
     </v-flex>
   </v-layout>
 </template>

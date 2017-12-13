@@ -53,6 +53,8 @@ namespace SpeckleRhino
 
         public string StreamName;
 
+        PayloadStreamUpdate QueuedUpdate;
+
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
             Context = _Context;
@@ -68,6 +70,9 @@ namespace SpeckleRhino
             SetRhinoEvents();
             SetTimers();
 
+            Display = new SpeckleDisplayConduit();
+            Display.Enabled = true;
+
             Client.IntializeSender((string)InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid()).ContinueWith(res =>
             {
                 StreamId = Client.Stream.StreamId;
@@ -78,7 +83,6 @@ namespace SpeckleRhino
 
                 InitTrackedObjects(InitPayload);
                 SendUpdate(CreateUpdatePayload());
-
             });
 
         }
@@ -102,11 +106,9 @@ namespace SpeckleRhino
             }
         }
 
-        public void AddTrackedObjects() { }
-
-        public void AddTrackedLayers()
+        public void AddTrackedObjects()
         {
-            // 
+
         }
 
         public void SetRhinoEvents()
@@ -134,6 +136,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -142,6 +149,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -150,7 +162,12 @@ namespace SpeckleRhino
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            if(e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
             }
@@ -158,6 +175,11 @@ namespace SpeckleRhino
 
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
+            if (Paused)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
             if (e.RhinoObject.Attributes.GetUserString("spk_" + StreamId) != "")
             {
                 DataSender.Start();
@@ -216,8 +238,20 @@ namespace SpeckleRhino
             Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 
-        public void SendUpdate(PayloadStreamUpdate payload)
+        public void ForceUpdate()
         {
+            SendUpdate(CreateUpdatePayload(), true);
+        }
+
+        public void SendUpdate(PayloadStreamUpdate payload, bool force = false)
+        {
+            if(Paused && !force)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                QueuedUpdate = payload;
+                return;
+            }
+
             Debug.WriteLine("Sending update " + DateTime.Now);
             Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
             var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
@@ -273,7 +307,7 @@ namespace SpeckleRhino
                     }
                     else
                     {
-                        var spkl = pLayers.FirstOrDefault(pl => pl.OrderIndex == obj.Attributes.LayerIndex);
+                        var spkl = pLayers.FirstOrDefault(pl => pl.Name == layer.FullPath);
                         spkl.ObjectCount++;
                     }
 
@@ -320,7 +354,7 @@ namespace SpeckleRhino
 
         public void TogglePaused(bool status)
         {
-            this.Paused = status;
+            Paused = status;
         }
 
         public void ToggleVisibility(bool status)
@@ -330,7 +364,26 @@ namespace SpeckleRhino
 
         public void ToggleLayerHover(string layerId, bool status)
         {
-            throw new NotImplementedException();
+            Display.Geometry = new List<GeometryBase>();
+            if (!status)
+            {
+                Display.HoverRange = new Interval(0, 0);
+                RhinoDoc.ActiveDoc.Views.Redraw();
+                return;
+            }
+
+            int myLIndex = RhinoDoc.ActiveDoc.Layers.Find(new Guid(layerId), true);
+
+            var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + this.StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
+
+            foreach(var obj in objs)
+            {
+                if (obj.Attributes.LayerIndex == myLIndex) Display.Geometry.Add(obj.Geometry);
+            }
+
+            Display.HoverRange = new Interval(0, Display.Geometry.Count);
+            RhinoDoc.ActiveDoc.Views.Redraw();
+            
         }
 
         public void ToggleLayerVisibility(string layerId, bool status)
@@ -384,6 +437,9 @@ namespace SpeckleRhino
             SetClientEvents();
             SetRhinoEvents();
             SetTimers();
+
+            Display = new SpeckleDisplayConduit();
+            Display.Enabled = true;
 
             Type = (SenderType)info.GetInt16("type"); // check for exceptions
             TrackedObjects = info.GetValue("trackedobjects", typeof(List<string>)) as List<string>;

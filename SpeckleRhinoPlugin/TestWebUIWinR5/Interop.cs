@@ -91,36 +91,6 @@ namespace SpeckleRhino
                 if (SpeckleIsReady)
                     NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
             };
-
-            RhinoDoc.ModifyObjectAttributes += (sender, e) =>
-            {
-                Debug.WriteLine("MODIFY obj attributes");
-            };
-
-            RhinoDoc.ReplaceRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("REPLACE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.DeleteRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("DELETE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.AddRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("ADD Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.UndeleteRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("UNDELETE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.LayerTableEvent += (sender, e) =>
-            {
-                Debug.WriteLine("LAYER TABLE EVENT Rhino Object {0} " + e.EventType.ToString());
-            };
         }
 
         #region General Utils
@@ -348,6 +318,8 @@ namespace SpeckleRhino
 
         }
 
+
+
         public void refreshClient(string clientId)
         {
             var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
@@ -357,6 +329,17 @@ namespace SpeckleRhino
                     ((RhinoReceiver)myClient).UpdateGlobal();
                 }
                 catch { throw new Exception("Refresh client was not a receiver. whoopsie poopsiee."); }
+        }
+
+        public void forceSend(string clientId)
+        {
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                try
+                {
+                    ((RhinoSender)myClient).ForceUpdate();
+                }
+                catch { throw new Exception("Force send client was not a sender. whoopsie poopsiee."); }
         }
 
         #endregion

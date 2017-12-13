@@ -35,8 +35,6 @@
 
   .layer {
     padding: 2px 0 2px 0;
-    background-color: rgba(25,25,25,0.3);
-    /*border-left: 2px solid #0080FF;*/
     transition: all .3s ease;
   }
 

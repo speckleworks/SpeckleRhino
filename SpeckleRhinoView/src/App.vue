@@ -9,18 +9,19 @@
           <v-tabs-item key='accounts' href='accounts'>
             Accounts
           </v-tabs-item>
-          <v-menu open-on-hover transition="slide-x-transition" >
+          <v-menu open-on-hover transition="slide-x-transition">
             <v-tabs-item slot='activator' @click.native='showDev'>
               <v-icon style='font-size: 14px;'>code</v-icon>
-            </v-tabs-item> <v-tabs-item slot='activator' @click.native='purgeClients'>
+            </v-tabs-item>
+            <v-tabs-item slot='activator' @click.native='purgeClients'>
               <v-icon style='font-size: 14px;'>refresh</v-icon>
             </v-tabs-item>
           </v-menu>
-          <v-tabs-slider color='light-blue'></v-tabs-slider>
+          <v-tabs-slider color='grey'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
           <v-tabs-content id='clients' key='clients'>
-            <v-card flat>
+            <v-card flat class='transparent'>
               <client-manager></client-manager>
             </v-card>
           </v-tabs-content>
@@ -31,7 +32,7 @@
           </v-tabs-content>
         </v-tabs-items>
       </v-tabs>
-      <v-slide-y-transition>
+      <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="clients"'>
           <v-btn slot='activator' fab v-model='fab' color='light-blue'>
             <v-icon>add</v-icon>
@@ -50,8 +51,8 @@
             </v-btn>
           </v-tooltip>
         </v-speed-dial>
-      </v-slide-y-transition>
-      <v-slide-y-transition>
+      </v-fab-transition>
+      <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="accounts"'>
           <v-btn slot='activator' fab v-model='fab' color='purple xxxlighten-2'>
             <v-icon>add</v-icon>
@@ -69,7 +70,7 @@
             </v-btn>
           </v-tooltip>
         </v-speed-dial>
-      </v-slide-y-transition>
+      </v-fab-transition>
     </v-app>
   </div>
 </template>
@@ -116,5 +117,18 @@ export default {
 </script>
 <style>
 body {}
+
 #app {}
+
+.ellipsis {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  /* Required for text-overflow to do anything */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.xs-actions {
+  font-size: 16px !important;
+}
 </style>
