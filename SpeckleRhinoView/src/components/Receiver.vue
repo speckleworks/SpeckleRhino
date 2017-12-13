@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small class='ma-0 cyan darken-3' slot='activator' v-model='fab'>
+          <v-btn fab small class='ma-0 teal' slot='activator' v-model='fab'>
             <v-icon xxxclass='cyan--text xxxxs-actions'>
               cloud_download
             </v-icon>

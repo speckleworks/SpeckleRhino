@@ -1,30 +1,23 @@
 <template>
-  <div class='pl-4 pr-3'>
-    <!-- <v-btn icon> -->
-    <template v-for='layer in layers'>
-      <v-layout>
-        <v-flex>
-          {{layer.name}}
-        </v-flex>
-        <v-flex>
-          {{layer.properties.color.hex}}
-        </v-flex>
-        <v-flex>
-          {{layer.objectCount}}
-        </v-flex>
-      </v-layout>
-    </template>
-    </v-layout>
-  </div>
+  <v-container fluid class='layer-list pa-0'>
+    <layer v-for='layer in layers' :key='layer.guid' :layer='layer' :clientId='clientId' class='layer'></layer>
+  </v-container>
 </template>
 <script>
+
+import Layer from './SenderLayersLayer.vue'
+
+
 export default {
   name: 'SenderLayers',
   props: {
     layers: Array,
-    objects: Array
+    objects: Array,
+    clientId: String
   },
-  components: {},
+  components: {
+    Layer
+  },
   computed: {},
   data( ) {
     return {}

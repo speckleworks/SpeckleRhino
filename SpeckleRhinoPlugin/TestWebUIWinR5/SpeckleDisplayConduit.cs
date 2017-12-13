@@ -11,7 +11,7 @@ using Rhino.Display;
 namespace SpeckleRhino
 {
     /// <summary>
-    /// (c) Luis @fraguada
+    /// kudos to Luis @fraguada
     /// </summary>
     public class SpeckleDisplayConduit : Rhino.Display.DisplayConduit
     {
@@ -101,6 +101,7 @@ namespace SpeckleRhino
                             break;
 
                         case Rhino.DocObjects.ObjectType.TextDot:
+                            //e.Display.Draw3dText( ((TextDot)obj).Text, Colors[count], new Plane(((TextDot)obj).Point));
                             //todo
                             break;
 

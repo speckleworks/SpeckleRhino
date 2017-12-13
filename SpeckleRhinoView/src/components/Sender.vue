@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small class='ma-0 pink darken-3' slot='activator' v-model='fab'>
+          <v-btn fab small class='ma-0 purple' slot='activator' v-model='fab'>
             <v-icon xxxclass='pink--text xxxxs-actions'>
               cloud_download
             </v-icon>
@@ -34,7 +34,8 @@
         </v-card-title>
       </v-flex>
     </v-layout>
-    <v-progress-linear height='3' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
+    <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
+    <!-- expired alert -->
     <v-alert color='info' v-model='client.expired'>
       <v-layout align-center>
         <v-flex>There are updates available.</v-flex>
@@ -45,32 +46,30 @@
         </v-flex>
       </v-layout>
     </v-alert>
+    <!-- error alert -->
+    <v-alert color='error' v-model='hasError' dismissible>
+      <v-layout align-center>
+        <v-flex>Error: {{ client.error }}</v-flex>
+      </v-layout>
+    </v-alert>
     <!-- standard actions -->
-    <v-scale-transition>
-      <v-card-actions v-show='true' class='pl-2'>
-        <v-spacer></v-spacer>
-        <v-btn icon @click.native='toggleLayers' small>
-          <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
-        </v-btn>
-        <!-- <v-btn icon @click.native='toggleLog' small>
+    <v-card-actions v-show='true' class='pl-2'>
+      <v-spacer></v-spacer>
+      <v-btn icon @click.native='toggleLayers' small>
+        <v-icon class='xs-actions'>{{ showLayers ? 'keyboard_arrow_up' : 'layers' }}</v-icon>
+      </v-btn>
+      <!-- <v-btn icon @click.native='toggleLog' small>
           <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn> -->
-        <v-btn icon @click.native='toggleChildren' small>
-          <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
-        </v-btn>
-        <!-- <v-btn icon flat color='light-blue xxxlighten-3' small @click.native='togglePause'>
-          <v-icon class='xs-actions'>{{ paused ? "pause_circle_outline" : "play_circle_outline" }}</v-icon>
-        </v-btn>
-        <v-btn icon flat color='red xxxlighten-3' small @click.native='removeClient'>
-          <v-icon class='xs-actions'>close</v-icon>
-        </v-btn> -->
-      </v-card-actions>
-    </v-scale-transition>
+      <v-btn icon @click.native='toggleChildren' small>
+        <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
+      </v-btn>
+    </v-card-actions>
     <!-- layers -->
     <v-slide-y-transition>
-      <v-card-text v-show='showLayers' class='pa-0'>
-        <sender-layers :layers='client.stream.layers' :objects='client.stream.objects'></sender-layers>
-      </v-card-text>
+      <div v-show='showLayers' class='pa-0'>
+        <sender-layers :layers='client.stream.layers' :objects='client.stream.objects' :clientId='client.ClientId'></sender-layers>
+      </div>
     </v-slide-y-transition>
     <!-- log -->
     <v-slide-y-transition>
@@ -91,21 +90,10 @@
     <!-- history -->
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
-        <blockquote class='section-title'>Children:</blockquote>
-        <br> {{ client.stream.children.length == 0 ? 'Stream has no children.' : '' }}
-        <template v-for='kid in client.stream.children'>
-          <v-btn small block>
-            {{kid}}
-          </v-btn>
-        </template>
-        <br>
-        <blockquote class='section-title'>Parent:</blockquote>
-        <br> {{ client.stream.parent ? client.stream.parent : 'Stream is a root element.'}}
-        <v-btn v-if='client.stream.parent' small block> {{client.stream.parent}} </v-btn>
-        <br>
+       History: todo
       </v-card-text>
     </v-slide-y-transition>
-    <!-- dialog -->
+    <!-- add objects dialog -->
     <v-dialog v-model='showAddDialog'>
       <v-card v-if='objectSelection.length > 0'>
         <v-card-title class="headline">Add {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} to the stream?</v-card-title>
@@ -127,6 +115,7 @@
         </div>
       </v-card>
     </v-dialog>
+    <!-- remove objects dialog -->
     <v-dialog v-model='showRemoveDialog'>
       <v-card v-if='objectSelection.length > 0'>
         <v-card-title class="headline">Remove {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} from the stream?</v-card-title>
@@ -191,7 +180,8 @@ export default {
       showMenu: false,
       showAddDialog: false,
       showRemoveDialog: false,
-      paused: false
+      paused: false,
+      hasError: true
     }
   },
   methods: {
@@ -230,6 +220,10 @@ export default {
 }
 </script>
 <style lang='scss'>
+.faded {
+  opacity: 0.2
+}
+
 .stream-menu {
   position: absolute;
 }

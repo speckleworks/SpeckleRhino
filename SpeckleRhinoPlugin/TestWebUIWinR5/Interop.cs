@@ -91,36 +91,6 @@ namespace SpeckleRhino
                 if (SpeckleIsReady)
                     NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
             };
-
-            RhinoDoc.ModifyObjectAttributes += (sender, e) =>
-            {
-                Debug.WriteLine("MODIFY obj attributes");
-            };
-
-            RhinoDoc.ReplaceRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("REPLACE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.DeleteRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("DELETE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.AddRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("ADD Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.UndeleteRhinoObject += (sender, e) =>
-            {
-                Debug.WriteLine("UNDELETE Rhino Object {0}", e.ObjectId);
-            };
-
-            RhinoDoc.LayerTableEvent += (sender, e) =>
-            {
-                Debug.WriteLine("LAYER TABLE EVENT Rhino Object {0} " + e.EventType.ToString());
-            };
         }
 
         #region General Utils
@@ -347,6 +317,8 @@ namespace SpeckleRhino
         {
 
         }
+
+
 
         public void refreshClient(string clientId)
         {
