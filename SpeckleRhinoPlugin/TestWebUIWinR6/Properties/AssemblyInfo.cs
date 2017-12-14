@@ -17,12 +17,12 @@ using Rhino.PlugIns;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TestEtoWebkit")]
+[assembly: AssemblyTitle("Speckle Rhino Plugin v6")] // Plug-In title is extracted from this
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TestEtoWebkit")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyProduct("Speckle Rhino Plugin v6")]
+[assembly: AssemblyCopyright("Copyright Speckle.Works ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,7 +32,7 @@ using Rhino.PlugIns;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("14e17074-9e4e-4ab8-a49b-8a2ab15b017d")] // This will also be the Guid of the Rhino plug-in
+[assembly: Guid("512D9705-6F92-49CA-A606-D6D5C1AC6AA2")] // This will also be the Guid of the Rhino plug-in
 
 // Version information for an assembly consists of the following four values:
 //
