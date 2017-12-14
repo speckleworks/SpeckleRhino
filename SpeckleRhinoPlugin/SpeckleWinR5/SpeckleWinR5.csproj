@@ -123,9 +123,7 @@
     <Compile Include="SpeckleRhinoReceiver.cs" />
     <Compile Include="SpeckleRhinoSender.cs" />
     <Compile Include="SpeckleTestObject.cs" />
-    <Compile Include="WinForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="WinForm.cs" />
     <Compile Include="WinForm.Designer.cs">
       <DependentUpon>WinForm.cs</DependentUpon>
     </Compile>
