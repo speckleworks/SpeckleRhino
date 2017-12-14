@@ -89,6 +89,9 @@
     <Compile Include="..\src\SpeckleDisplayConduit.cs">
       <Link>SpeckleDisplayConduit.cs</Link>
     </Compile>
+    <Compile Include="..\src\SpecklePlugIn.cs">
+      <Link>SpecklePlugIn.cs</Link>
+    </Compile>
     <Compile Include="..\src\SpeckleRhinoReceiver.cs">
       <Link>SpeckleRhinoReceiver.cs</Link>
     </Compile>
@@ -104,7 +107,6 @@
       <DependentUpon>WinForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SpecklePlugIn.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\src\WinForm.resx">
