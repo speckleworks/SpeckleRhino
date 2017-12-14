@@ -4,7 +4,7 @@
     <v-layout>
       <!-- speed dial menu -->
       <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
-        <v-btn fab small flat class='ma-0 light-blue' slot='activator' v-model='fab'>
+        <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
           <v-icon xxxclass='pink--text xxxxs-actions'>
             <!-- cloud_upload -->
             arrow_upward

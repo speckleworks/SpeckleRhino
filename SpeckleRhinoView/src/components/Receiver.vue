@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
-          <v-btn flat fab small class='ma-0 teal' slot='activator' v-model='fab'>
+          <v-btn :flat='paused' fab small class='ma-0 teal' slot='activator' v-model='fab'>
             <v-icon xxxclass='cyan--text xxxxs-actions'>
               arrow_downward
             </v-icon>
@@ -30,6 +30,7 @@
         <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
           <p class='headline mb-1'>
             {{ client.stream.name }}
+            <!-- <a href='https://speckle.works' target='_blank'><v-icon>open_in_browser</v-icon></a> -->
           </p>
           <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
