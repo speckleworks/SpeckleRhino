@@ -42,7 +42,8 @@ namespace SpeckleRhino
 
             // Create a browser component. 
             // Change the below to wherever your webpack ui server is running.
-            chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+            //chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+            chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
             // Add it to the form and fill it to the form window.
 
             this.Controls.Add(chromeBrowser);
