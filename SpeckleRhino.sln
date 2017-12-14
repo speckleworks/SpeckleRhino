@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Grasshopper Add-On", "Grass
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BD6A8002-2FDF-4E91-AFA6-CAE16507BB12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR6", "SpeckleRhinoPlugin\TestWebUIWinR6\SpeckleWinR6.csproj", "{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR6", "SpeckleRhinoPlugin\SpeckleWinR6\SpeckleWinR6.csproj", "{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR5", "SpeckleRhinoPlugin\TestWebUIWinR5\SpeckleWinR5.csproj", "{A8591174-0599-433C-9B01-2A51C2B877AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR5", "SpeckleRhinoPlugin\SpeckleWinR5\SpeckleWinR5.csproj", "{A8591174-0599-433C-9B01-2A51C2B877AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "SpeckleGrasshopper\SpeckleGrasshopper.csproj", "{82EC14D9-01C7-46C7-8600-DB75F871740D}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpecklePopup", "SpeckleAccountManager\SpecklePopup.csproj", "{D65594C8-EA2E-46CA-A756-B1634EDC3AE3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleRhinoConverter", "SpeckleRhinoConverter\SpeckleRhinoConverter.csproj", "{E967A1E1-37FF-4394-B793-6987A7958016}"
+EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "SpeckleRhinoView", "SpeckleRhinoView\SpeckleRhinoView.njsproj", "{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,6 +131,22 @@ Global
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Release|x64.ActiveCfg = Release|x64
 		{E967A1E1-37FF-4394-B793-6987A7958016}.Release|x64.Build.0 = Release|x64
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug|x64.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug32|Any CPU.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug32|Any CPU.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug32|x64.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug32|x64.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug64|Any CPU.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug64|Any CPU.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug64|x64.ActiveCfg = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Debug64|x64.Build.0 = Debug|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Release|x64.ActiveCfg = Release|Any CPU
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,6 +158,7 @@ Global
 		{CFE27D3D-8A1A-43F9-9387-8FD9E119E174} = {BD6A8002-2FDF-4E91-AFA6-CAE16507BB12}
 		{D65594C8-EA2E-46CA-A756-B1634EDC3AE3} = {E0A2931D-E17A-4BA3-9669-BE3C6C869D8C}
 		{E967A1E1-37FF-4394-B793-6987A7958016} = {BD6A8002-2FDF-4E91-AFA6-CAE16507BB12}
+		{1230185B-4DCF-4DB5-A092-C2BEE97ED0F3} = {A0FBCC60-D14C-429F-BA55-1D8D9B20DFB7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9585A594-E82A-4609-AE9A-D098FA14BE71}
