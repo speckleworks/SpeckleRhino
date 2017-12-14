@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model='visible' style='width: 100%' >
+  <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%' >
     <v-card class=''>
       <v-card-title>
         Add Receiver

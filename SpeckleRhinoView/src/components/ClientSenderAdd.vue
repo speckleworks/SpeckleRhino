@@ -1,9 +1,12 @@
 <template>
-  <v-dialog v-model='visible' style='width: 100%'>
-    <v-card class=''>
-      <v-card-title>
-        Add Sender
-      </v-card-title>
+  <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%'>
+    <v-card>
+      <v-toolbar style="flex: 0 0 auto;" dark class='light-blue'>
+        <v-btn icon @click.native="dialog = false" dark>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-toolbar-title>Add Sender</v-toolbar-title>
+      </v-toolbar>
       <v-card-text class="grey darken-4" text-center>
         <div class='step-1'>
           <v-form>
@@ -22,12 +25,12 @@
             </template>
           </v-card>
           <v-card v-else class='elevation-4 pa-2'>
-            <div class='pa-2'>No selection found. Please select the layers you want this stream to be attached to:</div>
-            <div class='caption pa-1'>
+            <div class='pa-2'>No selection found. Please select some objects!</div>
+            <!-- <div class='caption pa-1'>
               <template v-for='layer, index in layerSelectionMap'>
                 <v-checkbox small v-model='layer.selected' :label='layer.layerName + " | " + layer.objectCount + " objs"' class='layer-selector' color='grey lighten-4'></v-checkbox>
               </template>
-            </div>
+            </div> -->
           </v-card>
           <v-alert color='error' :value='fail' icon='error'>
             {{ error }}
@@ -99,8 +102,13 @@ export default {
         this.fail = true
         return
       }
-      if ( !this.streamName || /^\s*$/.test( this.streamName ) ) {  
+      if ( !this.streamName || /^\s*$/.test( this.streamName ) ) {
         this.error = 'Please input a stream name.'
+        this.fail = true
+        return
+      }
+      if ( this.objectSelection.length == 0 ) {
+        this.error = 'Please select some objects.'
         this.fail = true
         return
       }

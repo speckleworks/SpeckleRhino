@@ -131,4 +131,42 @@ body {}
 .xs-actions {
   font-size: 16px !important;
 }
+
+.layer-list {
+  padding: 0;
+}
+
+.layer {
+  padding: 2px 0 2px 0;
+  transition: all .3s ease;
+}
+
+.layer:last-child{
+
+}
+.layers-section {
+  position: relative;
+  transition: all 0.3s;
+  border-top: 1px dashed grey;
+}
+.layers-section:last-child{
+  border-bottom: 1px dashed grey;
+}
+
+.layers-section:hover:after {
+  opacity: 0;
+}
+
+.layers-section:after {
+  content: '\A';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  transition: all 0.3s;
+  pointer-events: none;
+}
 </style>

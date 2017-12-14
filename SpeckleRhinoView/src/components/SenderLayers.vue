@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class='layer-list pa-0'>
-    <layer v-for='layer in layers' :key='layer.guid' :layer='layer' :clientId='clientId' class='layer'></layer>
+    <layer v-for='layer in layers' :key='layer.guid' :layer='layer' :clientId='clientId' class='layer layers-section'></layer>
   </v-container>
 </template>
 <script>

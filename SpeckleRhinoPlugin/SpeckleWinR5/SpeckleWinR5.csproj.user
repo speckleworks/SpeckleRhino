@@ -8,4 +8,12 @@
     <StartProgram>c:\Program Files\Rhinoceros 5 %2864-bit%29\System\Rhino.exe</StartProgram>
     <StartAction>Program</StartAction>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DimitrieDebug|AnyCPU'">
+    <StartProgram>c:\Program Files\Rhinoceros 5 %2864-bit%29\System\Rhino.exe</StartProgram>
+    <StartAction>Program</StartAction>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DimitrieDebug|x64'">
+    <StartProgram>c:\Program Files\Rhinoceros 5 %2864-bit%29\System\Rhino.exe</StartProgram>
+    <StartAction>Program</StartAction>
+  </PropertyGroup>
 </Project>
