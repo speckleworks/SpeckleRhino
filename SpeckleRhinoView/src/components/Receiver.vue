@@ -32,7 +32,7 @@
             {{ client.stream.name }}
             <!-- <a href='https://speckle.works' target='_blank'><v-icon>open_in_browser</v-icon></a> -->
           </p>
-          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
         </v-card-title>

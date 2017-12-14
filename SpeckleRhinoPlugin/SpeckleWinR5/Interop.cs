@@ -91,6 +91,11 @@ namespace SpeckleRhino
                 if (SpeckleIsReady)
                     NotifySpeckleFrame("object-selection", "", this.getLayersAndObjectsInfo());
             };
+
+            RhinoApp.Idle += (sender, e) =>
+            {
+                //Debug.WriteLine("App Idle event fired.");
+            };
         }
 
         #region General Utils
@@ -318,7 +323,18 @@ namespace SpeckleRhino
 
         }
 
+        public void addObjectsToStream(string clientId, string _guids)
+        {
+            string[] guids = JsonConvert.DeserializeObject<string[]>(_guids);
 
+            var myClient = UserClients.FirstOrDefault(c => c.GetClientId() == clientId);
+            if (myClient != null)
+                try
+                {
+                    ((RhinoSender)myClient).AddTrackedObjects(guids);
+                }
+                catch { throw new Exception("Force send client was not a sender. whoopsie poopsiee."); }
+        }
 
         public void refreshClient(string clientId)
         {

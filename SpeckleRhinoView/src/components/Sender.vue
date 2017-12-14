@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
         <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
-          <v-icon xxxclass='pink--text xxxxs-actions'>
+          <v-icon>
             <!-- cloud_upload -->
             arrow_upward
           </v-icon>
@@ -13,31 +13,30 @@
         </v-btn>
         <v-tooltip bottom>
           Add or remove objects from the stream.
-          <v-btn fab small class='light-blue' slot='activator'>
+          <v-btn fab small class='yellow darken-3 mr-1' slot='activator' @click.native='showAddRemoveDialog = true'>
             <v-icon>swap_horiz</v-icon>
           </v-btn>
         </v-tooltip>
-        <v-btn fab small @click.native='togglePause'>
+        <v-btn fab small @click.native='togglePause' class=' ma-1'>
           <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
         </v-btn>
-        <v-btn fab small class='red' @click.native='confirmDelete=true'>
+        <v-btn fab small class='red ma-1' @click.native='confirmDelete=true'>
           <v-icon>delete</v-icon>
         </v-btn>
       </v-speed-dial>
-      <!-- <v-flex class='xs2'>
-      </v-flex> -->
       <!-- title -->
       <v-flex>
         <v-card-title primary-title class='pb-0 pt-3 ml-5' :class='{ faded: fab }' style='transition: all .3s ease;'>
           <p class='headline mb-1'>
             {{ client.stream.name }}
           </p>
-          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} Last updated:
+          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
         </v-card-title>
       </v-flex>
     </v-layout>
+    <!-- progress bar -->
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
     <!-- expired alert -->
     <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
@@ -56,10 +55,12 @@
     <v-alert color='error' v-model='hasError' class='mt-4'>
       <v-layout align-center>
         <v-flex>Error: {{ client.error }}
-          <v-btn dark small @click.native='killError' slot='activator' class='ma-0 '>
-            <!-- <v-icon>close</v-icon> -->
-            dismiss
-          </v-btn>
+          <v-tooltip left>
+            Force refresh.
+            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0'>
+              <v-icon>refresh</v-icon>
+            </v-btn>
+          </v-tooltip>
         </v-flex>
       </v-layout>
     </v-alert>
@@ -105,47 +106,33 @@
       </v-card-text>
     </v-slide-y-transition>
     <!-- add objects dialog -->
-    <v-dialog v-model='showAddDialog'>
-      <v-card v-if='objectSelection.length > 0'>
-        <v-card-title class="headline">Add {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} to the stream?</v-card-title>
-        <div>
-          <v-layout class='text-xs-center pa-0 ma-0'>
-            <v-flex>
-              <v-tooltip bottom>
-                <span>You can still edit your selection.</span>
-                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='addObjectsToStream'>Yes!</v-btn>
+    <v-dialog fullscreen v-model='showAddRemoveDialog'>
+      <v-card>
+        <v-toolbar style="flex: 0 0 auto;" dark>
+          <v-btn icon @click.native="showAddRemoveDialog = false" dark>
+            <v-icon>close</v-icon>
+          </v-btn>
+          <v-toolbar-title>Add or Remove to {{client.stream.name}}</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text>
+          <div class='headline'>Based on your selection, there are <strong>{{selectionObjectCount}} </strong> objects on {{objectSelection.length}} layers.</div>
+          <div class='body-1'>You can still edit your selection.</div>
+          <div syle='width:100%' class='pa-3'>
+            <template v-for='sel in objectSelection'>
+              <v-chip xxxsmall class='eliptic caption' style='text-align: left; max-width: 40%;' slot='activator'>
+                <v-avatar :style='{ backgroundColor: sel.color }'>{{sel.objectCount}}</v-avatar>
+                {{sel.layerName}}
+              </v-chip>
               </v-tooltip>
-            </v-flex>
-          </v-layout>
-        </div>
-      </v-card>
-      <v-card v-else class='elevation-4 pa-2'>
-        <div class='pa-2 subheading'>
-          <v-icon>warning</v-icon>
-          No selection found. Please select some objects to add or remove!
-        </div>
-      </v-card>
-    </v-dialog>
-    <!-- remove objects dialog -->
-    <v-dialog v-model='showRemoveDialog'>
-      <v-card v-if='objectSelection.length > 0'>
-        <v-card-title class="headline">Remove {{ selectionObjectCount }} object{{selectionObjectCount > 1 ? "s" : "" }} from the stream?</v-card-title>
-        <div>
-          <v-layout class='text-xs-center pa-0 ma-0'>
-            <v-flex>
-              <v-tooltip bottom>
-                <span>You can still edit your selection.</span>
-                <v-btn block slot='activator' class='light-blue fat-one pa-0 ma-0' @click.native='removeObjectsFromStream'>Yes!</v-btn>
-              </v-tooltip>
-            </v-flex>
-          </v-layout>
-        </div>
-      </v-card>
-      <v-card v-else class='elevation-4 pa-2'>
-        <div class='pa-2 subheading'>
-          <v-icon>warning</v-icon>
-          No selection found. Please select some objects to add or remove!
-        </div>
+            </template>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn flat @click.native='showAddRemoveDialog=false'>cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn block color='light-blue' @click.native='addObjectsToStream'>Add</v-btn>
+          <v-btn color='red' @click.native='removeObjectsFromStream'>Remove</v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
     <!-- confirm delete dialog -->
@@ -195,22 +182,21 @@ export default {
       showLog: false,
       showChildren: false,
       showMenu: false,
-      showAddDialog: false,
-      showRemoveDialog: false,
+      showAddRemoveDialog: false,
       paused: false,
     }
   },
   methods: {
     addObjectsToStream( ) {
-      this.showAddDialog = false
+      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.ObjectGuids, ...acc ], [ ] )
+      Interop.addObjectsToStream( this.client.ClientId, JSON.stringify( guids ) )
     },
     removeObjectsFromStream( ) {
-      this.showRemoveDialog = false
+
     },
     togglePause( ) {
       this.paused = !this.paused
       Interop.setClientPause( this.client.ClientId, this.paused )
-      console.log( "ADSfasfd" )
     },
     toggleLog( ) {
       if ( this.showLog ) return this.showLog = false
@@ -235,9 +221,10 @@ export default {
     },
     refreshStream( ) {
       this.client.expired = false
+      this.killError( )
       Interop.forceSend( this.client.ClientId )
     },
-    killError() {
+    killError( ) {
       this.client.error = null
     }
   },

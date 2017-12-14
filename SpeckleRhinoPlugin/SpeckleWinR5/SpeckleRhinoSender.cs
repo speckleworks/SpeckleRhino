@@ -55,6 +55,8 @@ namespace SpeckleRhino
 
         PayloadStreamUpdate QueuedUpdate;
 
+        public bool IsSendingUpdate = false;
+
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
             Context = _Context;
@@ -106,9 +108,16 @@ namespace SpeckleRhino
             }
         }
 
-        public void AddTrackedObjects()
+        public void AddTrackedObjects(string[] guids)
         {
+            foreach(string guid in guids)
+                RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
+        }
 
+        public void RemoveTrackedObjects(string[] guids)
+        {
+            foreach (string guid in guids)
+                RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, null);
         }
 
         public void SetRhinoEvents()
@@ -252,9 +261,19 @@ namespace SpeckleRhino
                 return;
             }
 
+            if(IsSendingUpdate)
+            {
+                Context.NotifySpeckleFrame("client-expired", StreamId, "");
+                return;
+            }
+
+            IsSendingUpdate = true;
+
             Debug.WriteLine("Sending update " + DateTime.Now);
             Context.NotifySpeckleFrame("client-is-loading", StreamId, "");
+
             var response = Client.StreamUpdate(payload, Client.Stream.StreamId);
+
             Client.BroadcastMessage(new { eventType = "update-global" });
 
             // commit to cache
@@ -270,6 +289,8 @@ namespace SpeckleRhino
 
             Context.NotifySpeckleFrame("client-metadata-update", StreamId, Client.Stream.ToJson());
             Context.NotifySpeckleFrame("client-done-loading", StreamId, "");
+
+            IsSendingUpdate = false;
         }
 
         public PayloadStreamUpdate CreateUpdatePayload()
