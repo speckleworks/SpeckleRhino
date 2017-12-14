@@ -41,7 +41,7 @@ namespace SpeckleRhino
             Cef.Initialize(settings);
 
             // Create a browser component
-            chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+            chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
 
             // Add it to the form and fill it to the form window.
             this.Controls.Add(chromeBrowser);
