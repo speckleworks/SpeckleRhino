@@ -95,8 +95,13 @@ namespace SpeckleRhino
                             break;
 
                         case Rhino.DocObjects.ObjectType.Mesh:
-                            DisplayMaterial mMaterial = new DisplayMaterial(Colors[count], 0.5);
-                            e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                            if ((obj as Mesh).VertexColors.Count > 0)
+                                e.Display.DrawMeshFalseColors((Mesh)obj);
+                            else
+                            {
+                                DisplayMaterial mMaterial = new DisplayMaterial(Colors[count], 0.5);
+                                e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                            }
                             //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
                             break;
 
