@@ -189,10 +189,13 @@ export default {
   methods: {
     addObjectsToStream( ) {
       let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.ObjectGuids, ...acc ], [ ] )
-      Interop.addObjectsToStream( this.client.ClientId, JSON.stringify( guids ) )
+      Interop.addRemoveObjects( this.client.ClientId, JSON.stringify( guids ), false )
+      this.showAddRemoveDialog = false
     },
     removeObjectsFromStream( ) {
-
+      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.ObjectGuids, ...acc ], [ ] )
+      Interop.addRemoveObjects( this.client.ClientId, JSON.stringify( guids ), true )
+      this.showAddRemoveDialog = false
     },
     togglePause( ) {
       this.paused = !this.paused

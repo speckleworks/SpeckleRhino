@@ -112,12 +112,16 @@ namespace SpeckleRhino
         {
             foreach(string guid in guids)
                 RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
+
+            SendUpdate(CreateUpdatePayload());
         }
 
         public void RemoveTrackedObjects(string[] guids)
         {
             foreach (string guid in guids)
                 RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, null);
+
+            SendUpdate(CreateUpdatePayload());
         }
 
         public void SetRhinoEvents()

@@ -323,7 +323,7 @@ namespace SpeckleRhino
 
         }
 
-        public void addObjectsToStream(string clientId, string _guids)
+        public void AddRemoveObjects(string clientId, string _guids, bool remove)
         {
             string[] guids = JsonConvert.DeserializeObject<string[]>(_guids);
 
@@ -331,7 +331,10 @@ namespace SpeckleRhino
             if (myClient != null)
                 try
                 {
+                    if(!remove)
                     ((RhinoSender)myClient).AddTrackedObjects(guids);
+                    else ((RhinoSender)myClient).RemoveTrackedObjects(guids);
+
                 }
                 catch { throw new Exception("Force send client was not a sender. whoopsie poopsiee."); }
         }
