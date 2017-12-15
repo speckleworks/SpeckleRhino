@@ -122,11 +122,11 @@
     <Compile Include="..\src\SpeckleAccount.cs">
       <Link>SpeckleAccount.cs</Link>
     </Compile>
-    <Compile Include="..\src\SpeckleCommand.cs">
-      <Link>SpeckleCommand.cs</Link>
-    </Compile>
     <Compile Include="..\src\SpeckleDisplayConduit.cs">
       <Link>SpeckleDisplayConduit.cs</Link>
+    </Compile>
+    <Compile Include="..\src\SpecklePanelCommand.cs">
+      <Link>SpecklePanelCommand.cs</Link>
     </Compile>
     <Compile Include="..\src\SpecklePlugIn.cs">
       <Link>SpecklePlugIn.cs</Link>
@@ -137,17 +137,30 @@
     <Compile Include="..\src\SpeckleRhinoSender.cs">
       <Link>SpeckleRhinoSender.cs</Link>
     </Compile>
-    <Compile Include="..\src\WinForm.cs">
-      <Link>WinForm.cs</Link>
+    <Compile Include="..\src\SpeckleRhinoUserControl.cs">
+      <Link>SpeckleRhinoUserControl.cs</Link>
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="..\src\WinForm.Designer.cs">
-      <Link>WinForm.Designer.cs</Link>
+    <Compile Include="..\src\SpeckleRhinoUserControl.designer.cs">
+      <Link>SpeckleRhinoUserControl.designer.cs</Link>
+      <DependentUpon>SpeckleRhinoUserControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
@@ -158,6 +171,9 @@
       <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
       <Name>SpeckleRhinoConverter</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
