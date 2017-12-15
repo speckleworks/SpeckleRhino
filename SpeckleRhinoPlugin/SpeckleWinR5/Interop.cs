@@ -368,7 +368,7 @@ namespace SpeckleRhino
         public string getLayersAndObjectsInfo(bool ignoreSelection = false)
         {
             List<RhinoObject> SelectedObjects;
-            List<SpeckleLayerInfo> layerInfoList = new List<SpeckleLayerInfo>();
+            List<LayerSelection> layerInfoList = new List<LayerSelection>();
             if (!ignoreSelection)
             {
                 SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
@@ -378,7 +378,7 @@ namespace SpeckleRhino
                 SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
                 foreach(Layer ll in RhinoDoc.ActiveDoc.Layers)
                 {
-                    layerInfoList.Add(new SpeckleLayerInfo()
+                    layerInfoList.Add(new LayerSelection()
                     {
                         objectCount = 0,
                         layerName = ll.FullPath,
@@ -404,7 +404,7 @@ namespace SpeckleRhino
                 }
                 else
                 {
-                    var myNewLinfo = new SpeckleLayerInfo()
+                    var myNewLinfo = new LayerSelection()
                     {
                         objectCount = 1,
                         layerName = layer.FullPath,
@@ -423,7 +423,7 @@ namespace SpeckleRhino
     }
 
     [Serializable]
-    public class SpeckleLayerInfo
+    public class LayerSelection
     {
         public string layerName;
         public int objectCount;
