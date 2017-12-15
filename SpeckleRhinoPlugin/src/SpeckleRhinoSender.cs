@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -59,6 +60,11 @@ namespace SpeckleRhino
 
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
             Context = _Context;
             Type = _Type;
 
@@ -449,6 +455,12 @@ namespace SpeckleRhino
 
         protected RhinoSender(SerializationInfo info, StreamingContext context)
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
+
             byte[] serialisedClient = Convert.FromBase64String((string)info.GetString("client"));
 
             using (var ms = new MemoryStream())

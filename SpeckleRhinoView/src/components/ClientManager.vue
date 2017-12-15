@@ -1,15 +1,14 @@
 <template>
-  <v-container fluid pa-0 class='transparent'>
+  <div>
     <receiver-add></receiver-add>
     <sender-add></sender-add>
-    <v-layout wrap column>
-      <v-flex xs12 v-for='client in clients' :key='client.restApi' flat class='receiver'>
+    <v-container fluid pa-0 class='transparent' v-if='clients.length > 0'>
+      <template v-for='client in clients'>
         <receiver v-if='client.Role === 1' :client='client'></receiver>
         <sender v-else :client='client'></sender>
-      </v-flex>
-    </v-layout>
-    
-  </v-container>
+      </template>
+    </v-container>
+  </div>
 </template>
 <script>
 import ReceiverAdd from './ClientReceiverAdd.vue'

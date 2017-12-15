@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
@@ -38,6 +39,13 @@ namespace SpeckleRhino
 
         public RhinoReceiver(string _payload, Interop _parent)
         {
+
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
+
             Context = _parent;
             dynamic payload = JsonConvert.DeserializeObject(_payload);
 
@@ -49,6 +57,8 @@ namespace SpeckleRhino
             Client.OnLogData += Client_OnLogData;
             Client.OnWsMessage += Client_OnWsMessage;
             Client.OnError += Client_OnError;
+
+            Debug.WriteLine("YOLOS");
 
             Client.IntializeReceiver((string)payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), (string)payload.account.apiToken);
 
@@ -389,6 +399,11 @@ namespace SpeckleRhino
 
         protected RhinoReceiver(SerializationInfo info, StreamingContext context)
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
             Display = new SpeckleDisplayConduit();
             Display.Enabled = true;
 
