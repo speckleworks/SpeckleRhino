@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-app dark>
+    <v-app >
       <v-tabs grow v-model='active'>
         <v-tabs-bar class='transparent' dark>
           <v-tabs-item key='clients' href='clients'>
