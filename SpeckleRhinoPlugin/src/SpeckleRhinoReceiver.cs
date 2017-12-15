@@ -61,17 +61,17 @@ namespace SpeckleRhino
         #region events
         private void Client_OnError(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
+            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
         }
 
         public virtual void Client_OnLogData(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData));
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
         }
 
         public virtual void Client_OnReady(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
+            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }, Context.SS));
 
             Context.UserClients.Add(this);
 
@@ -100,7 +100,7 @@ namespace SpeckleRhino
                     UpdateChildren();
                     break;
                 default:
-                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType));
+                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType, Context.SS));
                     break;
             }
         }

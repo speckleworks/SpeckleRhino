@@ -80,7 +80,7 @@ namespace SpeckleRhino
                 StreamId = Client.Stream.StreamId;
                 Client.Stream.Name = StreamName;
 
-                Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
+                Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }, Context.SS));
                 Context.UserClients.Add(this);
 
                 InitTrackedObjects(InitPayload);
@@ -243,12 +243,12 @@ namespace SpeckleRhino
 
         private void Client_OnLogData(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData));
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
         }
 
         private void Client_OnError(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
+            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
         }
 
         public void ForceUpdate()
@@ -443,7 +443,7 @@ namespace SpeckleRhino
         {
             Context = _Context;
 
-            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
+            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }, Context.SS));
             Context.UserClients.Add(this);
         }
 

@@ -16,6 +16,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
 using System.Dynamic;
 using Rhino.DocObjects;
+using Newtonsoft.Json.Serialization;
 
 namespace SpeckleRhino
 {
@@ -33,10 +34,18 @@ namespace SpeckleRhino
 
         public Dictionary<string, SpeckleObject> ObjectCache;
 
+        public JsonSerializerSettings SS;
+
         public bool SpeckleIsReady = false;
 
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
+
+            SS = new JsonSerializerSettings()
+            {
+                ContractResolver = new DefaultContractResolver() { NamingStrategy = new CamelCaseNamingStrategy() }
+            };
+
             Browser = _originalBrowser;
             mainForm = _mainForm;
 
@@ -185,7 +194,7 @@ namespace SpeckleRhino
         public string GetUserAccounts()
         {
             ReadUserAccounts();
-            return JsonConvert.SerializeObject(UserAccounts);
+            return JsonConvert.SerializeObject(UserAccounts, SS);
         }
 
         private void ReadUserAccounts()
@@ -416,7 +425,7 @@ namespace SpeckleRhino
                 }
             }
 
-            return JsonConvert.SerializeObject(layerInfoList);
+            return JsonConvert.SerializeObject(layerInfoList, SS);
         }
 
         #endregion

@@ -41,7 +41,7 @@ new Vue( {
   mounted( ) {
     // Populate with existing accounts
     this.$store.dispatch( 'getUserAccounts' )
-
+    console.log( this.$store ) 
     EventBus.$on( 'client-purge', ( ) => {
       console.log( 'purge-purge' )
       this.$store.commit( 'PURGE_CLIENTS' )
