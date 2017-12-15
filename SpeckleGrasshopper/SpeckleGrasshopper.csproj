@@ -159,6 +159,7 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
+Erase "$(TargetPath)"
 copy /Y "$(TargetDir)$(ProjectName).gha" "%25AppData%25\Grasshopper\Libraries\SpeckleSendReceive\$(ProjectName).gha"
 copy /Y "$(TargetDir)SpecklePopup.dll" "%25AppData%25\Grasshopper\Libraries\SpeckleSendReceive\SpecklePopup.dll"</PostBuildEvent>
   </PropertyGroup>
