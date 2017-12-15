@@ -10,16 +10,16 @@ namespace SpeckleRhino
     /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
     /// "Show All Files" to see it in the "Solution Explorer" window).</para>
     ///</summary>
-    public class TestWebUIPlugIn : Rhino.PlugIns.PlugIn
+    public class SpecklePlugIn : Rhino.PlugIns.PlugIn
 
     {
-        public TestWebUIPlugIn()
+        public SpecklePlugIn()
         {
             Instance = this;
         }
 
         ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
-        public static TestWebUIPlugIn Instance
+        public static SpecklePlugIn Instance
         {
             get; private set;
         }
@@ -30,9 +30,6 @@ namespace SpeckleRhino
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
-
-
-
             return base.OnLoad(ref errorMessage);
         }
 
