@@ -139,7 +139,6 @@
     </Compile>
     <Compile Include="..\src\WinForm.cs">
       <Link>WinForm.cs</Link>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="..\src\WinForm.Designer.cs">
       <Link>WinForm.Designer.cs</Link>
@@ -159,11 +158,6 @@
       <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
       <Name>SpeckleRhinoConverter</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="..\src\WinForm.resx">
-      <Link>WinForm.resx</Link>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
