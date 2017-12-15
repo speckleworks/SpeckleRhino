@@ -1,4 +1,7 @@
-﻿using Rhino.PlugIns;
+﻿using System;
+using Rhino;
+using Rhino.PlugIns;
+using Rhino.UI;
 
 namespace SpeckleRhino
 {
@@ -11,7 +14,6 @@ namespace SpeckleRhino
     /// "Show All Files" to see it in the "Solution Explorer" window).</para>
     ///</summary>
     public class SpecklePlugIn : Rhino.PlugIns.PlugIn
-
     {
         public SpecklePlugIn()
         {
@@ -24,12 +26,19 @@ namespace SpeckleRhino
             get; private set;
         }
 
+        /// <summary>
+        /// The tabbed dockbar user control
+        /// </summary>
+        public SpeckleRhinoUserControl PanelUserControl { get; set; }
+
         // You can override methods here to change the plug-in behavior on
         // loading and shut down, add options pages to the Rhino _Option command
         // and maintain plug-in wide options in a document.
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
+            var panel_type = typeof(SpeckleRhinoUserControl);
+            Panels.RegisterPanel(this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle);
             return base.OnLoad(ref errorMessage);
         }
 

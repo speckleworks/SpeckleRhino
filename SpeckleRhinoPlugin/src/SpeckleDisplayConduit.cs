@@ -101,12 +101,12 @@ namespace SpeckleRhino
                                 for (int i = 0; i <  mesh.VertexColors.Count; i++)
                                     mesh.VertexColors[i] = Color.FromArgb(100, mesh.VertexColors[i]);
                     
-                                e.Display.DrawMeshFalseColors((Mesh)obj);
+                                e.Display.DrawMeshFalseColors(mesh);
                             }
                             else
                             {
                                 DisplayMaterial mMaterial = new DisplayMaterial(Colors[count], 0.5);
-                                e.Display.DrawMeshShaded((Mesh)obj, mMaterial);
+                                e.Display.DrawMeshShaded(mesh, mMaterial);
                             }
                             //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
                             break;

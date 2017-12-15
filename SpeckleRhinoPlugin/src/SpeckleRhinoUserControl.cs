@@ -1,24 +1,37 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Windows.Forms;
-using CefSharp;
 using CefSharp.WinForms;
-using Rhino;
+using CefSharp;
 using System.Reflection;
 using System.IO;
+using Rhino;
 
 namespace SpeckleRhino
 {
-    public partial class WinForm : Form
+    /// <summary>
+    /// This is the user control that is buried in the tabbed, docking panel.
+    /// </summary>
+    [System.Runtime.InteropServices.Guid("5736E01B-1459-48FF-8021-AE8E71257795")]
+    public partial class SpeckleRhinoUserControl : UserControl
     {
+
         public ChromiumWebBrowser chromeBrowser;
         public Interop Store;
 
-        public WinForm()
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        public SpeckleRhinoUserControl()
         {
             InitializeComponent();
             // Start the browser after initialize global component
             InitializeChromium();
+
+            // Set the user control property on our plug-in
+            SpecklePlugIn.Instance.PanelUserControl = this;
+
+            //When Rhino closes, we need to shutdown Cef.
+            RhinoApp.Closing += OnClosing;
         }
 
         public void InitializeChromium()
@@ -35,7 +48,6 @@ namespace SpeckleRhino
             settings.BrowserSubprocessPath = pathSubprocess;
             settings.CefCommandLineArgs.Add("disable-gpu", "1");
 
-
             // Initialize cef with the provided settings
             Cef.Initialize(settings);
 
@@ -49,30 +61,34 @@ namespace SpeckleRhino
             chromeBrowser.Dock = DockStyle.Fill;
 
             // Allow the use of local resources in the browser
-            BrowserSettings browserSettings = new BrowserSettings();
-            browserSettings.FileAccessFromFileUrls = CefState.Enabled;
-            browserSettings.UniversalAccessFromFileUrls = CefState.Enabled;
+            BrowserSettings browserSettings = new BrowserSettings
+            {
+                FileAccessFromFileUrls = CefState.Enabled,
+                UniversalAccessFromFileUrls = CefState.Enabled
+            };
 
             Store = new Interop(chromeBrowser, this);
 
             chromeBrowser.RegisterAsyncJsObject("Interop", Store);
         }
 
-        private void WinForm_FormClosed(object sender, FormClosedEventArgs e)
+        private void OnClosing(object sender, EventArgs e)
         {
-            Action ShutDownCef = () =>
-            {
-                Cef.Shutdown();
-            };
-
-            Rhino.RhinoApp.MainApplicationWindow.Invoke(ShutDownCef);
+            chromeBrowser.Dispose();
+            Cef.Shutdown();
+            SpecklePlugIn.Instance.PanelUserControl = null;
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        /// <summary>
+        /// Returns the ID of this panel.
+        /// </summary>
+        public static Guid PanelId
         {
-            this.Hide();
-            e.Cancel = true;
-            base.OnFormClosing(e);
+            get
+            {
+                return typeof(SpeckleRhinoUserControl).GUID;
+            }
         }
     }
 }
+

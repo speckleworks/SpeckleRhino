@@ -16,6 +16,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
 using System.Dynamic;
 using Rhino.DocObjects;
+using System.Windows.Forms;
 
 namespace SpeckleRhino
 {
@@ -26,7 +27,7 @@ namespace SpeckleRhino
     public class Interop
     {
         private static ChromiumWebBrowser Browser;
-        private static WinForm mainForm;
+        private static Control mainForm;
 
         private List<SpeckleAccount> UserAccounts;
         public List<ISpeckleRhinoClient> UserClients;
@@ -35,7 +36,7 @@ namespace SpeckleRhino
 
         public bool SpeckleIsReady = false;
 
-        public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
+        public Interop(ChromiumWebBrowser _originalBrowser, Control _mainForm)
         {
             Browser = _originalBrowser;
             mainForm = _mainForm;
