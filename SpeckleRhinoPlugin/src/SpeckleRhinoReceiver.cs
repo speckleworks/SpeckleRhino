@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
@@ -38,6 +39,13 @@ namespace SpeckleRhino
 
         public RhinoReceiver(string _payload, Interop _parent)
         {
+
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
+
             Context = _parent;
             dynamic payload = JsonConvert.DeserializeObject(_payload);
 
@@ -61,17 +69,17 @@ namespace SpeckleRhino
         #region events
         private void Client_OnError(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
+            Context.NotifySpeckleFrame("client-error", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 
         public virtual void Client_OnLogData(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData, Context.SS));
+            Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject(e.EventData));
         }
 
         public virtual void Client_OnReady(object source, SpeckleEventArgs e)
         {
-            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }, Context.SS));
+            Context.NotifySpeckleFrame("client-add", StreamId, JsonConvert.SerializeObject(new { stream = Client.Stream, client = Client }));
 
             Context.UserClients.Add(this);
 
@@ -100,7 +108,7 @@ namespace SpeckleRhino
                     UpdateChildren();
                     break;
                 default:
-                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType, Context.SS));
+                    Context.NotifySpeckleFrame("client-log", StreamId, JsonConvert.SerializeObject("Unkown event: " + (string)e.EventObject.args.eventType));
                     break;
             }
         }
@@ -389,6 +397,11 @@ namespace SpeckleRhino
 
         protected RhinoReceiver(SerializationInfo info, StreamingContext context)
         {
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
             Display = new SpeckleDisplayConduit();
             Display.Enabled = true;
 

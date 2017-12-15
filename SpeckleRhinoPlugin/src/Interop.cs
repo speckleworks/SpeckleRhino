@@ -34,16 +34,14 @@ namespace SpeckleRhino
 
         public Dictionary<string, SpeckleObject> ObjectCache;
 
-        public JsonSerializerSettings SS;
-
         public bool SpeckleIsReady = false;
 
         public Interop(ChromiumWebBrowser _originalBrowser, WinForm _mainForm)
         {
 
-            SS = new JsonSerializerSettings()
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
             {
-                ContractResolver = new DefaultContractResolver() { NamingStrategy = new CamelCaseNamingStrategy() }
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
             Browser = _originalBrowser;
@@ -194,7 +192,7 @@ namespace SpeckleRhino
         public string GetUserAccounts()
         {
             ReadUserAccounts();
-            return JsonConvert.SerializeObject(UserAccounts, SS);
+            return JsonConvert.SerializeObject(UserAccounts);
         }
 
         private void ReadUserAccounts()
@@ -425,7 +423,7 @@ namespace SpeckleRhino
                 }
             }
 
-            return JsonConvert.SerializeObject(layerInfoList, SS);
+            return JsonConvert.SerializeObject(layerInfoList);
         }
 
         #endregion
