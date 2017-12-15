@@ -25,16 +25,16 @@
         </v-btn>
       </v-speed-dial>
       <!-- title -->
-      <v-flex>
+      <div>
         <v-card-title primary-title class='pb-0 pt-3 ml-5' :class='{ faded: fab }' style='transition: all .3s ease;'>
-          <p class='headline mb-1'>
+          <div class='headline mb-1' style='display: block; width:100%'>
             {{ client.stream.name }}
-          </p>
-          <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
+          </div>
+          <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
         </v-card-title>
-      </v-flex>
+      </div>
     </v-layout>
     <!-- progress bar -->
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
@@ -188,12 +188,12 @@ export default {
   },
   methods: {
     addObjectsToStream( ) {
-      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.ObjectGuids, ...acc ], [ ] )
+      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.objectGuids, ...acc ], [ ] )
       Interop.addRemoveObjects( this.client.ClientId, JSON.stringify( guids ), false )
       this.showAddRemoveDialog = false
     },
     removeObjectsFromStream( ) {
-      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.ObjectGuids, ...acc ], [ ] )
+      let guids = this.objectSelection.reduce( ( acc, obj ) => [ ...obj.objectGuids, ...acc ], [ ] )
       Interop.addRemoveObjects( this.client.ClientId, JSON.stringify( guids ), true )
       this.showAddRemoveDialog = false
     },

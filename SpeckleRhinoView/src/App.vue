@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-app >
+    <v-app>
       <v-tabs grow v-model='active'>
         <v-tabs-bar class='transparent' dark>
           <v-tabs-item key='clients' href='clients'>
@@ -120,6 +120,22 @@ body {}
 
 #app {}
 
+.receiver-content {
+  transition: all .3s ease;
+}
+.receiver-content:before {
+  content: '\A';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 1;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
 .ellipsis {
   max-width: 100%;
   text-overflow: ellipsis;
@@ -141,15 +157,15 @@ body {}
   transition: all .3s ease;
 }
 
-.layer:last-child{
+.layer:last-child {}
 
-}
 .layers-section {
   position: relative;
   transition: all 0.3s;
   border-top: 1px dashed grey;
 }
-.layers-section:last-child{
+
+.layers-section:last-child {
   border-bottom: 1px dashed grey;
 }
 
@@ -164,7 +180,7 @@ body {}
   height: 100%;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.07);
   opacity: 1;
   transition: all 0.3s;
   pointer-events: none;

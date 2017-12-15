@@ -101,7 +101,7 @@ namespace SpeckleRhino
             {
                 case SenderType.BySelection:
                     foreach (var layer in payload.selection)
-                        foreach (string guid in layer.ObjectGuids)
+                        foreach (string guid in layer.objectGuids)
                         {
                             RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
                             TrackedObjects.Add(guid);

@@ -30,8 +30,8 @@
         <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='position: relative; transition: all .3s ease; left: 5px;'>
           <p class='headline mb-1'>
             {{ client.stream.name }}
-            <!-- <a href='https://speckle.works' target='_blank'><v-icon>open_in_browser</v-icon></a> -->
           </p>
+          <br>
           <div class='caption'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
@@ -196,10 +196,6 @@ export default {
 
 .section-title {
   padding: 2px 0 2px 24px;
-}
-
-.receiver-content {
-  transition: all .3s ease;
 }
 
 .log {
