@@ -52,6 +52,7 @@ export default new Vuex.Store( {
       state.accounts = state.accounts.filter( item => item.fileName !== payload )
     },
     ADD_CLIENT( state, payload ) {  
+      console.log( payload )
       payload.client.stream = payload.stream
       // extra props for the ui
       payload.client.log = [ { timestamp: new Date(), message: 'Client added.' } ]

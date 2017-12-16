@@ -94,7 +94,7 @@
     <v-slide-y-transition>
       <v-card-text v-show='showChildren' xxxclass='grey darken-4'>
         <blockquote class='section-title'>Children:</blockquote>
-        <br> {{ client.stream.children.length == 0 ? 'Stream has no children.' : '' }}
+        <!-- <br> {{ client.stream.children.length == 0 ? 'Stream has no children.' : '' }} -->
         <template v-for='kid in client.stream.children'>
           <v-btn small block>
             {{kid}}

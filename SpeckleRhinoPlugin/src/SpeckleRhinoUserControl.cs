@@ -5,6 +5,7 @@ using CefSharp;
 using System.Reflection;
 using System.IO;
 using Rhino;
+using System.Net;
 
 namespace SpeckleRhino
 {
@@ -57,10 +58,26 @@ namespace SpeckleRhino
             Cef.Initialize(settings);
 
             // Create a browser component. 
-            // Change the below to wherever your webpack ui server is running.
-            //chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
-            chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
-            // Add it to the form and fill it to the form window.
+            // #IF DEBUG
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(@"http://localhost:9090/");
+            request.Timeout = 100;
+            request.Method = "HEAD";
+            try
+            {
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+                    // IF NORMAL PERSON 
+                    chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
+                }
+            }
+            catch (WebException)
+            {
+                // IF DIMITRIE ON PARALLELS
+                chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+            }
+
+            //#IF RELEASE
+            // TODO: Load app from local file
 
             this.Controls.Add(chromeBrowser);
             chromeBrowser.Dock = DockStyle.Fill;
