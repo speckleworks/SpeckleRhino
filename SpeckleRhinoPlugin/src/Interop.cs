@@ -213,6 +213,9 @@ namespace SpeckleRhino
         {
             var x = UserAccounts.RemoveAll(account => { return account.fileName == payload; });
             // TODO: Delete file, or move it to special folder
+            if (File.Exists(payload))
+                File.Delete(payload);
+                
         }
         #endregion
 
