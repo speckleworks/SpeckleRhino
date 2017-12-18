@@ -7,7 +7,7 @@
         </v-btn>
         <v-toolbar-title>Add Sender</v-toolbar-title>
       </v-toolbar>
-      <v-card-text class="grey darken-4" text-center>
+      <v-card-text text-center>
         <div class='step-1'>
           <v-form>
             <v-select label="Account" required v-bind:items='userAccounts' v-model='selectedAccountValue' style='z-index: 9000' autocomplete :search-input:sync='userAccounts'></v-select>

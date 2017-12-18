@@ -4,7 +4,7 @@
       <v-card-title>
         Add Receiver
       </v-card-title>        
-      <v-card-text class="grey darken-4" text-center>
+      <v-card-text text-center>
         <div class='step-1'>
           <v-select required label='Account' v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
           <br>

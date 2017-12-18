@@ -131,7 +131,7 @@ body {}
   height: 100%;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
   opacity: 1;
   transition: all 0.3s;
   pointer-events: none;
