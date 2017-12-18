@@ -362,6 +362,11 @@ namespace SpeckleRhino
                 catch { throw new Exception("Force send client was not a sender. whoopsie poopsiee."); }
         }
 
+        public void openUrl(string url)
+        {
+            System.Diagnostics.Process.Start(url);
+        }
+
         #endregion
 
         #region Sender Helpers

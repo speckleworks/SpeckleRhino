@@ -1,23 +1,23 @@
 <template>
   <div id="app">
-    <v-app >
-      <v-tabs grow v-model='active'>
-        <v-tabs-bar class='transparent' dark>
-          <v-tabs-item key='clients' href='clients'>
-            Clients
+    <v-app :dark='dark'>
+      <v-tabs v-model='active' dark grow>
+        <v-tabs-bar class='grey'>
+          <v-tabs-item key='clients' href='clients' >
+            <span class='grey--text text--darken-2'>Clients</span>
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
-            Accounts
+            <span class='grey--text text--darken-2 '>Accounts</span>
           </v-tabs-item>
           <v-menu open-on-hover transition="slide-x-transition">
             <v-tabs-item slot='activator' @click.native='showDev'>
               <v-icon style='font-size: 14px;'>code</v-icon>
             </v-tabs-item>
-            <v-tabs-item slot='activator' @click.native='purgeClients'>
-              <v-icon style='font-size: 14px;'>refresh</v-icon>
+            <v-tabs-item slot='activator' @click.native='dark=!dark'>
+              <v-icon style='font-size: 14px;'>wb_incandescent</v-icon>
             </v-tabs-item>
           </v-menu>
-          <v-tabs-slider color='grey'></v-tabs-slider>
+          <v-tabs-slider color='grey darken-1' style='height:2px'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
           <v-tabs-content id='clients' key='clients'>
@@ -88,7 +88,8 @@ export default {
   data( ) {
     return {
       fab: {},
-      active: null
+      active: null,
+      dark: false
     }
   },
   methods: {
@@ -120,6 +121,25 @@ body {}
 
 #app {}
 
+.receiver-content {
+  transition: all .3s ease;
+}
+.receiver-content:before {
+  content: '\A';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.12);
+  opacity: 1;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.receiver-content:hover:before{
+  background: rgba(0, 0, 0, 0);
+}
+
 .ellipsis {
   max-width: 100%;
   text-overflow: ellipsis;
@@ -141,15 +161,15 @@ body {}
   transition: all .3s ease;
 }
 
-.layer:last-child{
+.layer:last-child {}
 
-}
 .layers-section {
   position: relative;
   transition: all 0.3s;
   border-top: 1px dashed grey;
 }
-.layers-section:last-child{
+
+.layers-section:last-child {
   border-bottom: 1px dashed grey;
 }
 
@@ -164,7 +184,7 @@ body {}
   height: 100%;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.07);
   opacity: 1;
   transition: all 0.3s;
   pointer-events: none;
