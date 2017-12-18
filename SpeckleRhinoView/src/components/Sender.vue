@@ -7,7 +7,6 @@
         <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
           <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
             <v-icon>
-              <!-- cloud_upload -->
               arrow_upward
             </v-icon>
             <v-icon>close</v-icon>
@@ -18,7 +17,7 @@
               <v-icon>swap_horiz</v-icon>
             </v-btn>
           </v-tooltip>
-          <v-btn fab small @click.native='togglePause' class=' ma-1'>
+          <v-btn fab small @click.native='togglePause' class='ma-1 black' dark>
             <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
           </v-btn>
           <v-btn fab small class='red ma-1' @click.native='confirmDelete=true'>
@@ -78,6 +77,7 @@
       <v-btn icon @click.native='toggleChildren' small>
         <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
       </v-btn>
+      <extra-view-menu :streamId='client.stream.streamId' :restApi='client.BaseUrl'></extra-view-menu>
     </v-card-actions>
     <!-- layers -->
     <v-slide-y-transition>
@@ -152,6 +152,7 @@
 </template>
 <script>
 import SenderLayers from './SenderLayers.vue'
+import ExtraViewMenu from './ExtraViewMenu.vue'
 
 export default {
   name: 'Sender',
@@ -159,7 +160,8 @@ export default {
     client: Object
   },
   components: {
-    SenderLayers
+    SenderLayers,
+    ExtraViewMenu
   },
   watch: {
     'client.error' ( value ) {

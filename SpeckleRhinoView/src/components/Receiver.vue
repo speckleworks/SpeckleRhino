@@ -4,9 +4,9 @@
     <v-layout>
       <!-- speed dial menu -->
       <v-flex class='xs2'>
-        <v-speed-dial v-model='fab' direction='right' left style='top:15px' class='pa-0 ma-0'>
+        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
           <v-btn :flat='paused' fab small class='ma-0 teal' slot='activator' v-model='fab'>
-            <v-icon xxxclass='cyan--text xxxxs-actions'>
+            <v-icon>
               arrow_downward
             </v-icon>
             <v-icon>close</v-icon>
@@ -17,10 +17,10 @@
               <v-icon>play_for_work</v-icon>
             </v-btn>
           </v-tooltip>
-          <v-btn fab small @click.native='togglePause'>
+          <v-btn fab small @click.native='togglePause' class='ma-1 black' dark>
             <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
           </v-btn>
-          <v-btn fab small class='red' @click.native='confirmDelete=true'>
+          <v-btn fab small class='red ma-1' @click.native='confirmDelete=true'>
             <v-icon>delete</v-icon>
           </v-btn>
         </v-speed-dial>
@@ -66,6 +66,7 @@
         <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
           <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
         </v-btn>
+        <extra-view-menu :streamId='client.stream.streamId' :restApi='client.BaseUrl'></extra-view-menu>
       </v-card-actions>
     </v-slide-y-transition>
     <!-- layers -->
@@ -122,11 +123,13 @@
 </template>
 <script>
 import ReceiverLayers from './ReceiverLayers.vue'
+import ExtraViewMenu from './ExtraViewMenu.vue'
 
 export default {
   name: 'Receiver',
   components: {
-    ReceiverLayers
+    ReceiverLayers,
+    ExtraViewMenu
   },
   props: {
     client: Object

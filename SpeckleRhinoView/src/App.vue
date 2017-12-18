@@ -1,13 +1,13 @@
 <template>
   <div id="app">
     <v-app :dark='dark'>
-      <v-tabs grow v-model='active'>
-        <v-tabs-bar class='transparent'>
-          <v-tabs-item key='clients' href='clients'>
-            Clients
+      <v-tabs v-model='active' dark grow>
+        <v-tabs-bar class='grey'>
+          <v-tabs-item key='clients' href='clients' >
+            <span class='grey--text text--darken-2'>Clients</span>
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
-            Accounts
+            <span class='grey--text text--darken-2 '>Accounts</span>
           </v-tabs-item>
           <v-menu open-on-hover transition="slide-x-transition">
             <v-tabs-item slot='activator' @click.native='showDev'>
@@ -17,7 +17,7 @@
               <v-icon style='font-size: 14px;'>wb_incandescent</v-icon>
             </v-tabs-item>
           </v-menu>
-          <v-tabs-slider color='grey'></v-tabs-slider>
+          <v-tabs-slider color='grey darken-1' style='height:2px'></v-tabs-slider>
         </v-tabs-bar>
         <v-tabs-items>
           <v-tabs-content id='clients' key='clients'>
