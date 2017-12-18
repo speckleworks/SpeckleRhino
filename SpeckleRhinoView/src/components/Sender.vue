@@ -3,38 +3,40 @@
     <!-- header - menu and title -->
     <v-layout>
       <!-- speed dial menu -->
-      <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
-        <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
-          <v-icon>
-            <!-- cloud_upload -->
-            arrow_upward
-          </v-icon>
-          <v-icon>close</v-icon>
-        </v-btn>
-        <v-tooltip bottom>
-          Add or remove objects from the stream.
-          <v-btn fab small class='yellow darken-3 mr-1' slot='activator' @click.native='showAddRemoveDialog = true'>
-            <v-icon>swap_horiz</v-icon>
+      <v-flex class='xs2'>
+        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+          <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
+            <v-icon>
+              <!-- cloud_upload -->
+              arrow_upward
+            </v-icon>
+            <v-icon>close</v-icon>
           </v-btn>
-        </v-tooltip>
-        <v-btn fab small @click.native='togglePause' class=' ma-1'>
-          <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
-        </v-btn>
-        <v-btn fab small class='red ma-1' @click.native='confirmDelete=true'>
-          <v-icon>delete</v-icon>
-        </v-btn>
-      </v-speed-dial>
+          <v-tooltip bottom>
+            Add or remove objects from the stream.
+            <v-btn fab small class='yellow darken-3 mr-1' slot='activator' @click.native='showAddRemoveDialog = true'>
+              <v-icon>swap_horiz</v-icon>
+            </v-btn>
+          </v-tooltip>
+          <v-btn fab small @click.native='togglePause' class=' ma-1'>
+            <v-icon>{{ paused ? "pause" : "play_arrow" }}</v-icon>
+          </v-btn>
+          <v-btn fab small class='red ma-1' @click.native='confirmDelete=true'>
+            <v-icon>delete</v-icon>
+          </v-btn>
+        </v-speed-dial>
+      </v-flex>
       <!-- title -->
-      <div>
-        <v-card-title primary-title class='pb-0 pt-3 ml-5' :class='{ faded: fab }' style='transition: all .3s ease;'>
-          <div class='headline mb-1' style='display: block; width:100%'>
+      <v-flex>
+        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;'>
+          <p class='headline mb-1'>
             {{ client.stream.name }}
-          </div>
+          </p>
           <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
         </v-card-title>
-      </div>
+      </v-flex>
     </v-layout>
     <!-- progress bar -->
     <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>

@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <v-app>
+    <v-app :dark='dark'>
       <v-tabs grow v-model='active'>
-        <v-tabs-bar class='transparent' dark>
+        <v-tabs-bar class='transparent'>
           <v-tabs-item key='clients' href='clients'>
             Clients
           </v-tabs-item>
@@ -13,8 +13,8 @@
             <v-tabs-item slot='activator' @click.native='showDev'>
               <v-icon style='font-size: 14px;'>code</v-icon>
             </v-tabs-item>
-            <v-tabs-item slot='activator' @click.native='purgeClients'>
-              <v-icon style='font-size: 14px;'>refresh</v-icon>
+            <v-tabs-item slot='activator' @click.native='dark=!dark'>
+              <v-icon style='font-size: 14px;'>wb_incandescent</v-icon>
             </v-tabs-item>
           </v-menu>
           <v-tabs-slider color='grey'></v-tabs-slider>
@@ -88,7 +88,8 @@ export default {
   data( ) {
     return {
       fab: {},
-      active: null
+      active: null,
+      dark: false
     }
   },
   methods: {
@@ -130,10 +131,13 @@ body {}
   height: 100%;
   top: 0;
   left: 0;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.12);
   opacity: 1;
   transition: all 0.3s;
   pointer-events: none;
+}
+.receiver-content:hover:before{
+  background: rgba(0, 0, 0, 0);
 }
 
 .ellipsis {
