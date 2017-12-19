@@ -43,11 +43,16 @@ namespace SpeckleRhino
             string assemblyPath = Path.GetDirectoryName(assemblyLocation);
             string pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
 
-            CefSettings settings = new CefSettings();
-            settings.LogSeverity = LogSeverity.Verbose;
-            settings.LogFile = "ceflog.txt";
-            settings.BrowserSubprocessPath = pathSubprocess;
+            CefSettings settings = new CefSettings
+            {
+                LogSeverity = LogSeverity.Verbose,
+                LogFile = "ceflog.txt",
+                BrowserSubprocessPath = pathSubprocess,
+            };
+#if WINR5
+            //Not needed in Rhino 6
             settings.CefCommandLineArgs.Add("disable-gpu", "1");
+#endif
 
             // Initialize cef with the provided settings
             Cef.Initialize(settings);
