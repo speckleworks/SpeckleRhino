@@ -400,7 +400,6 @@ namespace SpeckleRhino
                     });
                 }
             }
-
             
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 

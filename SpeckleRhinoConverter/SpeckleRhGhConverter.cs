@@ -148,9 +148,12 @@ namespace SpeckleRhinoConverter
             object myObject = _object;
             try
             {
-                var Value = _object.GetType().GetProperty("Value").GetValue(_object, null);
-                if (Value != null) myObject = Value;
-
+                var preValue = _object.GetType().GetProperty("Value");
+                if (preValue != null)
+                {
+                    var Value = preValue.GetValue(_object, null);
+                    if (Value != null) myObject = Value;
+                }
             }
             catch { };
 
