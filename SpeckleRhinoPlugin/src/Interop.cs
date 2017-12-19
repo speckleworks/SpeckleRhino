@@ -378,14 +378,17 @@ namespace SpeckleRhino
         {
             List<RhinoObject> SelectedObjects;
             List<LayerSelection> layerInfoList = new List<LayerSelection>();
+
             if (!ignoreSelection)
             {
                 SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
+                if(SelectedObjects.Count == 0 || SelectedObjects[0]==null) return JsonConvert.SerializeObject(layerInfoList);
             }
             else
             {
                 SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
-                foreach(Layer ll in RhinoDoc.ActiveDoc.Layers)
+                if (SelectedObjects.Count == 0 || SelectedObjects[0] == null) return JsonConvert.SerializeObject(layerInfoList);
+                foreach (Layer ll in RhinoDoc.ActiveDoc.Layers)
                 {
                     layerInfoList.Add(new LayerSelection()
                     {
@@ -398,6 +401,7 @@ namespace SpeckleRhino
                 }
             }
 
+            
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 
             foreach (var obj in SelectedObjects)

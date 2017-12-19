@@ -1,9 +1,10 @@
 <template>
   <div id="app">
     <v-app :dark='dark'>
+      <!-- tabs with main content -->
       <v-tabs v-model='active' dark grow>
         <v-tabs-bar class='grey'>
-          <v-tabs-item key='clients' href='clients' >
+          <v-tabs-item key='clients' href='clients'>
             <span class='grey--text text--darken-2'>Clients</span>
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
@@ -32,6 +33,7 @@
           </v-tabs-content>
         </v-tabs-items>
       </v-tabs>
+      <!-- clients fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="clients"'>
           <v-btn slot='activator' fab v-model='fab' color='light-blue'>
@@ -52,6 +54,7 @@
           </v-tooltip>
         </v-speed-dial>
       </v-fab-transition>
+      <!-- accounts fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="accounts"'>
           <v-btn slot='activator' fab v-model='fab' color='purple xxxlighten-2'>
@@ -59,31 +62,36 @@
           </v-btn>
           <v-tooltip left>
             <span>Register New Account</span>
-            <v-btn fab dark color='pink' slot='activator' @click=''>
+            <v-btn fab dark color='pink' slot='activator' @click.native='showRegistration'>
               <v-icon>person_add</v-icon>
             </v-btn>
           </v-tooltip>
           <v-tooltip left>
             <span>Login to old account</span>
-            <v-btn fab dark color='blue' slot='activator' @click=''>
+            <v-btn fab dark color='blue' slot='activator' @click.native='showLogin'>
               <v-icon>person</v-icon>
             </v-btn>
           </v-tooltip>
         </v-speed-dial>
       </v-fab-transition>
+      <register-form></register-form>
     </v-app>
   </div>
 </template>
 <script>
 import AccountsManager from './components/AccountsManager.vue'
 import ClientManager from './components/ClientManager.vue'
+import RegisterForm from './components/RegisterForm.vue'
+
+
 import { EventBus } from './event-bus'
 
 export default {
   name: 'app',
   components: {
     AccountsManager,
-    ClientManager
+    ClientManager,
+    RegisterForm
   },
   data( ) {
     return {
@@ -108,6 +116,13 @@ export default {
     readClients( ) {
       Interop.getFileStreams( )
     },
+    showRegistration( ) {
+      console.log('asdfasdfasdfasdfasdfafd')
+      EventBus.$emit( 'show-register' )
+    },
+    showLogin( ) {
+      EventBus.$emit( 'show-login' )
+    },
     purgeClients( ) {
       Interop.removeAllClients( )
         .then( res => {} )
@@ -124,11 +139,15 @@ body {}
 .receiver-content {
   transition: all .3s ease;
 }
+
+
+
 /*
 .receiver-content:last-child{
   margin-bottom: 90px;
 }
 */
+
 .receiver-content:before {
   content: '\A';
   position: absolute;
@@ -141,7 +160,8 @@ body {}
   transition: all 0.3s;
   pointer-events: none;
 }
-.receiver-content:hover:before{
+
+.receiver-content:hover:before {
   background: rgba(0, 0, 0, 0);
 }
 
