@@ -36,22 +36,30 @@
     <v-dialog v-model='pingDialog' fullscreen>
       <v-card>
         <v-toolbar style="flex: 0 0 auto;" dark>
-          <v-btn icon @click.native="pingDialog=false" dark>
+          <v-btn icon @click.native="pingDialog=false" dark class='mr-0'>
             <v-icon>close</v-icon>
           </v-btn>
-          <v-toolbar-title>Stream list for {{account.serverName}}</v-toolbar-title>
+          <v-toolbar-title>{{account.serverName}} / {{account.email}}</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
           <div v-if='streams.length==0&&!fail'>No streams found for this account.<span class='caption'>({{account.serverName}})</span></div>
           <div v-if='!fail'>
-            <v-layout>You created {{ streams.length }} streams.</v-layout>
-            <v-layout style='height: 70vh; overflow-y: scroll; position: relative; overflow: hidden'>
+            <v-layout>
+              <div class='title ml-3 mb-2'>
+                Here are your {{ streams.length }} streams:
+              </div>
+            </v-layout>
+            <v-layout style='height: 75vh; overflow-y: scroll; position: relative; overflow-y:scroll; overflow-x:hidden;'>
               <v-list>
                 <template v-for='stream in streams'>
                   <v-list-tile>
                     <v-list-tile-content>
-                      <v-list-tile-title class='subheading'>{{stream.name}}</v-list-tile-title>
-                      <v-list-tile-sub-title>{{stream.streamId}} | Last update: <timeago :auto-update='10000000' :since='stream.updatedAt'></timeago></v-list-tile-sub-title>
+                      <v-list-tile-title>
+                      <div class='subheading'>{{stream.name}}</div>
+                      </v-list-tile-title>
+                      <v-list-tile-sub-title class='caption'><code>{{stream.streamId}}</code> | Last update:
+                        <timeago :auto-update='10000000' :since='stream.updatedAt'></timeago>
+                      </v-list-tile-sub-title>
                     </v-list-tile-content>
                   </v-list-tile>
                 </template>
@@ -66,7 +74,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn flat @click.native="pingDialog=false">Close</v-btn>
+          <v-btn @click.native="pingDialog=false">Close</v-btn>
           <v-btn v-if='fail' color='error' @click.native="deleteDialog=true">Delete</v-btn>
         </v-card-actions>
       </v-card>

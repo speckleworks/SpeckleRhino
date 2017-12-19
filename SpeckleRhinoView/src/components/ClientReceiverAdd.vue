@@ -1,21 +1,23 @@
 <template>
-  <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%' >
+  <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%'>
     <v-card class=''>
-      <v-card-title>
-        Add Receiver
-      </v-card-title>        
+      <v-toolbar style="flex: 0 0 auto;" dark class='teal'>
+        <v-btn icon @click.native="visible = false" dark>
+          <v-icon>close</v-icon>
+        </v-btn>
+        <v-toolbar-title>Add Receiver</v-toolbar-title>
+      </v-toolbar>
       <v-card-text text-center>
         <div class='step-1'>
-          <v-select required label='Account' v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000'autocomplete :search-input:sync='selectItems'></v-select>
+          <v-select required label='Account' v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000' autocomplete :search-input:sync='selectItems'></v-select>
           <br>
-            <div class='headline grey--text' v-show='selectedAccountValue!=null && !fail'>
-            <v-select label='Existing streams' v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000'autocomplete :search-input.sync="streamsMap"></v-select>
+          <div class='headline grey--text' v-show='selectedAccountValue!=null && !fail'>
+            <v-select label='Existing streams' v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000' autocomplete :search-input.sync="streamsMap"></v-select>
             <v-text-field label='Stream Id Direct Input' v-model='directStreamId'></v-text-field>
-            </div>
+          </div>
           <v-alert color='error' :value='fail' icon='error'>
             Failed to contact server.
-            <br>
-            {{ error }}
+            <br> {{ error }}
           </v-alert>
         </div>
       </v-card-text>
@@ -27,7 +29,6 @@
     </v-card>
   </v-dialog>
 </template>
-
 <script>
 import API from '../store/apicaller.js'
 import { EventBus } from '../event-bus'
@@ -35,47 +36,47 @@ import { EventBus } from '../event-bus'
 export default {
   name: 'ClientReceiverAdd',
   computed: {
-    accounts() { 
+    accounts( ) {
       return this.$store.getters.accounts
     },
-    selectItems() {
+    selectItems( ) {
       return this.$store.getters.accounts.map( a => a.serverName )
     },
     streamsMap: {
-      get() {
+      get( ) {
         return this.streams.map( s => s.name + this.separator + s.streamId )
       },
       set( value ) {
-        
+
       }
     }
   },
   watch: {
     selectedAccountValue( value ) {
-      if( !value ) return
+      if ( !value ) return
       this.selectedAccount = this.accounts.find( ac => ac.serverName === value )
       API.getStreams( this.selectedAccount )
-      .then( res => {
-        this.fail = false
-        this.streams = res.streams
-        this.selectedStream = null
-      })
-      .catch( err => {
-        this.streams = []
-        this.fail = true
-        this.error = err.toString()
-      })
+        .then( res => {
+          this.fail = false
+          this.streams = res.streams
+          this.selectedStream = null
+        } )
+        .catch( err => {
+          this.streams = [ ]
+          this.fail = true
+          this.error = err.toString( )
+        } )
     },
     visible( value ) {
-      if( value ) return
+      if ( value ) return
       this.selectedAccountValue = null
       this.selectedAccount = null
       this.selectedStream = null
       this.directStreamId = null
-      this.streams = []
+      this.streams = [ ]
     }
   },
-  data() {
+  data( ) {
     return {
       visible: false,
       separator: ' | ',
@@ -84,37 +85,36 @@ export default {
       selectedAccount: null,
       selectedStream: null,
       directStreamId: null,
-      streams:[],
+      streams: [ ],
       fail: false,
       error: null
     }
   },
   methods: {
-    addReceiver() {
+    addReceiver( ) {
       let streamId = null
-      if( this.selectedStream ) streamId = this.selectedStream.split( this.separator )[ 1 ]
-      else if( this.directStreamId ) streamId = this.directStreamId
-      if( !streamId ) {
+      if ( this.selectedStream ) streamId = this.selectedStream.split( this.separator )[ 1 ]
+      else if ( this.directStreamId ) streamId = this.directStreamId
+      if ( !streamId ) {
         this.fail = true
         this.error = 'No streamid provided.'
         return
       }
-      let payload = { 
+      let payload = {
         account: this.selectedAccount,
         streamId: streamId
       }
       Interop.addReceiverClient( JSON.stringify( payload ) )
       this.visible = false
     }
-  }, 
-  mounted () {
-   EventBus.$on('show-add-receiver-dialog', () => {
+  },
+  mounted( ) {
+    EventBus.$on( 'show-add-receiver-dialog', ( ) => {
       this.visible = true
-    }) 
+    } )
   }
 }
 </script>
-
 <style lang="scss">
 .list__tile__title {
   font-size: 12px !important;
