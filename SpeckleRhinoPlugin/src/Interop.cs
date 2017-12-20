@@ -17,6 +17,7 @@ using Rhino;
 using System.Dynamic;
 using Rhino.DocObjects;
 using System.Windows.Forms;
+using Newtonsoft.Json.Serialization;
 
 namespace SpeckleRhino
 {
@@ -38,6 +39,12 @@ namespace SpeckleRhino
 
         public Interop(ChromiumWebBrowser _originalBrowser, Control _mainForm)
         {
+            // Makes sure we always get some camelCaseLove
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+
             Browser = _originalBrowser;
             mainForm = _mainForm;
 
@@ -222,7 +229,7 @@ namespace SpeckleRhino
         #region Client Management
         public bool AddReceiverClient(string _payload)
         {
-            var myReceiver = new RhinoReceiver(_payload, this);
+            var myReceiver = new RhinoReceiver(_payload, this); 
             return true;
         }
 

@@ -112,15 +112,15 @@ export default {
         this.fail = true
         return
       }
-      let payload = { account: this.selectedAccount, streamName: this.streamName }
-      if ( this.objectSelection.length == 0 ) {
-        // BY LAYERS
-      } else {
-        // BY SELECTION
-        payload.selection = this.objectSelection
-        Interop.addSenderClientFromSelection( JSON.stringify( payload ) )
-        this.visible = false
+
+      let payload = {
+        account: this.selectedAccount,
+        streamName: this.streamName,
+        selection: this.objectSelection.reduce( ( a, l ) => { return [ ...a, ...l.objectGuids ] }, [ ] )
       }
+
+      Interop.addSenderClientFromSelection( JSON.stringify( payload ) )
+      this.visible = false
     }
   },
   mounted( ) {

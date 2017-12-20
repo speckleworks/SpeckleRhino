@@ -39,13 +39,6 @@ namespace SpeckleRhino
 
         public RhinoReceiver(string _payload, Interop _parent)
         {
-
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
-
-
             Context = _parent;
             dynamic payload = JsonConvert.DeserializeObject(_payload);
 

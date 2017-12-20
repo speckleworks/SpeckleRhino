@@ -60,11 +60,6 @@ namespace SpeckleRhino
 
         public RhinoSender(string _payload, Interop _Context, SenderType _Type)
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
-
             Context = _Context;
             Type = _Type;
 
@@ -100,12 +95,10 @@ namespace SpeckleRhino
             switch (Type)
             {
                 case SenderType.BySelection:
-                    foreach (var layer in payload.selection)
-                        foreach (string guid in layer.objectGuids)
-                        {
-                            RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
-                            TrackedObjects.Add(guid);
-                        }
+                    foreach (string guid in payload.selection)
+                        RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
+                    //TrackedObjects.Add(guid);
+
                     break;
 
                 case SenderType.ByLayers:
@@ -116,7 +109,7 @@ namespace SpeckleRhino
 
         public void AddTrackedObjects(string[] guids)
         {
-            foreach(string guid in guids)
+            foreach (string guid in guids)
                 RhinoDoc.ActiveDoc.Objects.Find(new Guid(guid)).Attributes.SetUserString("spk_" + StreamId, StreamId);
 
             SendUpdate(CreateUpdatePayload());
@@ -264,14 +257,14 @@ namespace SpeckleRhino
 
         public void SendUpdate(PayloadStreamUpdate payload, bool force = false)
         {
-            if(Paused && !force)
+            if (Paused && !force)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 QueuedUpdate = payload;
                 return;
             }
 
-            if(IsSendingUpdate)
+            if (IsSendingUpdate)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 return;
@@ -407,14 +400,14 @@ namespace SpeckleRhino
 
             var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString("spk_" + this.StreamId, "*", false).OrderBy(obj => obj.Attributes.LayerIndex);
 
-            foreach(var obj in objs)
+            foreach (var obj in objs)
             {
                 if (obj.Attributes.LayerIndex == myLIndex) Display.Geometry.Add(obj.Geometry);
             }
 
             Display.HoverRange = new Interval(0, Display.Geometry.Count);
             RhinoDoc.ActiveDoc.Views.Redraw();
-            
+
         }
 
         public void ToggleLayerVisibility(string layerId, bool status)

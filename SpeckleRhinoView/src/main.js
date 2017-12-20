@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import Vuetify from 'vuetify'
 import VueTimeago from 'vue-timeago'
+import VeeValidate from 'vee-validate'
 
 import App from './App.vue'
 import Store from './store/store.js'
