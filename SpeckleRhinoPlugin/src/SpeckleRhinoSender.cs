@@ -148,7 +148,7 @@ namespace SpeckleRhino
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            Debug.WriteLine("UNDELETE Event");
+            //Debug.WriteLine("UNDELETE Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
@@ -162,7 +162,7 @@ namespace SpeckleRhino
 
         private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            Debug.WriteLine("ADD Event");
+            //Debug.WriteLine("ADD Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
@@ -176,7 +176,7 @@ namespace SpeckleRhino
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
-            Debug.WriteLine("DELETE Event");
+            //Debug.WriteLine("DELETE Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
@@ -190,7 +190,10 @@ namespace SpeckleRhino
 
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
-            Debug.WriteLine("MODIFY event");
+            //Debug.WriteLine("MODIFY Event");
+            //Prevents https://github.com/speckleworks/SpeckleRhino/issues/51 from happening
+            if (Converter.getBase64(e.NewAttributes) == Converter.getBase64(e.OldAttributes)) return;
+
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
