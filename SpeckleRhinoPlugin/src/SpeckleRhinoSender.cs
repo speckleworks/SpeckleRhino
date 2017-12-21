@@ -148,12 +148,13 @@ namespace SpeckleRhino
 
         private void RhinoDoc_UndeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            Debug.WriteLine("UNDELETE Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 return;
             }
-            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) == StreamId)
             {
                 DataSender.Start();
             }
@@ -161,12 +162,13 @@ namespace SpeckleRhino
 
         private void RhinoDoc_AddRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            Debug.WriteLine("ADD Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 return;
             }
-            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) == StreamId)
             {
                 DataSender.Start();
             }
@@ -174,12 +176,13 @@ namespace SpeckleRhino
 
         private void RhinoDoc_DeleteRhinoObject(object sender, RhinoObjectEventArgs e)
         {
+            Debug.WriteLine("DELETE Event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 return;
             }
-            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (e.TheObject.Attributes.GetUserString("spk_" + StreamId) == StreamId)
             {
                 DataSender.Start();
             }
@@ -187,12 +190,13 @@ namespace SpeckleRhino
 
         private void RhinoDoc_ModifyObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs e)
         {
+            Debug.WriteLine("MODIFY event");
             if (Paused)
             {
                 Context.NotifySpeckleFrame("client-expired", StreamId, "");
                 return;
             }
-            if (e.RhinoObject.Attributes.GetUserString("spk_" + StreamId) != "")
+            if (e.RhinoObject.Attributes.GetUserString("spk_" + StreamId) == StreamId)
             {
                 DataSender.Start();
             }

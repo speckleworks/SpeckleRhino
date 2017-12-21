@@ -72,6 +72,8 @@ namespace SpeckleRhino
 
         protected override void PostDrawObjects(DrawEventArgs e)
         {
+            if (VisibleList.Count == 0) return;
+
             base.PostDrawObjects(e);
             int count = 0;
 
