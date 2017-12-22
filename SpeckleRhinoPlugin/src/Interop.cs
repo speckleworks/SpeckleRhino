@@ -173,7 +173,7 @@ namespace SpeckleRhino
 
             string[] senderKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames("speckle-client-senders");
 
-            foreach(string sen in senderKeys)
+            foreach (string sen in senderKeys)
             {
                 byte[] serialisedClient = Convert.FromBase64String(RhinoDoc.ActiveDoc.Strings.GetValue("speckle-client-senders", sen));
 
@@ -222,14 +222,14 @@ namespace SpeckleRhino
             // TODO: Delete file, or move it to special folder
             if (File.Exists(payload))
                 File.Delete(payload);
-                
+
         }
         #endregion
 
         #region Client Management
         public bool AddReceiverClient(string _payload)
         {
-            var myReceiver = new RhinoReceiver(_payload, this); 
+            var myReceiver = new RhinoReceiver(_payload, this);
             return true;
         }
 
@@ -272,6 +272,10 @@ namespace SpeckleRhino
         #region To UI (Generic)
         public void NotifySpeckleFrame(string EventType, string StreamId, string EventInfo)
         {
+            if (SpeckleIsReady)
+            {
+
+            }
             var script = string.Format("window.EventBus.$emit('{0}', '{1}', '{2}')", EventType, StreamId, EventInfo);
             Browser.GetMainFrame().EvaluateScriptAsync(script);
         }
@@ -342,8 +346,8 @@ namespace SpeckleRhino
             if (myClient != null)
                 try
                 {
-                    if(!remove)
-                    ((RhinoSender)myClient).AddTrackedObjects(guids);
+                    if (!remove)
+                        ((RhinoSender)myClient).AddTrackedObjects(guids);
                     else ((RhinoSender)myClient).RemoveTrackedObjects(guids);
 
                 }
@@ -389,7 +393,7 @@ namespace SpeckleRhino
             if (!ignoreSelection)
             {
                 SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects(false, false).ToList();
-                if(SelectedObjects.Count == 0 || SelectedObjects[0]==null) return JsonConvert.SerializeObject(layerInfoList);
+                if (SelectedObjects.Count == 0 || SelectedObjects[0] == null) return JsonConvert.SerializeObject(layerInfoList);
             }
             else
             {
@@ -407,7 +411,7 @@ namespace SpeckleRhino
                     });
                 }
             }
-            
+
             SelectedObjects = SelectedObjects.OrderBy(o => o.Attributes.LayerIndex).ToList();
 
             foreach (var obj in SelectedObjects)

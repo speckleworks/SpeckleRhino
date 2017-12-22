@@ -13,6 +13,9 @@ export default new Vuex.Store( {
   getters: {
     accounts: state => state.accounts,
     clients: state => state.clients,
+    clientByStreamId: state => streamId => {
+      return state.clients.find( c => c.stream.streamId === streamId )
+    },
     selection: state => state.selection,
     layerInfo: state => state.layerInfo
   },

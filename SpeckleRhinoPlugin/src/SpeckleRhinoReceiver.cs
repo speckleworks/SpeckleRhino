@@ -184,6 +184,8 @@ namespace SpeckleRhino
             RhinoConverter rhinoConverter = new RhinoConverter();
 
             Display.Geometry = new List<GeometryBase>();
+            Display.Colors = new List<System.Drawing.Color>();
+            Display.VisibleList = new List<bool>();
 
             int count = 0;
             foreach (SpeckleObject myObject in Objects)

@@ -11,13 +11,12 @@
         <div class='step-1'>
           <v-select required label='Account' v-bind:items='selectItems' v-model='selectedAccountValue' style='z-index: 9000' autocomplete :search-input:sync='selectItems'></v-select>
           <br>
-          <div class='headline grey--text' v-show='selectedAccountValue!=null && !fail'>
+          <div class='headline grey--text' v-show='selectedAccountValue!=null'>
             <v-select label='Existing streams' v-bind:items='streamsMap' v-model='selectedStream' style='z-index: 9000' autocomplete :search-input.sync="streamsMap"></v-select>
             <v-text-field label='Stream Id Direct Input' v-model='directStreamId'></v-text-field>
           </div>
           <v-alert color='error' :value='fail' icon='error'>
-            Failed to contact server.
-            <br> {{ error }}
+            {{ error }}
           </v-alert>
         </div>
       </v-card-text>
@@ -100,6 +99,13 @@ export default {
         this.error = 'No streamid provided.'
         return
       }
+      console.log( this.$store.getters.clientByStreamId( streamId ) )
+      if ( this.$store.getters.clientByStreamId( streamId ) ) {
+        this.fail = true
+        this.error = 'You already have a client sending/receiveing at that stream id. Duplicates not allowed!'
+        return
+      }
+
       let payload = {
         account: this.selectedAccount,
         streamId: streamId

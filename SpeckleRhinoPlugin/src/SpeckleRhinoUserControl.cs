@@ -19,6 +19,7 @@ namespace SpeckleRhino
         public ChromiumWebBrowser chromeBrowser;
         public Interop Store;
 
+        public bool CefInit = false;
         /// <summary>
         /// Public constructor
         /// </summary>
@@ -37,6 +38,8 @@ namespace SpeckleRhino
 
         public void InitializeChromium()
         {
+
+
             Cef.EnableHighDPISupport();
 
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -55,7 +58,8 @@ namespace SpeckleRhino
 #endif
 
             // Initialize cef with the provided settings
-            Cef.Initialize(settings);
+            if (!Cef.IsInitialized)
+                Cef.Initialize(settings);
 
             // Create a browser component. 
             // #IF DEBUG
