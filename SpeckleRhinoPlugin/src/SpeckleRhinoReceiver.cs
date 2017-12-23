@@ -246,6 +246,7 @@ namespace SpeckleRhino
             string parent = String.Format("{1} | {0}", Client.Stream.StreamId, Client.Stream.Name);
 
             var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent, true);
+
             if (parentId == -1)
             {
                 var parentLayer = new Layer()
@@ -253,6 +254,7 @@ namespace SpeckleRhino
                     Color = System.Drawing.Color.Black,
                     Name = parent
                 };
+
                 parentId = Rhino.RhinoDoc.ActiveDoc.Layers.Add(parentLayer);
             }
             else
@@ -261,18 +263,61 @@ namespace SpeckleRhino
 
             foreach (var sLayer in Client.Stream.Layers)
             {
-                var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + sLayer.Name, true);
+                var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + sLayer.Name, -1);
                 if (layerId == -1)
                 {
-                    var layer = new Layer()
+
+                    var index = -1;
+
+                    if (sLayer.Name.Contains("::"))
                     {
-                        Name = sLayer.Name,
-                        Id = Guid.Parse(sLayer.Guid),
-                        ParentLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[parentId].Id,
-                        Color = GetColorFromLayer(sLayer),
-                        IsVisible = true
-                    };
-                    var index = Rhino.RhinoDoc.ActiveDoc.Layers.Add(layer);
+                        var layers = sLayer.Name.Split(new string[] { "::" }, StringSplitOptions.None);
+
+                        var pLayerId = Guid.Empty;
+
+                        foreach (var l in layers)
+                        {
+                            
+                            if (pLayerId == Guid.Empty)
+                                pLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[parentId].Id;
+
+                            var nLayer = new Layer()
+                            {
+                                Name = l,
+                                ParentLayerId = pLayerId,
+                                Color = GetColorFromLayer(sLayer),
+                                IsVisible = true
+                            };
+
+                            var pName = Rhino.RhinoDoc.ActiveDoc.Layers.First(theLayer => theLayer.Id == pLayerId).FullPath;
+
+                            var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(pName + "::" + nLayer.Name, -1);
+
+                            if (layerExist == -1)
+                            {
+                                index = Rhino.RhinoDoc.ActiveDoc.Layers.Add(nLayer);
+                                pLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[index].Id;
+                            } else
+                            {
+                                pLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[layerExist].Id;
+                            }
+
+                        }
+                    }
+                    else
+                    {
+
+                        var layer = new Layer()
+                        {
+                            Name = sLayer.Name,
+                            Id = Guid.Parse(sLayer.Guid),
+                            ParentLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[parentId].Id,
+                            Color = GetColorFromLayer(sLayer),
+                            IsVisible = true
+                        };
+
+                        index = Rhino.RhinoDoc.ActiveDoc.Layers.Add(layer);
+                    }
 
                     for (int i = (int)sLayer.StartIndex; i < sLayer.StartIndex + sLayer.ObjectCount; i++)
                     {
