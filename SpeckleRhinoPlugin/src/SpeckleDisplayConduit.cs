@@ -90,6 +90,10 @@ namespace SpeckleRhino
                             e.Display.DrawCurve((Curve)obj, Colors[count]);
                             break;
 
+                        case Rhino.DocObjects.ObjectType.Extrusion:
+                            DisplayMaterial eMaterial = new DisplayMaterial(Colors[count], 0.5);
+                            e.Display.DrawBrepShaded(((Extrusion)obj).ToBrep(), eMaterial);
+                            break;
                         case Rhino.DocObjects.ObjectType.Brep:
                             DisplayMaterial bMaterial = new DisplayMaterial(Colors[count], 0.5);
                             e.Display.DrawBrepShaded((Brep)obj, bMaterial);

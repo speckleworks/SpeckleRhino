@@ -221,7 +221,8 @@ namespace SpeckleRhino
             System.Drawing.Color layerColor = System.Drawing.ColorTranslator.FromHtml("#AEECFD");
             try
             {
-                layerColor = System.Drawing.ColorTranslator.FromHtml(layer.Properties.Color.Hex);
+                if (layer.Properties != null)
+                    layerColor = System.Drawing.ColorTranslator.FromHtml(layer.Properties.Color.Hex);
             }
             catch
             {

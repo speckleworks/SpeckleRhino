@@ -291,8 +291,8 @@ namespace SpeckleRhinoConverter
 
             if (myObject is TextDot)
                 return ((TextDot)myObject).ToSpeckle();
-
-            // worst case, fail in a very stupid way:
+            
+            // worst case, fail in a very stupid (potentially dangerous) way:
             return Converter.ToAbstract(myObject);
         }
 
