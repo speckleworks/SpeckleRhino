@@ -281,6 +281,11 @@ namespace SpeckleRhinoConverter
                 return b.ExtrusionGeometry.ToSpeckle();
             }
 
+            if(myObject is Extrusion)
+            {
+                return ((Extrusion)myObject).ToSpeckle();
+            }
+
             if (myObject is TextEntity)
                 return ((TextEntity)myObject).ToSpeckle();
 
