@@ -99,6 +99,9 @@ namespace SpeckleRhinoConverter
                 case "Mesh":
                     encodedObject = ((SpeckleMesh)_object).ToRhino();
                     break;
+                case "Extrusion":
+                    encodedObject = ((SpeckleExtrusion)_object).ToRhino();
+                    break;
                 case "Annotation":
                     if (double.IsNaN(((SpeckleAnnotation)_object).TextHeight))
                     {
@@ -108,6 +111,10 @@ namespace SpeckleRhinoConverter
                     {
                         encodedObject = ((SpeckleAnnotation)_object).ToRhinoTextEntity();
                     }
+                    break;
+                case "Abstract":
+                    encodedObject = Converter.FromAbstract((SpeckleAbstract)_object);
+                    //encodedObject = _object;
                     break;
                 default:
                     encodedObject = _object;
@@ -256,10 +263,6 @@ namespace SpeckleRhinoConverter
             if (myObject is Ellipse)
                 return ((Ellipse)myObject).ToSpeckle();
 
-            // TODO: Polyline
-            // TODO: Polycurve
-            // TODO: NurbsCurve
-
             if (myObject is Box)
                 return ((Box)myObject).ToSpeckle();
             if (myObject is Rectangle3d)
@@ -270,15 +273,27 @@ namespace SpeckleRhinoConverter
 
             if (myObject is Brep)
                 return ((Brep)myObject).ToSpeckle();
+                
+            // TODO: check with rhino sender
+            if(myObject is Rhino.DocObjects.ExtrusionObject)
+            {
+                var b = myObject as Rhino.DocObjects.ExtrusionObject;
+                return b.ExtrusionGeometry.ToSpeckle();
+            }
+
+            if(myObject is Extrusion)
+            {
+                return ((Extrusion)myObject).ToSpeckle();
+            }
 
             if (myObject is TextEntity)
                 return ((TextEntity)myObject).ToSpeckle();
 
             if (myObject is TextDot)
                 return ((TextDot)myObject).ToSpeckle();
-
-            // worst case, fail in a very stupid way:
-            return new SpeckleString(Newtonsoft.Json.JsonConvert.SerializeObject(myObject));
+            
+            // worst case, fail in a very stupid (potentially dangerous) way:
+            return Converter.ToAbstract(myObject);
         }
 
 
@@ -361,7 +376,7 @@ namespace SpeckleRhinoConverter
     /// <summary>
     /// These methods extend both the SpeckleObject types with a .ToRhino() method as well as 
     /// the base RhinoCommon types with a .ToSpeckle() method for easier conversion logic.
-    /// </summary>
+    /// </summary>`
     public static class SpeckleTypesExtensions
     {
         // Convenience methods point:
@@ -685,6 +700,18 @@ namespace SpeckleRhinoConverter
                 return (Brep)Converter.getObjFromString(brep.Base64);
             else
                 throw new Exception("Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other.");
+        }
+
+        public static SpeckleExtrusion ToSpeckle(this Rhino.Geometry.Extrusion extrusion)
+        {
+            var myExtrusion = new SpeckleExtrusion(extrusion.Profile3d(0, 0).ToNurbsCurve().ToSpeckle(), extrusion.PathStart.DistanceTo(extrusion.PathEnd), extrusion.IsCappedAtBottom);
+            return myExtrusion;
+        }
+
+        public static Rhino.Geometry.Extrusion ToRhino( this SpeckleExtrusion extrusion)
+        {
+            var myExtrusion = Extrusion.Create(extrusion.Profile.ToRhino(), extrusion.Length, extrusion.Capped);
+            return myExtrusion;
         }
 
         // Texts & Annotations
