@@ -377,7 +377,7 @@ namespace SpeckleRhinoConverter
     /// These methods extend both the SpeckleObject types with a .ToRhino() method as well as 
     /// the base RhinoCommon types with a .ToSpeckle() method for easier conversion logic.
     /// </summary>`
-    public static class SpeckleTypesExtensions
+    public static class SpeckleTypeExtensions
     {
         // Convenience methods point:
         public static double[] ToArray(this Point3d pt)
