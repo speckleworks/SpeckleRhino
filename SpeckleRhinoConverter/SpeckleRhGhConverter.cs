@@ -49,67 +49,67 @@ namespace SpeckleRhinoConverter
                     encodedObject = ((SpeckleBoolean)_object).Value;
                     break;
                 case "Interval":
-                    encodedObject = ((SpeckleInterval)_object).ToRhino();
+                    encodedObject = ((SpeckleInterval)_object).ToNative();
                     break;
                 case "Interval2d":
-                    encodedObject = ((SpeckleInterval2d)_object).ToRhino();
+                    encodedObject = ((SpeckleInterval2d)_object).ToNative();
                     break;
                 case "String":
                     encodedObject = ((SpeckleString)_object).Value;
                     break;
                 case "Point":
-                    encodedObject = ((SpecklePoint)_object).ToRhino();
+                    encodedObject = ((SpecklePoint)_object).ToNative();
                     break;
                 case "Vector":
-                    encodedObject = ((SpeckleVector)_object).ToRhino();
+                    encodedObject = ((SpeckleVector)_object).ToNative();
                     break;
                 case "Plane":
-                    encodedObject = ((SpecklePlane)_object).ToRhino();
+                    encodedObject = ((SpecklePlane)_object).ToNative();
                     break;
                 case "Line":
-                    encodedObject = ((SpeckleLine)_object).ToRhino();
+                    encodedObject = ((SpeckleLine)_object).ToNative();
                     break;
                 case "Circle":
-                    encodedObject = ((SpeckleCircle)_object).ToRhino();
+                    encodedObject = ((SpeckleCircle)_object).ToNative();
                     break;
                 case "Arc":
-                    encodedObject = ((SpeckleArc)_object).ToRhino();
+                    encodedObject = ((SpeckleArc)_object).ToNative();
                     break;
                 case "Ellipse":
-                    encodedObject = ((SpeckleEllipse)_object).ToRhino();
+                    encodedObject = ((SpeckleEllipse)_object).ToNative();
                     break;
                 case "Rectangle":
-                    encodedObject = ((SpeckleRectangle)_object).ToRhino();
+                    encodedObject = ((SpeckleRectangle)_object).ToNative();
                     break;
                 case "Box":
-                    encodedObject = ((SpeckleBox)_object).ToRhino();
+                    encodedObject = ((SpeckleBox)_object).ToNative();
                     break;
                 case "Polyline":
-                    encodedObject = ((SpecklePolyline)_object).ToRhino();
+                    encodedObject = ((SpecklePolyline)_object).ToNative();
                     break;
                 case "Curve":
-                    encodedObject = ((SpeckleCurve)_object).ToRhino();
+                    encodedObject = ((SpeckleCurve)_object).ToNative();
                     break;
                 case "Polycurve":
-                    encodedObject = ((SpecklePolycurve)_object).ToRhino();
+                    encodedObject = ((SpecklePolycurve)_object).ToNative();
                     break;
                 case "Brep":
-                    encodedObject = ((SpeckleBrep)_object).ToRhino();
+                    encodedObject = ((SpeckleBrep)_object).ToNative();
                     break;
                 case "Mesh":
-                    encodedObject = ((SpeckleMesh)_object).ToRhino();
+                    encodedObject = ((SpeckleMesh)_object).ToNative();
                     break;
                 case "Extrusion":
-                    encodedObject = ((SpeckleExtrusion)_object).ToRhino();
+                    encodedObject = ((SpeckleExtrusion)_object).ToNative();
                     break;
                 case "Annotation":
                     if (double.IsNaN(((SpeckleAnnotation)_object).TextHeight))
                     {
-                        encodedObject = ((SpeckleAnnotation)_object).ToRhinoTextDot();
+                        encodedObject = ((SpeckleAnnotation)_object).ToNativeTextDot();
                     }
                     else
                     {
-                        encodedObject = ((SpeckleAnnotation)_object).ToRhinoTextEntity();
+                        encodedObject = ((SpeckleAnnotation)_object).ToNativeTextEntity();
                     }
                     break;
                 case "Abstract":
@@ -374,11 +374,20 @@ namespace SpeckleRhinoConverter
     }
 
     /// <summary>
-    /// These methods extend both the SpeckleObject types with a .ToRhino() method as well as 
+    /// These methods extend both the SpeckleObject types with a .ToNative() method as well as 
     /// the base RhinoCommon types with a .ToSpeckle() method for easier conversion logic.
     /// </summary>`
     public static class SpeckleTypeExtensions
     {
+
+        public static object ToNative(this SpeckleObject o)
+        {
+            using(var rconv = new RhinoConverter())
+            {
+                return rconv.ToNative(o);
+            }
+        }
+
         // Convenience methods point:
         public static double[] ToArray(this Point3d pt)
         {
@@ -426,7 +435,7 @@ namespace SpeckleRhinoConverter
             return new SpecklePoint(pt.X, pt.Y, pt.Z);
         }
 
-        public static Rhino.Geometry.Point ToRhino(this SpecklePoint pt)
+        public static Rhino.Geometry.Point ToNative(this SpecklePoint pt)
         {
             var myPoint = new Rhino.Geometry.Point(new Point3d(pt.Value[0], pt.Value[1], pt.Value[2]));
             return myPoint;
@@ -443,7 +452,7 @@ namespace SpeckleRhinoConverter
             return new SpeckleVector(pt.X, pt.Y, pt.Z);
         }
 
-        public static Vector3d ToRhino(this SpeckleVector pt)
+        public static Vector3d ToNative(this SpeckleVector pt)
         {
             return new Vector3d(pt.Value[0], pt.Value[1], pt.Value[2]);
         }
@@ -454,7 +463,7 @@ namespace SpeckleRhinoConverter
             return new SpeckleInterval(interval.T0, interval.T1);
         }
 
-        public static Interval ToRhino(this SpeckleInterval interval)
+        public static Interval ToNative(this SpeckleInterval interval)
         {
             return new Interval((double)interval.Start, (double)interval.End); ;
         }
@@ -465,9 +474,9 @@ namespace SpeckleRhinoConverter
             return new SpeckleInterval2d(interval.U.ToSpeckle(), interval.V.ToSpeckle());
         }
 
-        public static UVInterval ToRhino(this SpeckleInterval2d interval)
+        public static UVInterval ToNative(this SpeckleInterval2d interval)
         {
-            return new UVInterval(interval.U.ToRhino(), interval.V.ToRhino());
+            return new UVInterval(interval.U.ToNative(), interval.V.ToNative());
         }
 
         // Plane
@@ -476,11 +485,11 @@ namespace SpeckleRhinoConverter
             return new SpecklePlane(plane.Origin.ToSpeckle(), plane.Normal.ToSpeckle(), plane.XAxis.ToSpeckle(), plane.YAxis.ToSpeckle());
         }
 
-        public static Plane ToRhino(this SpecklePlane plane)
+        public static Plane ToNative(this SpecklePlane plane)
         {
-            var returnPlane = new Plane(plane.Origin.ToRhino().Location, plane.Normal.ToRhino());
-            returnPlane.XAxis = plane.Xdir.ToRhino();
-            returnPlane.YAxis = plane.Ydir.ToRhino();
+            var returnPlane = new Plane(plane.Origin.ToNative().Location, plane.Normal.ToNative());
+            returnPlane.XAxis = plane.Xdir.ToNative();
+            returnPlane.YAxis = plane.Ydir.ToNative();
             return returnPlane;
         }
 
@@ -495,9 +504,9 @@ namespace SpeckleRhinoConverter
             return new SpeckleLine(line.PointAtStart.ToSpeckle(), line.PointAtEnd.ToSpeckle(), properties: RhinoConverter.PropertiesToSpeckle(line.UserDictionary));
         }
 
-        public static NurbsCurve ToRhino(this SpeckleLine line)
+        public static NurbsCurve ToNative(this SpeckleLine line)
         {
-            return new Line(line.Start.ToRhino().Location, line.End.ToRhino().Location).ToNurbsCurve();
+            return new Line(line.Start.ToNative().Location, line.End.ToNative().Location).ToNurbsCurve();
         }
 
         // Rectangle
@@ -506,10 +515,10 @@ namespace SpeckleRhinoConverter
             return new SpeckleRectangle(rect.Corner(0).ToSpeckle(), rect.Corner(1).ToSpeckle(), rect.Corner(2).ToSpeckle(), rect.Corner(3).ToSpeckle());
         }
 
-        public static NurbsCurve ToRhino(this SpeckleRectangle rect)
+        public static NurbsCurve ToNative(this SpeckleRectangle rect)
         {
-            var myPlane = new Plane(rect.A.ToRhino().Location, new Vector3d(rect.B.ToRhino().Location), new Vector3d(rect.C.ToRhino().Location));
-            return new Rectangle3d(myPlane, rect.A.ToRhino().Location, rect.B.ToRhino().Location).ToNurbsCurve();
+            var myPlane = new Plane(rect.A.ToNative().Location, new Vector3d(rect.B.ToNative().Location), new Vector3d(rect.C.ToNative().Location));
+            return new Rectangle3d(myPlane, rect.A.ToNative().Location, rect.B.ToNative().Location).ToNurbsCurve();
         }
 
         // Circle
@@ -518,9 +527,9 @@ namespace SpeckleRhinoConverter
             return new SpeckleCircle(circ.Center.ToSpeckle(), circ.Normal.ToSpeckle(), circ.Radius);
         }
 
-        public static NurbsCurve ToRhino(this SpeckleCircle circ)
+        public static NurbsCurve ToNative(this SpeckleCircle circ)
         {
-            Circle circle = new Circle(new Plane(circ.Center.ToRhino().Location, circ.Normal.ToRhino()), (double)circ.Radius);
+            Circle circle = new Circle(new Plane(circ.Center.ToNative().Location, circ.Normal.ToNative()), (double)circ.Radius);
             return circle.ToNurbsCurve();
         }
 
@@ -531,9 +540,9 @@ namespace SpeckleRhinoConverter
             return arc;
         }
 
-        public static NurbsCurve ToRhino(this SpeckleArc a)
+        public static NurbsCurve ToNative(this SpeckleArc a)
         {
-            Arc arc = new Arc(a.Plane.ToRhino(), (double)a.Radius, (double)a.AngleRadians);
+            Arc arc = new Arc(a.Plane.ToNative(), (double)a.Radius, (double)a.AngleRadians);
             return arc.ToNurbsCurve();
         }
 
@@ -543,9 +552,9 @@ namespace SpeckleRhinoConverter
             return new SpeckleEllipse(e.Plane.ToSpeckle(), e.Radius1, e.Radius2);
         }
 
-        public static NurbsCurve ToRhino(this SpeckleEllipse e)
+        public static NurbsCurve ToNative(this SpeckleEllipse e)
         {
-            Ellipse elp = new Ellipse(e.Plane.ToRhino(), (double)e.FirstRadius, (double)e.SecondRadius);
+            Ellipse elp = new Ellipse(e.Plane.ToNative(), (double)e.FirstRadius, (double)e.SecondRadius);
             return elp.ToNurbsCurve();
         }
 
@@ -555,9 +564,9 @@ namespace SpeckleRhinoConverter
             return new SpeckleBox(box.Plane.ToSpeckle(), box.X.ToSpeckle(), box.Y.ToSpeckle(), box.Z.ToSpeckle());
         }
 
-        public static Box ToRhino(this SpeckleBox box)
+        public static Box ToNative(this SpeckleBox box)
         {
-            return new Box(box.BasePlane.ToRhino(), box.XSize.ToRhino(), box.YSize.ToRhino(), box.ZSize.ToRhino());
+            return new Box(box.BasePlane.ToNative(), box.XSize.ToNative(), box.YSize.ToNative(), box.ZSize.ToNative());
         }
 
         // Polyline
@@ -566,7 +575,7 @@ namespace SpeckleRhinoConverter
             return new SpecklePolyline(poly.ToFlatArray());
         }
 
-        public static NurbsCurve ToRhino(this SpecklePolyline poly)
+        public static NurbsCurve ToNative(this SpecklePolyline poly)
         {
             return new Polyline(poly.Value.ToPoints()).ToNurbsCurve();
         }
@@ -588,23 +597,23 @@ namespace SpeckleRhinoConverter
             return myPoly;
         }
 
-        public static NurbsCurve ToRhino(this SpecklePolycurve p)
+        public static NurbsCurve ToNative(this SpecklePolycurve p)
         {
 
             PolyCurve myPolyc = new PolyCurve();
             foreach (var segment in p.Segments)
             {
                 if (segment.Type == "Curve")
-                    myPolyc.Append(((SpeckleCurve)segment).ToRhino());
+                    myPolyc.Append(((SpeckleCurve)segment).ToNative());
 
                 if (segment.Type == "Line")
-                    myPolyc.Append(((SpeckleLine)segment).ToRhino());
+                    myPolyc.Append(((SpeckleLine)segment).ToNative());
 
                 if (segment.Type == "Arc")
-                    myPolyc.Append(((SpeckleArc)segment).ToRhino());
+                    myPolyc.Append(((SpeckleArc)segment).ToNative());
 
                 if (segment.Type == "Polyline")
-                    myPolyc.Append(((SpecklePolyline)segment).ToRhino().ToNurbsCurve());
+                    myPolyc.Append(((SpecklePolyline)segment).ToNative().ToNurbsCurve());
             }
             return myPolyc.ToNurbsCurve();
         }
@@ -628,13 +637,13 @@ namespace SpeckleRhinoConverter
             return x;
         }
 
-        public static NurbsCurve ToRhino(this SpeckleCurve curve)
+        public static NurbsCurve ToNative(this SpeckleCurve curve)
         {
             var ptsList = curve.Points.ToPoints();
 
             // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
             var myCurve = NurbsCurve.Create(curve.Periodic, curve.Degree, new Point3d[curve.Periodic ? ptsList.Length - 2 : ptsList.Length]);
-            myCurve.Domain = curve.Domain.ToRhino();
+            myCurve.Domain = curve.Domain.ToNative();
 
             for (int i = 0; i < ptsList.Length; i++)
                 myCurve.Points.SetPoint(i, ptsList[i].X, ptsList[i].Y, ptsList[i].Z, curve.Weights[i]);
@@ -660,7 +669,7 @@ namespace SpeckleRhinoConverter
             return new SpeckleMesh(verts, Faces, Colors, properties: RhinoConverter.PropertiesToSpeckle(mesh.UserDictionary));
         }
 
-        public static Mesh ToRhino(this SpeckleMesh mesh)
+        public static Mesh ToNative(this SpeckleMesh mesh)
         {
             Mesh m = new Mesh();
             m.Vertices.AddVertices(mesh.Vertices.ToPoints());
@@ -694,7 +703,7 @@ namespace SpeckleRhinoConverter
             return new SpeckleBrep(displayValue: joinedMesh.ToSpeckle(), base64: Converter.getBase64(brep), provenance: "ON", properties: RhinoConverter.PropertiesToSpeckle(brep.UserDictionary));
         }
 
-        public static Brep ToRhino(this SpeckleBrep brep)
+        public static Brep ToNative(this SpeckleBrep brep)
         {
             if (brep.Provenance == "ON")
                 return (Brep)Converter.getObjFromString(brep.Base64);
@@ -708,9 +717,9 @@ namespace SpeckleRhinoConverter
             return myExtrusion;
         }
 
-        public static Rhino.Geometry.Extrusion ToRhino( this SpeckleExtrusion extrusion)
+        public static Rhino.Geometry.Extrusion ToNative( this SpeckleExtrusion extrusion)
         {
-            var myExtrusion = Extrusion.Create(extrusion.Profile.ToRhino(), extrusion.Length, extrusion.Capped);
+            var myExtrusion = Extrusion.Create(extrusion.Profile.ToNative(), extrusion.Length, extrusion.Capped);
             return myExtrusion;
         }
 
@@ -734,19 +743,19 @@ namespace SpeckleRhinoConverter
         }
 
 
-        public static TextDot ToRhinoTextDot(this SpeckleAnnotation textdot)
+        public static TextDot ToNativeTextDot(this SpeckleAnnotation textdot)
         {
-            return new TextDot(textdot.Text, textdot.Location.ToRhino().Location);
+            return new TextDot(textdot.Text, textdot.Location.ToNative().Location);
         }
 
-        public static TextEntity ToRhinoTextEntity(this SpeckleAnnotation textentity)
+        public static TextEntity ToNativeTextEntity(this SpeckleAnnotation textentity)
         {
             Rhino.DocObjects.Tables.FontTable fontTable = Rhino.RhinoDoc.ActiveDoc.Fonts;
 
 
             TextEntity textEntity = new TextEntity();
             textEntity.Text = textentity.Text;
-            textEntity.Plane = textentity.Plane.ToRhino();
+            textEntity.Plane = textentity.Plane.ToNative();
             textEntity.TextHeight = textentity.TextHeight;
             int fontIndex = fontTable.FindOrCreate(textentity.FaceName, textentity.Bold, textentity.Italic);
             textEntity.FontIndex = fontIndex;

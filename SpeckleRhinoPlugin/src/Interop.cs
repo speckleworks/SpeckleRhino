@@ -272,9 +272,9 @@ namespace SpeckleRhino
         #region To UI (Generic)
         public void NotifySpeckleFrame(string EventType, string StreamId, string EventInfo)
         {
-            if (SpeckleIsReady)
+            if (!SpeckleIsReady)
             {
-
+                return;
             }
             var script = string.Format("window.EventBus.$emit('{0}', '{1}', '{2}')", EventType, StreamId, EventInfo);
             Browser.GetMainFrame().EvaluateScriptAsync(script);
