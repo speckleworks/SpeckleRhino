@@ -4,5 +4,7 @@ packages/
 bin/
 obj/
 node_modules/
+Release/
 
 # files
+
