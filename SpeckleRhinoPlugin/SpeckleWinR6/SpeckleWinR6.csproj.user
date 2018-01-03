@@ -5,4 +5,8 @@
     <StartAction>Program</StartAction>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Rhino BETA\System\Rhino.exe</StartProgram>
+  </PropertyGroup>
 </Project>
