@@ -139,19 +139,19 @@
   <ItemGroup>
     <None Include="Resources\Speckle.ico" />
   </ItemGroup>
-  <ItemGroup>  
-        <MySourceFiles Include="$(ProjectDir)bin\$(PlatformName)\$(ConfigurationName)\*"/>  
-    </ItemGroup> 
+  <ItemGroup>
+    <MySourceFiles Include="$(ProjectDir)bin\$(PlatformName)\$(ConfigurationName)\**\*.*" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target> -->
   <Target Name="AfterBuild">
-	<Copy  
-            SourceFiles="@(MySourceFiles)"  
-            DestinationFolder="$(SolutionDir)Release" 
-        /> 
+	<Copy
+            SourceFiles="@(MySourceFiles)"
+            DestinationFiles="@(MySourceFiles->'$(SolutionDir)Release\%(RecursiveDir)%(Filename)%(Extension)')"
+        />
   </Target>
  
   <PropertyGroup>
