@@ -13,6 +13,7 @@ import { EventBus } from './event-bus'
 
 Vue.use( Vuex )
 Vue.use( Vuetify )
+Vue.use( VeeValidate )
 
 Vue.use( VueTimeago, {
   name: 'timeago',

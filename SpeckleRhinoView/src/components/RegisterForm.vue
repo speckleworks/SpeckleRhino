@@ -10,12 +10,12 @@
       <v-card-text>
         Register a new account
         <v-form>
-          <v-text-field label='server url'></v-text-field>
-          <v-text-field label='your email address'></v-text-field>
-          <v-text-field label='name'></v-text-field>
-          <v-text-field label='surname'></v-text-field>
-          <v-text-field label='password' type='password' min='8' hint='min 8 chars'></v-text-field>
-          <v-text-field label='confirm' type='password' min='8' hint='min 8 chars'></v-text-field>
+          <v-text-field v-model='serverUrl' label='server url'></v-text-field>
+          <v-text-field v-model='userEmail' label='your email address' v-validate="'required|email'" :error-messages="errors.collect('email')" data-vv-name='email'></v-text-field>
+          <v-text-field v-model='userName' label='name'></v-text-field>
+          <v-text-field v-model='userSurname' label='surname'></v-text-field>
+          <v-text-field v-model='password' label='password' type='password' min='8' hint='min 8 chars'></v-text-field>
+          <v-text-field v-model='passwordConfirm' label='confirm' type='password' min='8' hint='min 8 chars'></v-text-field>
         </v-form>
       </v-card-text>
     </v-card>
@@ -29,7 +29,8 @@ export default {
   name: 'RegisterForm',
   data( ) {
     return {
-      visible: false
+      visible: false, 
+      serverUrl: null, userEmail: null, userName: null, userSurname: null, password: null, passwordConfirm: null
     }
   },
   methods: {},
