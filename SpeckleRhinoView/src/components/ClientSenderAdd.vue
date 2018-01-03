@@ -2,7 +2,7 @@
   <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%'>
     <v-card>
       <v-toolbar style="flex: 0 0 auto;" dark class='light-blue'>
-        <v-btn icon @click.native="dialog = false" dark>
+        <v-btn icon @click.native="visible = false" dark>
           <v-icon>close</v-icon>
         </v-btn>
         <v-toolbar-title>Add Sender</v-toolbar-title>

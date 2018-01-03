@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div >
     <receiver-add></receiver-add>
     <sender-add></sender-add>
-    <v-container fluid pa-0 class='transparent' v-if='clients.length > 0'>
+    <v-container fluid v-if='clients.length > 0' style='min-height: 100%;' class='pa-0'>
       <template v-for='client in clients'>
         <receiver v-if='client.Role === 1' :client='client'></receiver>
         <sender v-else :client='client'></sender>
