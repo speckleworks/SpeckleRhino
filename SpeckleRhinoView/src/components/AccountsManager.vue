@@ -6,11 +6,11 @@
           <div class="subheading">{{account.serverName}}</div>
           <div class='caption'>{{account.email}}</div>
         </div>
-        <account :account='account'></account>      </v-expansion-panel-content>
+        <account :account='account'></account>
+      </v-expansion-panel-content>
     </v-expansion-panel>
   </div>
 </template>
-
 <script>
 import Account from './Account.vue'
 
@@ -20,23 +20,19 @@ export default {
     Account
   },
   computed: {
-    accounts() { 
+    accounts( ) {
       return this.$store.getters.accounts
     }
   },
-  data() {
-    return {
-    }
+  data( ) {
+    return {}
   },
   methods: {
-    getUserAccounts() {
-    }
+    getUserAccounts( ) {}
   },
-  mounted () {
-  }
+  mounted( ) {}
 }
 </script>
-
 <style scoped>
 .account {
   max-width: 100%;

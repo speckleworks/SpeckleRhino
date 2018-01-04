@@ -36,7 +36,7 @@
       <!-- clients fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="clients"'>
-          <v-btn slot='activator' fab v-model='fab'>
+          <v-btn slot='activator' fab v-model='fab' dark>
             <v-icon>add</v-icon>
             <v-icon>close</v-icon>
           </v-btn>
@@ -57,7 +57,7 @@
       <!-- accounts fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="accounts"'>
-          <v-btn slot='activator' fab v-model='fab' color='purple xxxlighten-2'>
+          <v-btn slot='activator' fab v-model='fab' dark>
             <v-icon>add</v-icon>
           </v-btn>
           <v-tooltip left>
@@ -75,6 +75,7 @@
         </v-speed-dial>
       </v-fab-transition>
       <register-form></register-form>
+      <login-form></login-form>
     </v-app>
   </div>
 </template>
@@ -82,7 +83,7 @@
 import AccountsManager from './components/AccountsManager.vue'
 import ClientManager from './components/ClientManager.vue'
 import RegisterForm from './components/RegisterForm.vue'
-
+import LoginForm from './components/LoginForm.vue'
 
 import { EventBus } from './event-bus'
 
@@ -91,7 +92,8 @@ export default {
   components: {
     AccountsManager,
     ClientManager,
-    RegisterForm
+    RegisterForm,
+    LoginForm
   },
   data( ) {
     return {
