@@ -2,7 +2,7 @@
   <div id="app">
     <v-app :dark='dark'>
       <!-- tabs with main content -->
-      <v-tabs v-model='active' dark grow>
+      <v-tabs v-model='active' dark grow fill-height>
         <v-tabs-bar class='light-blue'>
           <v-tabs-slider :class='{ "grey darken-3": dark, "white lighten-4": !dark, "elevation-4":true}' style='height:100%'></v-tabs-slider>
           <v-tabs-item key='clients' href='clients'>
@@ -20,8 +20,8 @@
             </v-tabs-item>
           </v-menu>
         </v-tabs-bar>
-        <v-tabs-items>
-          <v-tabs-content id='clients' key='clients'>
+        <v-tabs-items fill-height>
+          <v-tabs-content id='clients' key='clients' fill-height>
             <v-card flat class='transparent'>
               <client-manager></client-manager>
             </v-card>
@@ -36,7 +36,7 @@
       <!-- clients fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="clients"'>
-          <v-btn slot='activator' fab v-model='fab' color='light-blue'>
+          <v-btn slot='activator' fab v-model='fab'>
             <v-icon>add</v-icon>
             <v-icon>close</v-icon>
           </v-btn>
@@ -48,7 +48,7 @@
           </v-tooltip>
           <v-tooltip left>
             <span>New Sender</span>
-            <v-btn fab dark color='pink' slot='activator' @click='addSender'>
+            <v-btn fab dark color='light-blue' slot='activator' @click='addSender'>
               <v-icon>cloud_upload</v-icon>
             </v-btn>
           </v-tooltip>
@@ -134,7 +134,9 @@ export default {
 <style>
 body {}
 
-#app {}
+.application--dark {
+  background-color: #424242 !important;
+}
 
 .receiver-content {
   transition: all .3s ease;

@@ -39,7 +39,7 @@ export default {
       return this.$store.getters.accounts
     },
     selectItems( ) {
-      return this.$store.getters.accounts.map( a => a.serverName )
+      return this.$store.getters.accounts.map( a => a.serverName + ', ' + a.email )
     },
     streamsMap: {
       get( ) {
@@ -53,7 +53,7 @@ export default {
   watch: {
     selectedAccountValue( value ) {
       if ( !value ) return
-      this.selectedAccount = this.accounts.find( ac => ac.serverName === value )
+      this.selectedAccount = this.accounts.find( ac => { return ac.serverName === value.split(', ')[0] && ac.email === value.split(', ')[1] } )
       API.getStreams( this.selectedAccount )
         .then( res => {
           this.fail = false

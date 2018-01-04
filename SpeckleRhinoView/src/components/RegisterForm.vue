@@ -1,15 +1,15 @@
 <template>
   <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%'>
-    <v-card>
+    <v-card v-if='!showSuccessMessage'>
       <v-toolbar style="flex: 0 0 auto;" dark class='light-blue'>
-        <v-btn icon @click.native="visible = false" dark>
+        <v-btn icon @click.native='clear' dark>
           <v-icon>close</v-icon>
         </v-btn>
         <v-toolbar-title>Register</v-toolbar-title>
       </v-toolbar>
       <v-card-text class=''>
         <v-form>
-          <v-text-field v-model='serverUrl' label='Speckle server url' v-validate="'required'" :error-messages="errors.collect('url')" data-vv-name='url'></v-text-field>
+          <v-text-field v-model='serverUrl' label='Speckle server api url' v-validate="'required'" :error-messages="errors.collect('url')" data-vv-name='url'></v-text-field>
           <v-text-field v-model='userEmail' label='Your email address' v-validate="'required|email'" :error-messages="errors.collect('email')" data-vv-name='email'></v-text-field>
           <v-text-field v-model='userName' label='Your name' v-validate="'required|max:20'" :error-messages="errors.collect('user_name')" data-vv-name='user_name'></v-text-field>
           <v-text-field v-model='userSurname' label='Your surname' v-validate="'max:20'" :error-messages="errors.collect('user_surname')" data-vv-name='user_surname'></v-text-field>
@@ -25,6 +25,17 @@
         <v-btn @click='clear' color=''>Cancel</v-btn>
         <v-btn @click='submit' color='light-blue'>Register</v-btn>
       </v-card-actions>
+    </v-card>
+    <v-card v-else>
+      <v-container fluid fill-height>
+        <v-layout justify-center align-center>
+          <div>
+            <h4>Hello {{userName}}! You have successfuly registered an account.</h4>
+            <p>When you will create a new sender or receiver, it will now be available.</p>
+            <v-btn @click='clear' color='light-blue'>Great stuff!</v-btn>
+          </div>
+        </v-layout>
+      </v-container>
     </v-card>
   </v-dialog>
 </template>
@@ -43,7 +54,8 @@ export default {
       userSurname: null,
       password: null,
       passwordConfirm: null,
-      registrationError: null
+      registrationError: null,
+      showSuccessMessage: true
     }
   },
   methods: {
@@ -51,17 +63,24 @@ export default {
       this.$validator.validateAll( ).then( result => {
         if ( result ) {
           this.registrationError = null
+          let apiToken = null
           API.registerAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, userName: this.userName, userSurname: this.userSurname, password: this.password } )
             .then( res => {
-              console.log( res )
+              apiToken = res.data.apitoken
+              return API.getServerName( this.serverUrl )
+            } )
+            .then( res => {
+              let payload = this.userEmail + ',' + apiToken + ',' + res + ',' + this.serverUrl + ',' + this.serverUrl
+              Interop.addAccount( payload )
+              this.$store.dispatch( 'getUserAccounts' )
+              this.showSuccessMessage = true
             } )
             .catch( err => {
-              console.log( err )
               this.registrationError = err.message
             } )
           return
         }
-        this.registrationError = "Please fix the errors in your form."
+        this.registrationError = 'Please fix the errors in your form.'
       } )
     },
     clear( ) {
@@ -72,7 +91,8 @@ export default {
       this.password = null
       this.passwordConfirm = null
       this.visible = false
-      // console.log( this.$validator )
+      this.showSuccessMessage = false
+
       this.$validator.reset( )
     }
   },

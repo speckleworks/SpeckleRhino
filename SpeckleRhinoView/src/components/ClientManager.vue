@@ -2,6 +2,11 @@
   <div >
     <receiver-add></receiver-add>
     <sender-add></sender-add>
+    <v-card fluid fill-height v-if='clients.length == 0' class='elevation-0 pa-4'>
+        <h4>Hello!</h4>
+        
+        <p>There are no clients in this file. You can add some from the big blue button in the lower right corner!</p>
+    </v-card>
     <v-container fluid v-if='clients.length > 0' style='min-height: 100%;' class='pa-0'>
       <template v-for='client in clients'>
         <receiver v-if='client.Role === 1' :client='client'></receiver>
