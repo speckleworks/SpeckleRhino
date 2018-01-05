@@ -6,7 +6,6 @@
 
 <script>
   import Layer from './ReceiverLayersLayer.vue'
-
   export default {
     name: 'ReceiverLayers',
     props: {

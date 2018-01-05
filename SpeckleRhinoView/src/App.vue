@@ -119,7 +119,6 @@ export default {
       Interop.getFileStreams( )
     },
     showRegistration( ) {
-      console.log('asdfasdfasdfasdfasdfafd')
       EventBus.$emit( 'show-register' )
     },
     showLogin( ) {
