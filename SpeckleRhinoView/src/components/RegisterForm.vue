@@ -62,6 +62,11 @@ export default {
     submit( ) {
       this.$validator.validateAll( ).then( result => {
         if ( result ) {
+          let existing = this.$store.getters.accounts.find( ac => ac.restApi === this.serverUrl && ac.email === this.userEmail )
+          if ( existing ) {
+            this.registrationError = 'You already have an account on this server with this email.'
+            return
+          }
           this.registrationError = null
           let apiToken = null
           API.registerAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, userName: this.userName, userSurname: this.userSurname, password: this.password } )

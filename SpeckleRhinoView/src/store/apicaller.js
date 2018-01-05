@@ -31,15 +31,19 @@ export default {
     } )
   },
 
+  loginAccount( data ) {
+    return Axios.post( data.serverUrl + '/accounts/login', { email: data.userEmail, password: data.password } )
+  },
+
   getServerName( url ) {
-    return  new Promise( (resolve, reject) => {
+    return new Promise( ( resolve, reject ) => {
       Axios.get( url )
-      .then( res => {
-        resolve( res.data.serverName )
-      })
-      .catch( err => {
-        reject( err )
-      })
-    })
+        .then( res => {
+          resolve( res.data.serverName )
+        } )
+        .catch( err => {
+          reject( err )
+        } )
+    } )
   }
 }

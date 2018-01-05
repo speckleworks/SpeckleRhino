@@ -61,11 +61,16 @@ export default {
     submit( ) {
       this.$validator.validateAll( ).then( result => {
         if ( result ) {
+          let existing = this.$store.getters.accounts.find( ac => ac.restApi === this.serverUrl && ac.email === this.userEmail )
+          if( existing ) {
+            this.registrationError = 'You already have an account on this server with this email.'
+            return
+          }
           this.registrationError = null
           let apiToken = null
-          API.registerAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, userName: this.userName, userSurname: this.userSurname, password: this.password } )
+          API.loginAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, password: this.password } )
             .then( res => {
-              apiToken = res.data.apitoken
+              apiToken = res.data.apiToken
               return API.getServerName( this.serverUrl )
             } )
             .then( res => {
@@ -75,7 +80,8 @@ export default {
               this.showSuccessMessage = true
             } )
             .catch( err => {
-              this.registrationError = err.message
+              console.log( err )
+              this.registrationError = err.response.data.message ? err.response.data.message : err.message
             } )
           return
         }
