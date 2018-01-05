@@ -5,7 +5,7 @@
       <span class="caption grey--text"> Object count: {{layer.objectCount }} </span>
     </v-flex>
     <v-flex class='xs1 text-xs-center'>
-      <v-btn icon small flat @click.native='visible=!visible' color='grey' xxclass='ma-0'>
+      <v-btn icon small flat @click.native='visible=!visible' @dblclick='toggleAll' color='grey' xxclass='ma-0'>
         <v-icon dark class='xs-actions'>{{ visible ? "visibility" : "visibility_off" }}</v-icon>
       </v-btn>
     </v-flex>
@@ -20,6 +20,8 @@
   </v-layout>
 </template>
 <script>
+import { EventBus } from '../event-bus'
+
 export default {
   name: '',
   props: {
@@ -45,6 +47,10 @@ export default {
     }
   },
   methods: {
+    toggleAll( ) {
+      this.visible = !this.visible
+      EventBus.$emit( 'layer-set-all-vis', { state: this.visible, clientId: this.clientId } )
+    },
     mouseOver( ) {
       Interop.setLayerHover( this.clientId, this.layer.guid, true )
     },
@@ -55,7 +61,12 @@ export default {
       Interop.bakeLayer( this.clientId, this.layer.guid )
     }
   },
-  mounted( ) {}
+  mounted( ) {
+    EventBus.$on( 'layer-set-all-vis', data => {
+      if ( this.clientId != data.clientId ) return
+      this.visible = data.state
+    } )
+  }
 }
 </script>
 <style lang='scss'>

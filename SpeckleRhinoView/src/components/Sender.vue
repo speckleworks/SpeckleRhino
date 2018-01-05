@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small :flat='paused' class='ma-0 light-blue' slot='activator' v-model='fab'>
+          <v-btn fab small :flat='paused' class='ma-0 light-blue elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_upward
             </v-icon>
@@ -38,7 +38,7 @@
       </v-flex>
     </v-layout>
     <!-- progress bar -->
-    <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear>
+    <!-- <v-progress-linear height='1' :indeterminate='true' v-if='client.isLoading'></v-progress-linear> -->
     <!-- expired alert -->
     <v-alert color='info' v-model='client.expired' class='pb-0 pt-0 mt-3'>
       <v-layout>

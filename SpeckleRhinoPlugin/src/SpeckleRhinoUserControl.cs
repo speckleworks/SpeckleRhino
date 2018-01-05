@@ -6,6 +6,7 @@ using System.Reflection;
 using System.IO;
 using Rhino;
 using System.Net;
+using System.Diagnostics;
 
 namespace SpeckleRhino
 {
@@ -39,7 +40,6 @@ namespace SpeckleRhino
         public void InitializeChromium()
         {
 
-
             Cef.EnableHighDPISupport();
 
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -61,8 +61,11 @@ namespace SpeckleRhino
             if (!Cef.IsInitialized)
                 Cef.Initialize(settings);
 
-            // Create a browser component. 
-            // #IF DEBUG
+            // Create a browser component.
+
+            
+
+#if DEBUG
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(@"http://localhost:9090/");
             request.Timeout = 100;
             request.Method = "HEAD";
@@ -76,26 +79,50 @@ namespace SpeckleRhino
             }
             catch (WebException)
             {
+                chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
                 // IF DIMITRIE ON PARALLELS
-                chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+                //chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
             }
+#else
+
 
             //#IF RELEASE
             // TODO: Load app from local file
 
-            this.Controls.Add(chromeBrowser);
-            chromeBrowser.Dock = DockStyle.Fill;
+            var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
+            Debug.WriteLine(path, "SPK");
 
+            var indexPath = string.Format(@"{0}\app\index.html", path);
+
+            if (!File.Exists(indexPath))
+                Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
+
+            indexPath = indexPath.Replace("\\", "/");
+
+            chromeBrowser = new ChromiumWebBrowser(indexPath);
+
+            //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
+#endif
             // Allow the use of local resources in the browser
-            BrowserSettings browserSettings = new BrowserSettings
+            chromeBrowser.BrowserSettings = new BrowserSettings
             {
                 FileAccessFromFileUrls = CefState.Enabled,
                 UniversalAccessFromFileUrls = CefState.Enabled
             };
 
+            this.Controls.Add(chromeBrowser);
+            chromeBrowser.Dock = DockStyle.Fill;
+
             Store = new Interop(chromeBrowser, this);
 
             chromeBrowser.RegisterAsyncJsObject("Interop", Store);
+            
+        }
+
+        private void ChromeBrowser_IsBrowserInitializedChanged(object sender, IsBrowserInitializedChangedEventArgs e)
+        {
+            if (e.IsBrowserInitialized)
+                chromeBrowser.ShowDevTools();
         }
 
         private void OnClosing(object sender, EventArgs e)

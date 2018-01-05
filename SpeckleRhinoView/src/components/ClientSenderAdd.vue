@@ -2,7 +2,7 @@
   <v-dialog fullscreen transition='dialog-bottom-transition' v-model='visible' style='width: 100%'>
     <v-card>
       <v-toolbar style="flex: 0 0 auto;" dark class='light-blue'>
-        <v-btn icon @click.native="dialog = false" dark>
+        <v-btn icon @click.native="visible = false" dark>
           <v-icon>close</v-icon>
         </v-btn>
         <v-toolbar-title>Add Sender</v-toolbar-title>
@@ -53,14 +53,14 @@ export default {
   name: 'ClientSenderAdd',
   computed: {
     accounts( ) { return this.$store.getters.accounts },
-    userAccounts( ) { return this.$store.getters.accounts.map( a => a.serverName ) },
+    userAccounts( ) { return this.$store.getters.accounts.map( a => a.serverName + ', ' + a.email ) },
     objectSelection( ) { return this.$store.getters.selection },
     layerInfo( ) { return this.$store.getters.layerInfo },
   },
   watch: {
     selectedAccountValue( value ) {
       if ( !value ) return
-      this.selectedAccount = this.accounts.find( ac => ac.serverName === value )
+      this.selectedAccount = this.accounts.find( ac => { return ac.serverName === value.split(', ')[0] && ac.email === value.split(', ')[1] } )
       API.getStreams( this.selectedAccount )
         .then( res => {
           this.fail = false

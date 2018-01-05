@@ -2,13 +2,14 @@
   <div id="app">
     <v-app :dark='dark'>
       <!-- tabs with main content -->
-      <v-tabs v-model='active' dark grow>
-        <v-tabs-bar class='grey'>
+      <v-tabs v-model='active' dark grow fill-height>
+        <v-tabs-bar class='light-blue'>
+          <v-tabs-slider :class='{ "grey darken-3": dark, "white lighten-4": !dark, "elevation-4":true}' style='height:100%'></v-tabs-slider>
           <v-tabs-item key='clients' href='clients'>
-            <span class='grey--text text--darken-2'>Clients</span>
+            <span :class='{ "grey--text text--lighten-4": dark, "grey--text text--darken-4": !dark}'>Clients</span>
           </v-tabs-item>
           <v-tabs-item key='accounts' href='accounts'>
-            <span class='grey--text text--darken-2 '>Accounts</span>
+            <span :class='{ "grey--text text--lighten-4": dark, "grey--text text--darken-4": !dark}'>Accounts</span>
           </v-tabs-item>
           <v-menu open-on-hover transition="slide-x-transition">
             <v-tabs-item slot='activator' @click.native='showDev'>
@@ -18,10 +19,9 @@
               <v-icon style='font-size: 14px;'>wb_incandescent</v-icon>
             </v-tabs-item>
           </v-menu>
-          <v-tabs-slider color='grey darken-1' style='height:2px'></v-tabs-slider>
         </v-tabs-bar>
-        <v-tabs-items>
-          <v-tabs-content id='clients' key='clients'>
+        <v-tabs-items fill-height>
+          <v-tabs-content id='clients' key='clients' fill-height>
             <v-card flat class='transparent'>
               <client-manager></client-manager>
             </v-card>
@@ -36,7 +36,7 @@
       <!-- clients fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="clients"'>
-          <v-btn slot='activator' fab v-model='fab' color='light-blue'>
+          <v-btn slot='activator' fab v-model='fab' dark>
             <v-icon>add</v-icon>
             <v-icon>close</v-icon>
           </v-btn>
@@ -48,7 +48,7 @@
           </v-tooltip>
           <v-tooltip left>
             <span>New Sender</span>
-            <v-btn fab dark color='pink' slot='activator' @click='addSender'>
+            <v-btn fab dark color='light-blue' slot='activator' @click='addSender'>
               <v-icon>cloud_upload</v-icon>
             </v-btn>
           </v-tooltip>
@@ -57,7 +57,7 @@
       <!-- accounts fab menu -->
       <v-fab-transition>
         <v-speed-dial v-model='fab' hover fixed bottom right direction='top' v-show='active=="accounts"'>
-          <v-btn slot='activator' fab v-model='fab' color='purple xxxlighten-2'>
+          <v-btn slot='activator' fab v-model='fab' dark>
             <v-icon>add</v-icon>
           </v-btn>
           <v-tooltip left>
@@ -75,6 +75,7 @@
         </v-speed-dial>
       </v-fab-transition>
       <register-form></register-form>
+      <login-form></login-form>
     </v-app>
   </div>
 </template>
@@ -82,7 +83,7 @@
 import AccountsManager from './components/AccountsManager.vue'
 import ClientManager from './components/ClientManager.vue'
 import RegisterForm from './components/RegisterForm.vue'
-
+import LoginForm from './components/LoginForm.vue'
 
 import { EventBus } from './event-bus'
 
@@ -91,7 +92,8 @@ export default {
   components: {
     AccountsManager,
     ClientManager,
-    RegisterForm
+    RegisterForm,
+    LoginForm
   },
   data( ) {
     return {
@@ -117,7 +119,6 @@ export default {
       Interop.getFileStreams( )
     },
     showRegistration( ) {
-      console.log('asdfasdfasdfasdfasdfafd')
       EventBus.$emit( 'show-register' )
     },
     showLogin( ) {
@@ -134,7 +135,9 @@ export default {
 <style>
 body {}
 
-#app {}
+.application--dark {
+  background-color: #424242 !important;
+}
 
 .receiver-content {
   transition: all .3s ease;
