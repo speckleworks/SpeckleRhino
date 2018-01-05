@@ -5,7 +5,7 @@
       <!-- speed dial menu -->
       <v-flex class='xs2'>
         <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
-          <v-btn fab small :flat='paused' class='ma-0 teal lighten-2 elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
+          <v-btn fab small :flat='paused' class='ma-0 teal elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_downward
             </v-icon>

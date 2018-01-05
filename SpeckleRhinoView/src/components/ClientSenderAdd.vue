@@ -53,14 +53,14 @@ export default {
   name: 'ClientSenderAdd',
   computed: {
     accounts( ) { return this.$store.getters.accounts },
-    userAccounts( ) { return this.$store.getters.accounts.map( a => a.serverName ) },
+    userAccounts( ) { return this.$store.getters.accounts.map( a => a.serverName + ', ' + a.email ) },
     objectSelection( ) { return this.$store.getters.selection },
     layerInfo( ) { return this.$store.getters.layerInfo },
   },
   watch: {
     selectedAccountValue( value ) {
       if ( !value ) return
-      this.selectedAccount = this.accounts.find( ac => ac.serverName === value )
+      this.selectedAccount = this.accounts.find( ac => { return ac.serverName === value.split(', ')[0] && ac.email === value.split(', ')[1] } )
       API.getStreams( this.selectedAccount )
         .then( res => {
           this.fail = false
