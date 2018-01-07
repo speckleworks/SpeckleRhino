@@ -8,7 +8,8 @@ export default new Vuex.Store( {
     accounts: [ ],
     clients: [ ],
     selection: [ ],
-    layerInfo: [ ]
+    layerInfo: [ ],
+    globalLoading: false
   },
   getters: {
     accounts: state => state.accounts,
@@ -45,6 +46,9 @@ export default new Vuex.Store( {
     }
   },
   mutations: {
+    SET_GL_LOAD( state, payload ) {
+      state.globalLoading = payload
+    },
     SET_ACCOUNTS( state, payload ) {
       state.accounts = payload
     },

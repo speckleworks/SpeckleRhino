@@ -104,6 +104,10 @@ new Vue( {
       this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
     } )
 
+    EventBus.$on( 'set-gl-load', (streamId, state ) => {
+      this.$store.commit('SET_GL_LOAD', state === 'true' )
+    })
+
     // tell .net that the app is ± ready.
     Interop.appReady( )
   }
