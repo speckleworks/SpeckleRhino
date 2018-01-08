@@ -1,10 +1,10 @@
 <template>
   <v-card class='receiver-content'>
     <!-- header - menu and title -->
-    <v-layout>
+    <v-layout align-center>
       <!-- speed dial menu -->
-      <v-flex class='xs2'>
-        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+      <v-flex xs2 text-xs-center>
+        <v-speed-dial v-model='fab' direction='right' left  xxstyle='top:15px' class='pa-0 ma-0'>
           <v-btn fab small :flat='paused' class='ma-0 light-blue elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_upward
@@ -26,8 +26,8 @@
         </v-speed-dial>
       </v-flex>
       <!-- title -->
-      <v-flex>
-        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;'>
+      <v-flex xs10 >
+        <v-card-title primary-title class='pb-0 pl-1 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;'>
           <p class='headline mb-1'>
             {{ client.stream.name }}
           </p>

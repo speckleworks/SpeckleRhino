@@ -56,7 +56,7 @@ namespace SpeckleRhino
 
     PayloadStreamUpdate QueuedUpdate;
 
-    public bool IsSendingUpdate = false;
+    public bool IsSendingUpdate = false, Expired = false;
 
     public RhinoSender( string _payload, Interop _Context, SenderType _Type )
     {
@@ -78,7 +78,8 @@ namespace SpeckleRhino
 
       Context.NotifySpeckleFrame( "set-gl-load", "", "true" );
 
-      Client.IntializeSender( ( string ) InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid() ).ContinueWith( res =>
+      Client.IntializeSender( ( string ) InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid() )
+        .ContinueWith( res =>
             {
               StreamId = Client.Stream.StreamId;
               Client.Stream.Name = StreamName;
@@ -270,13 +271,13 @@ namespace SpeckleRhino
       if ( Paused && !force )
       {
         Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
-        QueuedUpdate = payload;
         return;
       }
 
       if ( IsSendingUpdate )
       {
-        Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
+        //Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
+        Expired = true;
         return;
       }
 
@@ -304,6 +305,11 @@ namespace SpeckleRhino
       Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
 
       IsSendingUpdate = false;
+      if ( Expired )
+      {
+        DataSender.Start();
+      }
+      Expired = false;
     }
 
     public PayloadStreamUpdate CreateUpdatePayload( )
