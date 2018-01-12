@@ -4,7 +4,7 @@
     <v-layout align-center>
       <!-- speed dial menu -->
       <v-flex xs2 text-xs-center>
-        <v-speed-dial v-model='fab' direction='right' left xxstyle='top:15px' class='pa-0 ma-0'>
+        <v-speed-dial v-model='fab' direction='right' left style='left:0' class='pa-0 ma-0'>
           <v-btn fab small :flat='paused' class='ma-0 light-blue elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_upward
@@ -28,9 +28,8 @@
       <!-- title -->
       <v-flex xs10>
         <v-card-title primary-title class='pb-0 pl-1 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;' @mouseenter='showEditTitle=true' @mouseleave='showEditTitle=false'>
-          <p class='headline mb-1'>
+          <span class='headline mb-1 breaklines'>
             {{ client.stream.name }}
-          </p>
           <v-fade-transition>
             <v-tooltip bottom>
               Edit name
@@ -39,6 +38,7 @@
               </v-btn>
             </v-tooltip>
           </v-fade-transition>
+          </span>
           <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
@@ -212,7 +212,7 @@ export default {
       showMenu: false,
       showAddRemoveDialog: false,
       paused: false,
-      showEditTitle: false,
+      showEditTitle: true,
       editTitle: false,
       newStreamName: null,
       streamNameSaving: false
@@ -267,7 +267,6 @@ export default {
       this.newStreamName = this.client.stream.name
     },
     saveStreamName( ) {
-      console.log( this.client )
       this.$validator.validateAll( ).then( result => {
         if ( !result ) return
         this.streamNameSaving = true
@@ -276,7 +275,7 @@ export default {
           .then( res => {
             this.streamNameSaving = false
             this.editTitle = false // hide dialog
-            Interop.setName( this .client.ClientId, this.client.stream.name )
+            Interop.setName( this.client.ClientId, this.client.stream.name )
           } )
       } )
     }
@@ -285,6 +284,11 @@ export default {
 }
 </script>
 <style lang='scss'>
+.breaklines {
+  word-break: break-all;
+  hyphens: auto;
+}
+
 .faded {
   opacity: 0.2
 }

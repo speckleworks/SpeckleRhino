@@ -4,7 +4,7 @@
     <v-layout align-center>
       <!-- speed dial menu -->
       <v-flex xs2 text-xs-center>
-        <v-speed-dial v-model='fab' direction='right' left xxstyle='top:15px' class='pa-0 ma-0'>
+        <v-speed-dial v-model='fab' direction='right' left style='left:0' class='pa-0 ma-0'>
           <v-btn fab small :flat='paused' class='ma-0 teal elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_downward
