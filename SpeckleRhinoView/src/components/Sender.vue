@@ -1,10 +1,10 @@
 <template>
   <v-card class='receiver-content'>
     <!-- header - menu and title -->
-    <v-layout>
+    <v-layout align-center>
       <!-- speed dial menu -->
-      <v-flex class='xs2'>
-        <v-speed-dial v-model='fab' direction='right' left absolute style='top:15px' class='pa-0 ma-0'>
+      <v-flex xs2 text-xs-center>
+        <v-speed-dial v-model='fab' direction='right' left style='left:0' class='pa-0 ma-0'>
           <v-btn fab small :flat='paused' class='ma-0 light-blue elevation-0' slot='activator' v-model='fab' :loading='client.isLoading' :dark='!paused'>
             <v-icon>
               arrow_upward
@@ -26,11 +26,19 @@
         </v-speed-dial>
       </v-flex>
       <!-- title -->
-      <v-flex>
-        <v-card-title primary-title class='pb-0 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;'>
-          <p class='headline mb-1'>
+      <v-flex xs10>
+        <v-card-title primary-title class='pb-0 pl-1 pt-3' :class='{ faded: fab }' style='transition: all .3s ease;' @mouseenter='showEditTitle=true' @mouseleave='showEditTitle=false'>
+          <span class='headline mb-1 breaklines'>
             {{ client.stream.name }}
-          </p>
+          <v-fade-transition>
+            <v-tooltip bottom>
+              Edit name
+              <v-btn icon @click.native='toggleTitleEdit' small v-show='showEditTitle' class='pa-0 ma-0' slot='activator'>
+                <v-icon class='xs-actions'>edit</v-icon>
+              </v-btn>
+            </v-tooltip>
+          </v-fade-transition>
+          </span>
           <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
           </div>
@@ -148,9 +156,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <!-- change name -->
+    <v-dialog v-model='editTitle'>
+      <v-card>
+        <!-- <v-card-title class='headline'>Edit stream title</v-card-title> -->
+        <v-card-text>
+          <v-text-field label='New stream name' v-model='newStreamName' v-validate="'required|min:3|max:42'" :error-messages="errors.collect('name')" data-vv-name='name'></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn flat @click.native='editTitle=false'>Cancel</v-btn>
+          <v-btn color='light-blue' class='' @click.native='saveStreamName' :loading='streamNameSaving'>Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 <script>
+import API from '../store/apicaller.js'
+
 import SenderLayers from './SenderLayers.vue'
 import ExtraViewMenu from './ExtraViewMenu.vue'
 
@@ -176,7 +200,7 @@ export default {
       return sum
     },
     layerInfo( ) { return this.$store.getters.layerInfo },
-    hasError( ) { return this.client.error != "" && this.client.error != null }
+    hasError( ) { return this.client.error != '' && this.client.error != null }
   },
   data( ) {
     return {
@@ -188,6 +212,10 @@ export default {
       showMenu: false,
       showAddRemoveDialog: false,
       paused: false,
+      showEditTitle: true,
+      editTitle: false,
+      newStreamName: null,
+      streamNameSaving: false
     }
   },
   methods: {
@@ -233,12 +261,34 @@ export default {
     },
     killError( ) {
       this.client.error = null
+    },
+    toggleTitleEdit( ) {
+      this.editTitle = !this.editTitle
+      this.newStreamName = this.client.stream.name
+    },
+    saveStreamName( ) {
+      this.$validator.validateAll( ).then( result => {
+        if ( !result ) return
+        this.streamNameSaving = true
+        this.client.stream.name = this.newStreamName
+        API.updateStreamName( this.client )
+          .then( res => {
+            this.streamNameSaving = false
+            this.editTitle = false // hide dialog
+            Interop.setName( this.client.ClientId, this.client.stream.name )
+          } )
+      } )
     }
   },
   mounted( ) {}
 }
 </script>
 <style lang='scss'>
+.breaklines {
+  word-break: break-all;
+  hyphens: auto;
+}
+
 .faded {
   opacity: 0.2
 }
