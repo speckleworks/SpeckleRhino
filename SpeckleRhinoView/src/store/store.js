@@ -126,7 +126,6 @@ export default new Vuex.Store( {
     },
     SET_LAYERINFO( state, payload ) {
       state.layerInfo = payload
-      console.log( payload )
     }
   }
 } )

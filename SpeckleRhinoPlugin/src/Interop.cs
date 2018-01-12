@@ -390,6 +390,16 @@ namespace SpeckleRhino
       System.Diagnostics.Process.Start( url );
     }
 
+    public void setName( string clientId, string name)
+    {
+      var myClient = UserClients.FirstOrDefault( c => c.GetClientId() == clientId );
+      if ( myClient != null && myClient is RhinoSender )
+      {
+        ( ( RhinoSender ) myClient ).Client.Stream.Name = name;
+      }
+    }
+
+
     #endregion
 
     #region Sender Helpers

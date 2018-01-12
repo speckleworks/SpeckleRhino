@@ -14,6 +14,11 @@ export default {
     } )
   },
 
+  updateStreamName( client ) {
+    return Axios.put( client.BaseUrl + '/streams/' + client.stream.streamId + '/name', { name: client.stream.name }, { headers:  { 'Authorization': client.apiToken } } )
+    // return Axios.post( url, {}, {headersdd} )
+  },
+
   registerAccount( data ) {
     return new Promise( ( resolve, reject ) => {
       Axios.post( data.serverUrl + '/accounts/register', {
