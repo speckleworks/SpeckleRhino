@@ -458,7 +458,7 @@ namespace SpeckleGrasshopper
       base.DrawViewportWires( args );
       
       if ( this.Hidden || this.Locked ) return;
-      System.Drawing.Color clr = !this.Attributes.Selected ? System.Drawing.Color.AliceBlue : System.Drawing.Color.OrangeRed;
+      System.Drawing.Color solidClr = !this.Attributes.Selected ? args.ShadeMaterial.Diffuse : args.ShadeMaterial_Selected.Diffuse;
 
       foreach ( var obj in ConvertedObjects )
       {
@@ -466,19 +466,19 @@ namespace SpeckleGrasshopper
         switch ( ( ( GeometryBase ) obj ).ObjectType )
         {
           case Rhino.DocObjects.ObjectType.Point:
-            args.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, Rhino.Display.PointStyle.X, 2, clr );
+            args.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, Rhino.Display.PointStyle.X, 2, solidClr );
             break;
 
           case Rhino.DocObjects.ObjectType.Curve:
-            args.Display.DrawCurve( ( Curve ) obj, clr );
+            args.Display.DrawCurve( ( Curve ) obj, solidClr );
             break;
 
           case Rhino.DocObjects.ObjectType.Extrusion:
-            Rhino.Display.DisplayMaterial eMaterial = new Rhino.Display.DisplayMaterial( clr, 0.5 );
+            Rhino.Display.DisplayMaterial eMaterial = new Rhino.Display.DisplayMaterial( solidClr, 0.5 );
             args.Display.DrawBrepShaded( ( ( Extrusion ) obj ).ToBrep(), eMaterial );
             break;
           case Rhino.DocObjects.ObjectType.Brep:
-            Rhino.Display.DisplayMaterial bMaterial = new Rhino.Display.DisplayMaterial( clr, 0.5 );
+            Rhino.Display.DisplayMaterial bMaterial = new Rhino.Display.DisplayMaterial( solidClr, 0.5 );
             args.Display.DrawBrepShaded( ( Brep ) obj, bMaterial );
             //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
             break;
@@ -494,7 +494,7 @@ namespace SpeckleGrasshopper
             }
             else
             {
-              Rhino.Display.DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial( clr, 0.5 );
+              Rhino.Display.DisplayMaterial mMaterial = new Rhino.Display.DisplayMaterial( solidClr, 0.5 );
               args.Display.DrawMeshShaded( mesh, mMaterial );
             }
             //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
