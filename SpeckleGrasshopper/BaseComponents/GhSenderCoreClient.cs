@@ -112,11 +112,11 @@ namespace SpeckleGrasshopper
       base.AddedToDocument( document );
       Document = this.OnPingDocument();
 
-      this.Locked = true;
-      this.NickName = "Initialising...";
-
       if ( mySender == null )
       {
+        this.NickName = "Initialising...";
+        this.Locked = true;
+
         var myForm = new SpecklePopup.MainWindow();
 
         var some = new System.Windows.Interop.WindowInteropHelper( myForm )
@@ -141,7 +141,9 @@ namespace SpeckleGrasshopper
           return;
         }
       }
-      else { mySender.Converter = new RhinoConverter(); }
+      else {
+        mySender.Converter = new RhinoConverter();
+      }
 
       mySender.OnReady += ( sender, e ) =>
       {
