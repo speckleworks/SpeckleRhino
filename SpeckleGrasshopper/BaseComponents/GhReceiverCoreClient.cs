@@ -272,6 +272,11 @@ namespace SpeckleGrasshopper
 
            ConvertedObjects = Converter.ToNative( SpeckleObjects ).ToList();
 
+           if(ConvertedObjects.Count != SpeckleObjects.Count)
+           {
+             this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Some objects failed to convert." );
+           }
+
            UpdateOutputStructure();
 
            Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
@@ -405,6 +410,7 @@ namespace SpeckleGrasshopper
     public void SetObjects( IGH_DataAccess DA )
     {
       if ( Layers == null ) return;
+      if ( ConvertedObjects.Count == 0 ) return;
 
       foreach ( SpeckleLayer layer in Layers )
       {

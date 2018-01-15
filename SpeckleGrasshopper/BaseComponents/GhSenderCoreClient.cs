@@ -141,7 +141,8 @@ namespace SpeckleGrasshopper
           return;
         }
       }
-      else {
+      else
+      {
         mySender.Converter = new RhinoConverter();
       }
 
@@ -196,7 +197,6 @@ namespace SpeckleGrasshopper
 
     public override void DocumentContextChanged( GH_Document document, GH_DocumentContext context )
     {
-
       base.DocumentContextChanged( document, context );
     }
 
@@ -280,8 +280,8 @@ namespace SpeckleGrasshopper
 
     protected override void RegisterOutputParams( GH_Component.GH_OutputParamManager pManager )
     {
-      pManager.AddTextParameter( "log", "log", "Log data.", GH_ParamAccess.item );
-      pManager.AddTextParameter( "stream id", "streamId", "The stream's short id.", GH_ParamAccess.item );
+      pManager.AddTextParameter( "log", "L", "Log data.", GH_ParamAccess.item );
+      pManager.AddTextParameter( "stream id", "ID", "The stream's id.", GH_ParamAccess.item );
     }
 
     protected override void SolveInstance( IGH_DataAccess DA )
@@ -309,7 +309,13 @@ namespace SpeckleGrasshopper
 
     private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
-      Log += "Sending data update.";
+      if ( MetadataSender.Enabled )
+      {
+        //  start the timer again, as we need to make sure we're updating
+        DataSender.Start();
+        return;
+      }
+
       var Converter = new RhinoConverter();
 
       var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
@@ -323,6 +329,8 @@ namespace SpeckleGrasshopper
       payload.Layers = BucketLayers;
       payload.Name = BucketName;
       payload.Objects = convertedObjects;
+
+      Log += "Sending data update.";
 
       var response = mySender.StreamUpdate( payload, mySender.StreamId );
 
@@ -350,7 +358,8 @@ namespace SpeckleGrasshopper
 
     private void MetadataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
-      if ( DataSender.Enabled ) return;
+      // we do not need to enque another metadata sending event as the data update superseeds the metadata one.
+      if ( DataSender.Enabled ) { return; };
       var payload = new PayloadStreamMetaUpdate();
       payload.Layers = BucketLayers;
       payload.Name = BucketName;
