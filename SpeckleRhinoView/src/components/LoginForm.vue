@@ -12,11 +12,9 @@
           <v-text-field v-model='serverUrl' label='Speckle server api url' v-validate="'required'" :error-messages="errors.collect('url')" data-vv-name='url'></v-text-field>
           <v-text-field v-model='userEmail' label='Your email address' v-validate="'required|email'" :error-messages="errors.collect('email')" data-vv-name='email'></v-text-field>
           <v-text-field v-model='password' label='Your account password.' type='password' hint='min 8 chars' v-validate="'required|min:8'" :error-messages="errors.collect('password')" data-vv-name="password"></v-text-field>
-          
           <v-alert color='error' :value='registrationError' icon='error'>
             {{ registrationError }}
           </v-alert>
-        
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -62,12 +60,17 @@ export default {
       this.$validator.validateAll( ).then( result => {
         if ( result ) {
           let existing = this.$store.getters.accounts.find( ac => ac.restApi === this.serverUrl && ac.email === this.userEmail )
-          if( existing ) {
+          if ( existing ) {
             this.registrationError = 'You already have an account on this server with this email.'
             return
           }
           this.registrationError = null
           let apiToken = null
+
+          this.serverUrl = this.serverUrl.trim( )
+          if ( !this.serverUrl.includes( 'api' ) )
+            this.serverUrl += this.serverUrl.substr( -1 ) === '/' ? 'api' : '/api'
+
           API.loginAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, password: this.password } )
             .then( res => {
               apiToken = res.data.apiToken

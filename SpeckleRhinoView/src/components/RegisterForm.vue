@@ -69,6 +69,11 @@ export default {
           }
           this.registrationError = null
           let apiToken = null
+          
+          this.serverUrl = this.serverUrl.trim( )
+          if ( !this.serverUrl.includes( 'api' ) )
+            this.serverUrl += this.serverUrl.substr( -1 ) === '/' ? 'api' : '/api'
+
           API.registerAccount( { serverUrl: this.serverUrl, userEmail: this.userEmail, userName: this.userName, userSurname: this.userSurname, password: this.password } )
             .then( res => {
               apiToken = res.data.apitoken
