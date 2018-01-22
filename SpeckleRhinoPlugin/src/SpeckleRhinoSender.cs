@@ -236,6 +236,7 @@ namespace SpeckleRhino
       Debug.WriteLine( "Boing! Boing!" );
       DataSender.Stop();
       SendUpdate( CreateUpdatePayload() );
+      SendStaggeredUpdate();
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Update Sent." ) );
     }
 
@@ -381,6 +382,46 @@ namespace SpeckleRhino
 
       return payload;
     }
+
+    public void SendStaggeredUpdate()
+    {
+      var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false ).OrderBy( obj => obj.Attributes.LayerIndex );
+
+      List<SpeckleObject> convertedObjects = new List<SpeckleObject>();
+      List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
+
+      RhinoConverter converter = new RhinoConverter();
+
+      long currentBucketSize = 0;
+      List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
+
+      foreach(RhinoObject obj in objs)
+      {
+        var convertedObject = converter.ToSpeckle( obj.Geometry );
+        long size = RhinoConverter.getBytes( convertedObject ).Length;
+        currentBucketSize += size;
+        currentBucketObjects.Add( convertedObject );
+        if(currentBucketSize > 1e5 )
+        {
+          Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
+          objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+          currentBucketObjects = new List<SpeckleObject>();
+          currentBucketSize = 0;
+        }
+      }
+
+      if(currentBucketObjects.Count>0)
+      {
+        objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+      }
+
+      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count );
+
+      //Task.WhenAll()
+
+    }
+
+
 
     public SpeckleCore.ClientRole GetRole( )
     {
