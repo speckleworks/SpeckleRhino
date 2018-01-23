@@ -670,6 +670,8 @@ namespace SpeckleRhinoConverter
     {
       var verts = mesh.Vertices.Select( pt => ( Point3d ) pt ).ToFlatArray();
 
+      var tex_coords = mesh.TextureCoordinates.Select( pt => (Point2d) pt ).ToFlatArray();
+
       var Faces = mesh.Faces.SelectMany( face =>
        {
          if ( face.IsQuad ) return new int[ ] { 1, face.A, face.B, face.C, face.D };
@@ -677,7 +679,7 @@ namespace SpeckleRhinoConverter
        } ).ToArray();
 
       var Colors = mesh.VertexColors.Select( cl => cl.ToArgb() ).ToArray();
-      return new SpeckleMesh( verts, Faces, Colors, properties: RhinoConverter.PropertiesToSpeckle( mesh.UserDictionary ) );
+      return new SpeckleMesh( verts, Faces, Colors, tex_coords, properties: RhinoConverter.PropertiesToSpeckle( mesh.UserDictionary ) );
     }
 
     public static Mesh ToNative( this SpeckleMesh mesh )
