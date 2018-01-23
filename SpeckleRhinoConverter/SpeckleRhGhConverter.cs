@@ -395,6 +395,11 @@ namespace SpeckleRhinoConverter
       return new double[ ] { pt.X, pt.Y, pt.Z };
     }
 
+    public static double[ ] ToArray( this Point2d pt )
+    {
+      return new double[ ] { pt.X, pt.Y};
+    }
+
     public static Point3d ToPoint( this double[ ] arr )
     {
       return new Point3d( arr[ 0 ], arr[ 1 ], arr[ 2 ] );
@@ -413,6 +418,11 @@ namespace SpeckleRhinoConverter
     }
 
     public static double[ ] ToFlatArray( this IEnumerable<Point3d> points )
+    {
+      return points.SelectMany( pt => pt.ToArray() ).ToArray();
+    }
+
+    public static double[ ] ToFlatArray( this IEnumerable<Point2d> points )
     {
       return points.SelectMany( pt => pt.ToArray() ).ToArray();
     }
