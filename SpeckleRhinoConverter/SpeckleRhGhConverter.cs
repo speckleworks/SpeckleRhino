@@ -395,6 +395,11 @@ namespace SpeckleRhinoConverter
       return new double[ ] { pt.X, pt.Y, pt.Z };
     }
 
+    public static double[ ] ToArray( this Point2d pt )
+    {
+      return new double[ ] { pt.X, pt.Y};
+    }
+
     public static Point3d ToPoint( this double[ ] arr )
     {
       return new Point3d( arr[ 0 ], arr[ 1 ], arr[ 2 ] );
@@ -413,6 +418,11 @@ namespace SpeckleRhinoConverter
     }
 
     public static double[ ] ToFlatArray( this IEnumerable<Point3d> points )
+    {
+      return points.SelectMany( pt => pt.ToArray() ).ToArray();
+    }
+
+    public static double[ ] ToFlatArray( this IEnumerable<Point2d> points )
     {
       return points.SelectMany( pt => pt.ToArray() ).ToArray();
     }
@@ -660,6 +670,8 @@ namespace SpeckleRhinoConverter
     {
       var verts = mesh.Vertices.Select( pt => ( Point3d ) pt ).ToFlatArray();
 
+      var tex_coords = mesh.TextureCoordinates.Select( pt => (Point2d) pt ).ToFlatArray();
+
       var Faces = mesh.Faces.SelectMany( face =>
        {
          if ( face.IsQuad ) return new int[ ] { 1, face.A, face.B, face.C, face.D };
@@ -667,7 +679,7 @@ namespace SpeckleRhinoConverter
        } ).ToArray();
 
       var Colors = mesh.VertexColors.Select( cl => cl.ToArgb() ).ToArray();
-      return new SpeckleMesh( verts, Faces, Colors, properties: RhinoConverter.PropertiesToSpeckle( mesh.UserDictionary ) );
+      return new SpeckleMesh( verts, Faces, Colors, tex_coords, properties: RhinoConverter.PropertiesToSpeckle( mesh.UserDictionary ) );
     }
 
     public static Mesh ToNative( this SpeckleMesh mesh )
