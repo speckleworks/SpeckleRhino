@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^0.17.0",
     "babel-polyfill": "^6.26.0",
-    "vee-validate": "^2.0.0-rc.27",
+    "vee-validate": "^2.0.0",
     "vue": "^2.4.4",
     "vue-material": "^0.7.5",
     "vue-timeago": "^3.4.0",

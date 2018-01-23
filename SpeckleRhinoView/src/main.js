@@ -13,6 +13,7 @@ import { EventBus } from './event-bus'
 
 Vue.use( Vuex )
 Vue.use( Vuetify )
+Vue.use( VeeValidate )
 
 Vue.use( VueTimeago, {
   name: 'timeago',
@@ -102,6 +103,10 @@ new Vue( {
       console.log( 'object-selection' )
       this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
     } )
+
+    EventBus.$on( 'set-gl-load', (streamId, state ) => {
+      this.$store.commit('SET_GL_LOAD', state === 'true' )
+    })
 
     // tell .net that the app is ± ready.
     Interop.appReady( )
