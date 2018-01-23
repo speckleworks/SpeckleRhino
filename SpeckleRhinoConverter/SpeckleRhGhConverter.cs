@@ -400,7 +400,12 @@ namespace SpeckleRhinoConverter
       return new double[ ] { pt.X, pt.Y};
     }
 
-    public static Point3d ToPoint( this double[ ] arr )
+    public static double[] ToArray(this Point2f pt)
+    {
+        return new double[] { pt.X, pt.Y };
+    }
+
+        public static Point3d ToPoint( this double[ ] arr )
     {
       return new Point3d( arr[ 0 ], arr[ 1 ], arr[ 2 ] );
     }
@@ -427,8 +432,13 @@ namespace SpeckleRhinoConverter
       return points.SelectMany( pt => pt.ToArray() ).ToArray();
     }
 
-    // Convenience methods vector:
-    public static double[ ] ToArray( this Vector3d vc )
+    public static double[] ToFlatArray(this IEnumerable<Point2f> points)
+    {
+        return points.SelectMany(pt => pt.ToArray()).ToArray();
+    }
+
+        // Convenience methods vector:
+        public static double[ ] ToArray( this Vector3d vc )
     {
       return new double[ ] { vc.X, vc.Y, vc.Z };
     }
@@ -670,7 +680,7 @@ namespace SpeckleRhinoConverter
     {
       var verts = mesh.Vertices.Select( pt => ( Point3d ) pt ).ToFlatArray();
 
-      var tex_coords = mesh.TextureCoordinates.Select( pt => (Point2d) pt ).ToFlatArray();
+      var tex_coords = mesh.TextureCoordinates.Select( pt => pt ).ToFlatArray();
 
       var Faces = mesh.Faces.SelectMany( face =>
        {
