@@ -40,7 +40,7 @@
           </v-fade-transition>
           </span>
           <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
-              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago> {{client.progressMessage}} </span>
           </div>
         </v-card-title>
       </v-flex>

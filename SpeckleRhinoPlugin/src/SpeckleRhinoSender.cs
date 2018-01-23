@@ -403,6 +403,7 @@ namespace SpeckleRhino
       }
 
       IsSendingUpdate = true;
+      Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
 
       var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false ).OrderBy( obj => obj.Attributes.LayerIndex );
 
@@ -463,7 +464,7 @@ namespace SpeckleRhino
         totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );
 
-        if ( currentBucketSize > 1e6 ) // restrict max to ~1mb
+        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
           objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
@@ -493,14 +494,12 @@ namespace SpeckleRhino
         return;
       }
 
-      for ( int i = 0; i < updateTasks.Length; i ++ )
+      for ( int i = 0; i < updateTasks.Length; i++ )
       {
-        Debug.WriteLine( "Sending update payload # " + i + " out of " + updateTasks.Length);
-        Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", i, updateTasks.Length ));
+        Debug.WriteLine( "Sending update payload # " + i + " out of " + updateTasks.Length );
+        Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", i, updateTasks.Length ) );
         await updateTasks[ i ];
       }
-
-
 
       // finalise layer creation
       foreach ( var layer in pLayers )
@@ -525,7 +524,18 @@ namespace SpeckleRhino
       streamUpdatePayload.BaseProperties = baseProps;
 
       // push it to the server yo!
-      var response = await Client.StreamUpdateAsync( streamUpdatePayload, Client.Stream.StreamId );
+      Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Updating stream..." );
+      ResponseStreamUpdate response = null;
+      try
+      {
+        response = await Client.StreamUpdateAsync( streamUpdatePayload, Client.Stream.StreamId );
+      }
+      catch ( Exception err )
+      {
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, err.Message );
+        IsSendingUpdate = false;
+        return;
+      }
 
       // put the objects in the cache 
       int l = 0;
