@@ -89,7 +89,8 @@ namespace SpeckleRhino
               Context.UserClients.Add( this );
 
               InitTrackedObjects( InitPayload );
-              SendUpdate( CreateUpdatePayload() );
+              DataSender.Start();
+              //SendUpdate( CreateUpdatePayload() );
             } );
 
     }
@@ -116,7 +117,8 @@ namespace SpeckleRhino
       foreach ( string guid in guids )
         RhinoDoc.ActiveDoc.Objects.Find( new Guid( guid ) ).Attributes.SetUserString( "spk_" + StreamId, StreamId );
 
-      SendUpdate( CreateUpdatePayload() );
+      DataSender.Start();
+      //SendUpdate( CreateUpdatePayload() );
     }
 
     public void RemoveTrackedObjects( string[ ] guids )
@@ -124,7 +126,8 @@ namespace SpeckleRhino
       foreach ( string guid in guids )
         RhinoDoc.ActiveDoc.Objects.Find( new Guid( guid ) ).Attributes.SetUserString( "spk_" + StreamId, null );
 
-      SendUpdate( CreateUpdatePayload() );
+      DataSender.Start();
+      //SendUpdate( CreateUpdatePayload() );
     }
 
     public void SetRhinoEvents( )
@@ -235,7 +238,7 @@ namespace SpeckleRhino
     {
       Debug.WriteLine( "Boing! Boing!" );
       DataSender.Stop();
-      SendUpdate( CreateUpdatePayload() );
+      //SendUpdate( CreateUpdatePayload() );
       SendStaggeredUpdate();
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Update Sent." ) );
     }
@@ -264,7 +267,8 @@ namespace SpeckleRhino
 
     public void ForceUpdate( )
     {
-      SendUpdate( CreateUpdatePayload(), true );
+      SendStaggeredUpdate( true );
+      //SendUpdate( CreateUpdatePayload(), true );
     }
 
     public void SendUpdate( PayloadStreamUpdate payload, bool force = false )
@@ -383,25 +387,83 @@ namespace SpeckleRhino
       return payload;
     }
 
-    public void SendStaggeredUpdate()
+    public async void SendStaggeredUpdate( bool force = false )
     {
+
+      if ( Paused && !force )
+      {
+        Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
+        return;
+      }
+
+      if ( IsSendingUpdate )
+      {
+        Expired = true;
+        return;
+      }
+
+      IsSendingUpdate = true;
+
       var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false ).OrderBy( obj => obj.Attributes.LayerIndex );
 
+      List<SpeckleLayer> pLayers = new List<SpeckleLayer>();
       List<SpeckleObject> convertedObjects = new List<SpeckleObject>();
       List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
 
       RhinoConverter converter = new RhinoConverter();
 
+      long totalBucketSize = 0;
       long currentBucketSize = 0;
       List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
+      List<SpeckleObject> allObjects = new List<SpeckleObject>();
 
-      foreach(RhinoObject obj in objs)
+      int lindex = -1, count = 0, orderIndex = 0;
+      foreach ( RhinoObject obj in objs )
       {
+
+        // layer list creation
+        Layer layer = RhinoDoc.ActiveDoc.Layers[ obj.Attributes.LayerIndex ];
+        if ( lindex != obj.Attributes.LayerIndex )
+        {
+          var spkLayer = new SpeckleLayer()
+          {
+            Name = layer.FullPath,
+            Guid = layer.Id.ToString(),
+            ObjectCount = 1,
+            StartIndex = count,
+            OrderIndex = orderIndex++,
+            Properties = new SpeckleLayerProperties() { Color = new SpeckleCore.Color() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml( layer.Color ) }, }
+          };
+
+          pLayers.Add( spkLayer );
+          lindex = obj.Attributes.LayerIndex;
+        }
+        else
+        {
+          var spkl = pLayers.FirstOrDefault( pl => pl.Name == layer.FullPath );
+          spkl.ObjectCount++;
+        }
+
+        // object conversion
         var convertedObject = converter.ToSpeckle( obj.Geometry );
+        convertedObject.ApplicationId = obj.Id.ToString();
+        allObjects.Add( convertedObject );
+
+        // todo: check cache!!! and see what the response from the server is when sending placeholders
+        // in the ObjectCreateBulkAsyncRoute
+
+        if ( Context.ObjectCache.ContainsKey( convertedObject.Hash ) )
+        {
+          convertedObject = new SpeckleObjectPlaceholder() { Hash = convertedObject.Hash, DatabaseId = Context.ObjectCache[ convertedObject.Hash ].DatabaseId, ApplicationId = Context.ObjectCache[ convertedObject.Hash ].ApplicationId };
+        }
+
+        // size checking & bulk object creation payloads creation
         long size = RhinoConverter.getBytes( convertedObject ).Length;
         currentBucketSize += size;
+        totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );
-        if(currentBucketSize > 1e5 )
+
+        if ( currentBucketSize > 1e6 ) // restrict max to ~1mb
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
           objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
@@ -410,15 +472,84 @@ namespace SpeckleRhino
         }
       }
 
-      if(currentBucketObjects.Count>0)
-      {
+      // last bucket
+      if ( currentBucketObjects.Count > 0 )
         objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+
+      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
+
+      // create bulk object creation tasks
+      Task<ResponsePostObjects>[ ] updateTasks = new Task<ResponsePostObjects>[ objectUpdatePayloads.Count ]; int k = 0;
+      foreach ( var payload in objectUpdatePayloads )
+      {
+        updateTasks[ k++ ] = Client.ObjectCreateBulkAsync( payload );
       }
 
-      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count );
+      if ( objectUpdatePayloads.Count > 100 )
+      {
+        // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
+        Context.NotifySpeckleFrame( "client-error", StreamId, "This is a humongous update, in the range of ~100mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
+        IsSendingUpdate = false;
+        return;
+      }
 
-      //Task.WhenAll()
+      for ( int i = 0; i < updateTasks.Length; i ++ )
+      {
+        Debug.WriteLine( "Sending update payload # " + i + " out of " + updateTasks.Length);
+        Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", i, updateTasks.Length ));
+        await updateTasks[ i ];
+      }
 
+
+
+      // finalise layer creation
+      foreach ( var layer in pLayers )
+        layer.Topology = "0-" + layer.ObjectCount + " ";
+
+      // create placeholders for stream update payload
+      List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
+      int m = 0;
+      foreach ( Task<ResponsePostObjects> myTask in updateTasks )
+        foreach ( string dbId in myTask.Result.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId, ApplicationId = allObjects[ m++ ].ApplicationId } );
+
+      // create stream update payload
+      PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
+      streamUpdatePayload.Layers = pLayers;
+      streamUpdatePayload.Objects = placeholders;
+
+      // set some base properties (will be overwritten)
+      var baseProps = new Dictionary<string, object>();
+      baseProps[ "units" ] = RhinoDoc.ActiveDoc.ModelUnitSystem.ToString();
+      baseProps[ "tolerance" ] = RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+      baseProps[ "angleTolerance" ] = RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
+      streamUpdatePayload.BaseProperties = baseProps;
+
+      // push it to the server yo!
+      var response = await Client.StreamUpdateAsync( streamUpdatePayload, Client.Stream.StreamId );
+
+      // put the objects in the cache 
+      int l = 0;
+
+      foreach ( var obj in streamUpdatePayload.Objects )
+      {
+        obj.DatabaseId = response.Objects[ l ];
+        Context.ObjectCache[ allObjects[ l ].Hash ] = placeholders[ l ];
+        l++;
+      }
+
+      // emit  events, etc.
+      Client.Stream.Layers = streamUpdatePayload.Layers.ToList();
+      Client.Stream.Objects = streamUpdatePayload.Objects.Select( o => o.ApplicationId ).ToList();
+
+      Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
+      Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+
+      IsSendingUpdate = false;
+      if ( Expired )
+      {
+        DataSender.Start();
+      }
+      Expired = false;
     }
 
 
