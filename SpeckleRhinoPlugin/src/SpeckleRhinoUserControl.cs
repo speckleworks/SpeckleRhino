@@ -10,80 +10,58 @@ using System.Diagnostics;
 
 namespace SpeckleRhino
 {
-  /// <summary>
-  /// This is the user control that is buried in the tabbed, docking panel.
-  /// </summary>
-  [System.Runtime.InteropServices.Guid( "5736E01B-1459-48FF-8021-AE8E71257795" )]
-  public partial class SpeckleRhinoUserControl : UserControl
-  {
-
-    public ChromiumWebBrowser chromeBrowser;
-    public Interop Store;
-
-    public bool CefInit = false;
     /// <summary>
-    /// Public constructor
+    /// This is the user control that is buried in the tabbed, docking panel.
     /// </summary>
-    public SpeckleRhinoUserControl( )
-    {
-      InitializeComponent();
-      // Start the browser after initialize global component
-      InitializeChromium();
-
-      // Set the user control property on our plug-in
-      SpecklePlugIn.Instance.PanelUserControl = this;
-
-      //When Rhino closes, we need to shutdown Cef.
-      RhinoApp.Closing += OnClosing;
-    }
-
-    public void InitializeChromium( )
+    [System.Runtime.InteropServices.Guid("5736E01B-1459-48FF-8021-AE8E71257795")]
+    public partial class SpeckleRhinoUserControl : UserControl
     {
 
-      Cef.EnableHighDPISupport();
+        public ChromiumWebBrowser chromeBrowser;
+        public Interop Store;
 
-      string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-      string assemblyPath = Path.GetDirectoryName( assemblyLocation );
-      string pathSubprocess = Path.Combine( assemblyPath, "CefSharp.BrowserSubprocess.exe" );
+        public bool CefInit = false;
+        /// <summary>
+        /// Public constructor
+        /// </summary>
+        public SpeckleRhinoUserControl()
+        {
+            InitializeComponent();
+            // Start the browser after initialize global component
+            InitializeChromium();
 
-      CefSettings settings = new CefSettings
-      {
-        LogSeverity = LogSeverity.Verbose,
-        LogFile = "ceflog.txt",
-        BrowserSubprocessPath = pathSubprocess,
-      };
-#if WINR5
-            //Not needed in Rhino 6
-            settings.CefCommandLineArgs.Add("disable-gpu", "1");
-#endif
+            // Set the user control property on our plug-in
+            SpecklePlugIn.Instance.PanelUserControl = this;
 
-      // Initialize cef with the provided settings
-      if ( !Cef.IsInitialized )
-        Cef.Initialize( settings );
+            //When Rhino closes, we need to shutdown Cef.
+            RhinoApp.Closing += OnClosing;
+        }
 
-      // Create a browser component.
+        public void InitializeChromium()
+        {
+            if (Cef.IsInitialized)
+            {
 
-
+                // Create a browser component.
 
 #if DEBUG
-      HttpWebRequest request = ( HttpWebRequest ) WebRequest.Create( @"http://localhost:9090/" );
-      request.Timeout = 100;
-      request.Method = "HEAD";
-      HttpWebResponse response;
-      try
-      {
-        response = ( HttpWebResponse ) request.GetResponse();
-        var copy = response;
-        chromeBrowser = new ChromiumWebBrowser( @"http://localhost:9090/" );
-      }
-      catch ( WebException )
-      {
-        //chromeBrowser = new ChromiumWebBrowser( @"http://localhost:9090/" );
-        // IF DIMITRIE ON PARALLELS
-        chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
-      }
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(@"http://localhost:9090/");
+                request.Timeout = 100;
+                request.Method = "HEAD";
+                HttpWebResponse response;
+                try
+                {
+                    response = (HttpWebResponse)request.GetResponse();
+                    var copy = response;
+                    chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
+                }
+                catch (WebException)
+                {
+                    chromeBrowser = new ChromiumWebBrowser(@"http://localhost:9090/");
+                    // IF DIMITRIE ON PARALLELS
+                    //chromeBrowser = new ChromiumWebBrowser(@"http://10.211.55.2:9090/");
+                }
 #else
-
 
             //#IF RELEASE
             // TODO: Load app from local file
@@ -102,45 +80,51 @@ namespace SpeckleRhino
 
             //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
-      // Allow the use of local resources in the browser
-      chromeBrowser.BrowserSettings = new BrowserSettings
-      {
-        FileAccessFromFileUrls = CefState.Enabled,
-        UniversalAccessFromFileUrls = CefState.Enabled
-      };
 
-      this.Controls.Add( chromeBrowser );
-      chromeBrowser.Dock = DockStyle.Fill;
+                // Allow the use of local resources in the browser
+                chromeBrowser.BrowserSettings = new BrowserSettings
+                {
+                    FileAccessFromFileUrls = CefState.Enabled,
+                    UniversalAccessFromFileUrls = CefState.Enabled
+                };
 
-      Store = new Interop( chromeBrowser, this );
+                this.Controls.Add(chromeBrowser);
+                chromeBrowser.Dock = DockStyle.Fill;
 
-      chromeBrowser.RegisterAsyncJsObject( "Interop", Store );
+                Store = new Interop(chromeBrowser, this);
 
+                chromeBrowser.RegisterAsyncJsObject("Interop", Store);
+            }
+            else
+            {
+                Debug.WriteLine("For some reason, Cef didn't initialize", "SPK");
+            }
+
+        }
+
+        private void ChromeBrowser_IsBrowserInitializedChanged(object sender, IsBrowserInitializedChangedEventArgs e)
+        {
+            if (e.IsBrowserInitialized)
+                chromeBrowser.ShowDevTools();
+        }
+
+        private void OnClosing(object sender, EventArgs e)
+        {
+            chromeBrowser.Dispose();
+            Cef.Shutdown();
+            SpecklePlugIn.Instance.PanelUserControl = null;
+        }
+
+        /// <summary>
+        /// Returns the ID of this panel.
+        /// </summary>
+        public static Guid PanelId
+        {
+            get
+            {
+                return typeof(SpeckleRhinoUserControl).GUID;
+            }
+        }
     }
-
-    private void ChromeBrowser_IsBrowserInitializedChanged( object sender, IsBrowserInitializedChangedEventArgs e )
-    {
-      if ( e.IsBrowserInitialized )
-        chromeBrowser.ShowDevTools();
-    }
-
-    private void OnClosing( object sender, EventArgs e )
-    {
-      chromeBrowser.Dispose();
-      Cef.Shutdown();
-      SpecklePlugIn.Instance.PanelUserControl = null;
-    }
-
-    /// <summary>
-    /// Returns the ID of this panel.
-    /// </summary>
-    public static Guid PanelId
-    {
-      get
-      {
-        return typeof( SpeckleRhinoUserControl ).GUID;
-      }
-    }
-  }
 }
 

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
+using CefSharp;
 using Rhino;
 using Rhino.PlugIns;
 using Rhino.UI;
+using System.Reflection;
 
 namespace SpeckleRhino
 {
@@ -39,7 +42,32 @@ namespace SpeckleRhino
         {
             var panel_type = typeof(SpeckleRhinoUserControl);
             Panels.RegisterPanel(this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle);
+            InitializeCef();
             return base.OnLoad(ref errorMessage);
+        }
+
+        void InitializeCef()
+        {
+            Cef.EnableHighDPISupport();
+
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            string assemblyPath = Path.GetDirectoryName(assemblyLocation);
+            string pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
+
+            CefSettings settings = new CefSettings
+            {
+                LogSeverity = LogSeverity.Verbose,
+                LogFile = "ceflog.txt",
+                BrowserSubprocessPath = pathSubprocess,
+            };
+#if WINR5
+            //Not needed in Rhino 6
+            settings.CefCommandLineArgs.Add("disable-gpu", "1");
+#endif
+
+            // Initialize cef with the provided settings
+            if (!Cef.IsInitialized)
+                Cef.Initialize(settings);
         }
 
     }
