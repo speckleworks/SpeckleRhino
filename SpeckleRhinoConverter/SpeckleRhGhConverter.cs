@@ -128,7 +128,14 @@ namespace SpeckleRhinoConverter
       if ( encodedObject is GeometryBase )
       {
         var fullObj = encodedObject as GeometryBase;
-        fullObj.UserDictionary.ReplaceContentsWith( PropertiesToNative( _object.Properties ) );
+        try
+        {
+          fullObj.UserDictionary.ReplaceContentsWith( PropertiesToNative( _object.Properties ) );
+        }
+        catch
+        {
+          System.Diagnostics.Debug.WriteLine( "Failed to set dictionary." );
+        }
         return fullObj;
       }
 

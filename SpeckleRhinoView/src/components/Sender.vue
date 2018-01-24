@@ -39,8 +39,8 @@
             </v-tooltip>
           </v-fade-transition>
           </span>
-          <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> {{paused ? "(paused)" : ""}} updated:
-              <timeago :auto-update='10' :since='client.lastUpdate'></timeago></span>
+          <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> <span v-show='client.progressMessage==null'>{{paused ? "(paused)" : ""}} updated:
+              <timeago :auto-update='10' :since='client.lastUpdate'></timeago> </span>{{client.progressMessage}} </span>
           </div>
         </v-card-title>
       </v-flex>
@@ -65,9 +65,9 @@
       <v-layout align-center>
         <v-flex>Error: {{ client.error }}
           <v-tooltip left>
-            Force refresh.
-            <v-btn dark small fab flat @click.native='refreshStream' slot='activator' class='ma-0'>
-              <v-icon>refresh</v-icon>
+            Dismiss.
+            <v-btn dark small fab flat @click.native='hasError=false' slot='activator' class='ma-0'>
+              <v-icon>close</v-icon>
             </v-btn>
           </v-tooltip>
         </v-flex>

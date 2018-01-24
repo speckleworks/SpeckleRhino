@@ -318,29 +318,90 @@ namespace SpeckleGrasshopper
 
       var Converter = new RhinoConverter();
 
+      this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
+
       var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
          {
            if ( ObjectCache.ContainsKey( obj.Hash ) )
              return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };
            return obj;
-         } );
+         } ).ToList();
 
-      PayloadStreamUpdate payload = new PayloadStreamUpdate();
-      payload.Layers = BucketLayers;
-      payload.Name = BucketName;
-      payload.Objects = convertedObjects;
+      this.Message = String.Format( "Creating payloads");
 
-      Log += "Sending data update.";
+      long totalBucketSize = 0;
+      long currentBucketSize = 0;
+      List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
+      List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
+      List<SpeckleObject> allObjects = new List<SpeckleObject>();
 
-      var response = mySender.StreamUpdate( payload, mySender.StreamId );
+      foreach(SpeckleObject convertedObject in convertedObjects)
+      {
+        long size = RhinoConverter.getBytes( convertedObject ).Length;
+        currentBucketSize += size;
+        totalBucketSize += size;
+        currentBucketObjects.Add( convertedObject );
+
+        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
+        {
+          Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
+          objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+          currentBucketObjects = new List<SpeckleObject>();
+          currentBucketSize = 0;
+        }
+      }
+
+      if ( currentBucketObjects.Count > 0 )
+        objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+
+      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
+
+      if ( objectUpdatePayloads.Count > 100 )
+      {
+        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
+        return;
+      }
+
+      int k = 0;
+      List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
+      foreach ( var payload in objectUpdatePayloads )
+      {
+        this.Message = String.Format( "Sending payload\n{0} / {1}", k++, objectUpdatePayloads.Count );
+        responses.Add( mySender.ObjectCreateBulkAsync( payload ).GetAwaiter().GetResult() );
+      }
+
+      this.Message = "Updating stream...";
+
+      // create placeholders for stream update payload
+      List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
+      int m = 0;
+      foreach ( var myResponse in responses )
+        foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId } );
+
+      PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
+      streamUpdatePayload.Layers = BucketLayers;
+      streamUpdatePayload.Name = BucketName;
+      streamUpdatePayload.Objects = placeholders;
+
+      // set some base properties (will be overwritten)
+      var baseProps = new Dictionary<string, object>();
+      baseProps[ "units" ] = Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem.ToString();
+      baseProps[ "tolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+      baseProps[ "angleTolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
+      streamUpdatePayload.BaseProperties = baseProps;
+
+      var response = mySender.StreamUpdate( streamUpdatePayload, mySender.StreamId );
 
       mySender.BroadcastMessage( new { eventType = "update-global" } );
 
-      int k = 0;
-      foreach ( var obj in convertedObjects )
+      // put the objects in the cache 
+      int l = 0;
+
+      foreach ( var obj in streamUpdatePayload.Objects )
       {
-        obj.DatabaseId = response.Objects[ k++ ];
-        ObjectCache[ obj.Hash ] = obj;
+        obj.DatabaseId = response.Objects[ l ];
+        ObjectCache[ convertedObjects[ l ].Hash ] = placeholders[ l ];
+        l++;
       }
 
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
