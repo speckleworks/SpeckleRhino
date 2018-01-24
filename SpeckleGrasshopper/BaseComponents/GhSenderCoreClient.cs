@@ -307,19 +307,7 @@ namespace SpeckleGrasshopper
       DataSender.Start();
     }
 
-    private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
-    {
-      if ( MetadataSender.Enabled )
-      {
-        //  start the timer again, as we need to make sure we're updating
-        DataSender.Start();
-        return;
-      }
-
-      var Converter = new RhinoConverter();
-    }
-
-    private void DataSender_Elapsed2( object sender, ElapsedEventArgs e )
+    private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
       if ( MetadataSender.Enabled )
       {
@@ -330,14 +318,14 @@ namespace SpeckleGrasshopper
 
       var Converter = new RhinoConverter();
 
-      this.Message = String.Format( "Converting {0} objects", BucketObjects.Count );
+      this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
       var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
          {
            if ( ObjectCache.ContainsKey( obj.Hash ) )
              return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };
            return obj;
-         } );
+         } ).ToList();
 
       this.Message = String.Format( "Creating payloads");
 
@@ -377,29 +365,44 @@ namespace SpeckleGrasshopper
 
       int k = 0;
       List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
-      foreach ( var payload2 in objectUpdatePayloads )
+      foreach ( var payload in objectUpdatePayloads )
       {
-        this.Message = String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count );
-        responses.Add(mySender.ObjectCreateBulkAsync( payload2 ) );
+        this.Message = String.Format( "Sending payload\n{0} / {1}", k++, objectUpdatePayloads.Count );
+        responses.Add( mySender.ObjectCreateBulkAsync( payload ).GetAwaiter().GetResult() );
       }
 
+      this.Message = "Updating stream...";
 
-      PayloadStreamUpdate payload = new PayloadStreamUpdate();
-      payload.Layers = BucketLayers;
-      payload.Name = BucketName;
-      payload.Objects = convertedObjects;
+      // create placeholders for stream update payload
+      List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
+      int m = 0;
+      foreach ( var myResponse in responses )
+        foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId } );
 
-      Log += "Sending data update.";
+      PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
+      streamUpdatePayload.Layers = BucketLayers;
+      streamUpdatePayload.Name = BucketName;
+      streamUpdatePayload.Objects = placeholders;
 
-      var response = mySender.StreamUpdate( payload, mySender.StreamId );
+      // set some base properties (will be overwritten)
+      var baseProps = new Dictionary<string, object>();
+      baseProps[ "units" ] = Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem.ToString();
+      baseProps[ "tolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
+      baseProps[ "angleTolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
+      streamUpdatePayload.BaseProperties = baseProps;
+
+      var response = mySender.StreamUpdate( streamUpdatePayload, mySender.StreamId );
 
       mySender.BroadcastMessage( new { eventType = "update-global" } );
 
-      int k = 0;
-      foreach ( var obj in convertedObjects )
+      // put the objects in the cache 
+      int l = 0;
+
+      foreach ( var obj in streamUpdatePayload.Objects )
       {
-        obj.DatabaseId = response.Objects[ k++ ];
-        ObjectCache[ obj.Hash ] = obj;
+        obj.DatabaseId = response.Objects[ l ];
+        ObjectCache[ convertedObjects[ l ].Hash ] = placeholders[ l ];
+        l++;
       }
 
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
