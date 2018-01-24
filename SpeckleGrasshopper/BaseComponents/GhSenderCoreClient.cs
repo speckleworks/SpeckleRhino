@@ -307,7 +307,19 @@ namespace SpeckleGrasshopper
       DataSender.Start();
     }
 
-    private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
+    private void DataSender_Elapsed(object sender, ElapsedEventArgs e)
+    {
+      if ( MetadataSender.Enabled )
+      {
+        //  start the timer again, as we need to make sure we're updating
+        DataSender.Start();
+        return;
+      }
+
+      var Converter = new RhinoConverter();
+    }
+
+    private void DataSender_Elapsed2( object sender, ElapsedEventArgs e )
     {
       if ( MetadataSender.Enabled )
       {
@@ -318,12 +330,59 @@ namespace SpeckleGrasshopper
 
       var Converter = new RhinoConverter();
 
+      this.Message = String.Format( "Converting {0} objects", BucketObjects.Count );
+
       var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
          {
            if ( ObjectCache.ContainsKey( obj.Hash ) )
              return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };
            return obj;
          } );
+
+      this.Message = String.Format( "Creating payloads");
+
+      long totalBucketSize = 0;
+      long currentBucketSize = 0;
+      List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
+      List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
+      List<SpeckleObject> allObjects = new List<SpeckleObject>();
+
+      foreach(SpeckleObject convertedObject in convertedObjects)
+      {
+        long size = RhinoConverter.getBytes( convertedObject ).Length;
+        currentBucketSize += size;
+        totalBucketSize += size;
+        currentBucketObjects.Add( convertedObject );
+
+        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
+        {
+          Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
+          objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+          currentBucketObjects = new List<SpeckleObject>();
+          currentBucketSize = 0;
+        }
+
+      }
+
+      if ( currentBucketObjects.Count > 0 )
+        objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+
+      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
+
+      if ( objectUpdatePayloads.Count > 100 )
+      {
+        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
+        return;
+      }
+
+      int k = 0;
+      List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
+      foreach ( var payload2 in objectUpdatePayloads )
+      {
+        this.Message = String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count );
+        responses.Add(mySender.ObjectCreateBulkAsync( payload2 ) );
+      }
+
 
       PayloadStreamUpdate payload = new PayloadStreamUpdate();
       payload.Layers = BucketLayers;
