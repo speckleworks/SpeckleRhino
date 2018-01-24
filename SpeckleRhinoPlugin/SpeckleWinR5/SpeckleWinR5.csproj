@@ -170,9 +170,6 @@
     <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\index.html" DestinationFolder="$(TargetDir)\app" />
     <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\dist\build.js" DestinationFolder="$(TargetDir)\app\dist" />
   </Target>
-  <PropertyGroup>
-    <CefSharpTargetDir>$(TargetDir)Cef</CefSharpTargetDir>
-  </PropertyGroup>
   <Target Name="AfterBuild">
     <ItemGroup>
      <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
