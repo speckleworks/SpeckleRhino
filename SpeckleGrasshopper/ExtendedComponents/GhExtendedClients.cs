@@ -14,6 +14,7 @@ using System.Dynamic;
 using System.Windows.Forms;
 using Grasshopper.Kernel.Components;
 using Grasshopper.Kernel.Types;
+using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper
 {
@@ -332,6 +333,14 @@ namespace SpeckleGrasshopper
     {
       get { return new Guid( "{F4BCAF24-9F27-4DDE-8879-66075CA67719}" ); }
     }
+
+    protected override System.Drawing.Bitmap Icon
+    {
+      get
+      {
+        return Resources.GenericIconXS;
+      }
+    }
   }
 
   public class PointController : GH_Component
@@ -424,38 +433,6 @@ namespace SpeckleGrasshopper
       {
         return Properties.Resources.GenericIconXS;
       }
-    }
-  }
-
-  public class ExtenededReceiver : GhReceiverClient
-  {
-    public ExtenededReceiver( )
-    {
-      this.Category = "Speckle";
-      this.SubCategory = "Extensions";
-      this.Name = "Extended Receiver";
-      this.NickName = "Extended Receiver";
-      this.Description = "Example of how you can extend a component. It will pop a messagebox on all ws messages - not very useful!";
-    }
-
-
-    public override void OnWsMessage( object source, SpeckleCore.SpeckleEventArgs e )
-    {
-      base.OnWsMessage( source, e );
-      System.Windows.MessageBox.Show( String.Format( "Wow, got a custom message: {0}!", e.EventObject.args.eventType ) );
-    }
-
-    protected override System.Drawing.Bitmap Icon
-    {
-      get
-      {
-        return Properties.Resources.receiver_2;
-      }
-    }
-
-    public override Guid ComponentGuid
-    {
-      get { return new Guid( "{36728fa7-ab47-40a1-b47c-c072da646eb7}" ); }
     }
   }
 }
