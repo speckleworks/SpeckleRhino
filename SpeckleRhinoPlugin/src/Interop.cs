@@ -250,7 +250,7 @@ namespace SpeckleRhino
 
     public bool AddSenderClientFromSelection( string _payload )
     {
-      var mySender = new RhinoSender( _payload, this, SenderType.BySelection );
+      var mySender = new RhinoSender( _payload, this);
       return true;
     }
 
