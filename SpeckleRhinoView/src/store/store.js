@@ -97,7 +97,7 @@ export default new Vuex.Store( {
     SET_PROGRESS_MESSAGE( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )
       if ( !client ) return console.warn( 'No client found! ' + payload.streamId )
-      client.progressMessage = payload
+      client.progressMessage = payload.message
     },
     SET_ERROR( state, payload ) {
       let client = state.clients.find( c => c.stream.streamId === payload.streamId )

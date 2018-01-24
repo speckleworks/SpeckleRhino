@@ -86,6 +86,7 @@ new Vue( {
     } )
 
     EventBus.$on( 'client-progress-message', ( streamId, data ) => {
+      console.log( 'client-progress-message', data )
       this.$store.commit( 'SET_PROGRESS_MESSAGE', { streamId: streamId, message: data } )
     } )
 

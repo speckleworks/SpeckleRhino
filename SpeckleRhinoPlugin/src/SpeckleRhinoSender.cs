@@ -312,7 +312,8 @@ namespace SpeckleRhino
       IsSendingUpdate = false;
       if ( Expired )
       {
-        DataSender.Start();
+        //DataSender.Start();
+        SendStaggeredUpdate();
       }
       Expired = false;
     }
@@ -403,9 +404,12 @@ namespace SpeckleRhino
       }
 
       IsSendingUpdate = true;
+
       Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
 
       var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false ).OrderBy( obj => obj.Attributes.LayerIndex );
+
+      Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Converting " + objs.Count() + " objects..." );
 
       List<SpeckleLayer> pLayers = new List<SpeckleLayer>();
       List<SpeckleObject> convertedObjects = new List<SpeckleObject>();
@@ -445,6 +449,8 @@ namespace SpeckleRhino
           spkl.ObjectCount++;
         }
 
+        count++;
+
         // object conversion
         var convertedObject = converter.ToSpeckle( obj.Geometry );
         convertedObject.ApplicationId = obj.Id.ToString();
@@ -464,7 +470,7 @@ namespace SpeckleRhino
         totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );
 
-        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb
+        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
           objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
@@ -479,27 +485,24 @@ namespace SpeckleRhino
 
       Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
 
-      // create bulk object creation tasks
-      Task<ResponsePostObjects>[ ] updateTasks = new Task<ResponsePostObjects>[ objectUpdatePayloads.Count ]; int k = 0;
-      foreach ( var payload in objectUpdatePayloads )
-      {
-        updateTasks[ k++ ] = Client.ObjectCreateBulkAsync( payload );
-      }
-
       if ( objectUpdatePayloads.Count > 100 )
       {
         // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
-        Context.NotifySpeckleFrame( "client-error", StreamId, "This is a humongous update, in the range of ~100mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
+        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." ) );
         IsSendingUpdate = false;
         return;
       }
 
-      for ( int i = 0; i < updateTasks.Length; i++ )
+      // create bulk object creation tasks
+      int k = 0;
+      List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
+      foreach ( var payload in objectUpdatePayloads )
       {
-        Debug.WriteLine( "Sending update payload # " + i + " out of " + updateTasks.Length );
-        Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", i, updateTasks.Length ) );
-        await updateTasks[ i ];
+        Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count ) );
+        responses.Add( await Client.ObjectCreateBulkAsync( payload ) );
       }
+
+      Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Updating stream..." );
 
       // finalise layer creation
       foreach ( var layer in pLayers )
@@ -508,8 +511,8 @@ namespace SpeckleRhino
       // create placeholders for stream update payload
       List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
       int m = 0;
-      foreach ( Task<ResponsePostObjects> myTask in updateTasks )
-        foreach ( string dbId in myTask.Result.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId, ApplicationId = allObjects[ m++ ].ApplicationId } );
+      foreach ( var myResponse in responses )
+        foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId, ApplicationId = allObjects[ m++ ].ApplicationId } );
 
       // create stream update payload
       PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
@@ -524,7 +527,6 @@ namespace SpeckleRhino
       streamUpdatePayload.BaseProperties = baseProps;
 
       // push it to the server yo!
-      Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Updating stream..." );
       ResponseStreamUpdate response = null;
       try
       {
@@ -532,7 +534,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, err.Message );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
         IsSendingUpdate = false;
         return;
       }
@@ -553,6 +555,8 @@ namespace SpeckleRhino
 
       Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
       Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+
+      Client.BroadcastMessage( new { eventType = "update-global" } );
 
       IsSendingUpdate = false;
       if ( Expired )
