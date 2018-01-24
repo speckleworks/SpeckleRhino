@@ -238,6 +238,9 @@ namespace SpeckleGrasshopper
         case "update-meta":
           UpdateMeta();
           break;
+        case "update-name":
+          UpdateMeta();
+          break;
         case "update-children":
           UpdateChildren();
           break;
@@ -257,6 +260,7 @@ namespace SpeckleGrasshopper
 
       // TODO: Implement cache
       // we can safely omit the displayValue, since this is rhino!
+      this.Message = "Getting objects";
       PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
       payload.Objects = getStream.Result.Stream.Objects.Where( o => !ObjectCache.ContainsKey( o ) );
       myReceiver.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
@@ -270,6 +274,7 @@ namespace SpeckleGrasshopper
            foreach ( var objId in getStream.Result.Stream.Objects )
              SpeckleObjects.Add( ObjectCache[ objId ] );
 
+           this.Message = "Converting objects";
            ConvertedObjects = Converter.ToNative( SpeckleObjects ).ToList();
 
            if(ConvertedObjects.Count != SpeckleObjects.Count)
@@ -277,6 +282,7 @@ namespace SpeckleGrasshopper
              this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Some objects failed to convert." );
            }
 
+           this.Message = "Updating...";
            UpdateOutputStructure();
 
            Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );

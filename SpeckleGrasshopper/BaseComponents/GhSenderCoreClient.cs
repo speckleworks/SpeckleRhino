@@ -349,7 +349,6 @@ namespace SpeckleGrasshopper
           currentBucketObjects = new List<SpeckleObject>();
           currentBucketSize = 0;
         }
-
       }
 
       if ( currentBucketObjects.Count > 0 )
