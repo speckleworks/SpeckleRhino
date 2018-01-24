@@ -139,21 +139,24 @@
   <ItemGroup>
     <None Include="Resources\Speckle.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
+       Other similar extension points exist, see Microsoft.Common.targets.  -->
   <Target Name="BeforeBuild">
-  </Target> -->
+    <MakeDir Directories="$(TargetDir)\app\dist" />
+    <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\index.html" DestinationFolder="$(TargetDir)\app" />
+    <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\dist\build.js" DestinationFolder="$(TargetDir)\app\dist" />
+  </Target>
+  <PropertyGroup>
+    <CefSharpTargetDir>$(TargetDir)Cef</CefSharpTargetDir>
+  </PropertyGroup>
   <Target Name="AfterBuild">
+    <ItemGroup>
+     <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+    </ItemGroup>
     <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
       <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
     </Copy>
-	<MakeDir Directories="$(SolutionDir)\$(ConfigurationName)\app\dist"/>
-	<Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\index.html" DestinationFolder="$(SolutionDir)\$(ConfigurationName)\app"/>
-	<Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\dist\build.js" DestinationFolder="$(SolutionDir)\$(ConfigurationName)\app\dist"/>
   </Target>
   <PropertyGroup>
     <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"

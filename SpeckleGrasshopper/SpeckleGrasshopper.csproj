@@ -131,15 +131,15 @@
     <Content Include="Resources\GenericIcon.png" />
     <None Include="Resources\GenericIconXS.png" />
   </ItemGroup>
-  <ItemGroup>
-    <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>  -->
   <Target Name="AfterBuild">
+    <ItemGroup>
+      <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+    </ItemGroup>
     <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
       <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
     </Copy>
