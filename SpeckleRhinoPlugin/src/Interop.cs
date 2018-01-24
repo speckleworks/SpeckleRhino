@@ -396,6 +396,7 @@ namespace SpeckleRhino
       if ( myClient != null && myClient is RhinoSender )
       {
         ( ( RhinoSender ) myClient ).Client.Stream.Name = name;
+        ( ( RhinoSender ) myClient ).Client.BroadcastMessage( new { eventType = "update-name" } );
       }
     }
 

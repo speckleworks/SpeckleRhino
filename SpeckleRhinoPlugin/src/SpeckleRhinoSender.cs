@@ -90,7 +90,6 @@ namespace SpeckleRhino
 
               InitTrackedObjects( InitPayload );
               DataSender.Start();
-              //SendUpdate( CreateUpdatePayload() );
             } );
 
     }
@@ -518,6 +517,7 @@ namespace SpeckleRhino
       PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
       streamUpdatePayload.Layers = pLayers;
       streamUpdatePayload.Objects = placeholders;
+      streamUpdatePayload.Name = Client.Stream.Name;
 
       // set some base properties (will be overwritten)
       var baseProps = new Dictionary<string, object>();

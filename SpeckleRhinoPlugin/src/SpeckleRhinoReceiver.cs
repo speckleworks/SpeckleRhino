@@ -95,6 +95,9 @@ namespace SpeckleRhino
         case "update-meta":
           UpdateMeta();
           break;
+        case "update-name":
+          UpdateName();
+          break;
         case "update-object":
           break;
         case "update-children":
@@ -108,6 +111,14 @@ namespace SpeckleRhino
     #endregion
 
     #region updates
+
+    public void UpdateName()
+    {
+      var response = Client.StreamGetNameAsync(StreamId);
+      Client.Stream.Name = response.Result.Name;
+      Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() ); // i'm lazy
+    }
+
     public void UpdateMeta( )
     {
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Metadata update received." ) );
