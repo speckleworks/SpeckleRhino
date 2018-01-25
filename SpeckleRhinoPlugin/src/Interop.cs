@@ -27,8 +27,7 @@ namespace SpeckleRhino
 
   public class Interop
   {
-    private static ChromiumWebBrowser Browser;
-    private static Control mainForm;
+    public ChromiumWebBrowser Browser;
 
     private List<SpeckleAccount> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
@@ -37,7 +36,7 @@ namespace SpeckleRhino
 
     public bool SpeckleIsReady = false;
 
-    public Interop( ChromiumWebBrowser _originalBrowser, Control _mainForm )
+    public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
       JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
@@ -46,7 +45,6 @@ namespace SpeckleRhino
       };
 
       Browser = _originalBrowser;
-      mainForm = _mainForm;
 
       UserAccounts = new List<SpeckleAccount>();
 
