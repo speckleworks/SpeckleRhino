@@ -29,6 +29,7 @@ Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "SpeckleRhinoView", "Speckle
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFiles", "{E75869A5-02C1-405D-91E8-30DF61454288}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		README.md = README.md
 	EndProjectSection
 EndProject

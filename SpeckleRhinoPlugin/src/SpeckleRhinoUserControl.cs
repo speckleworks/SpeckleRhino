@@ -64,7 +64,6 @@ namespace SpeckleRhino
 #else
 
             //#IF RELEASE
-            // TODO: Load app from local file
 
             var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
             Debug.WriteLine(path, "SPK");
