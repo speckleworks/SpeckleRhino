@@ -25,10 +25,9 @@ namespace SpeckleRhino
   // If CEF will be removed, porting to url hacks will be necessary,
   // so let's keep the methods as simple as possible.
 
-  public class Interop
+  public class Interop : IDisposable
   {
-    private static ChromiumWebBrowser Browser;
-    private static Control mainForm;
+    public ChromiumWebBrowser Browser;
 
     private List<SpeckleAccount> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
@@ -37,7 +36,7 @@ namespace SpeckleRhino
 
     public bool SpeckleIsReady = false;
 
-    public Interop( ChromiumWebBrowser _originalBrowser, Control _mainForm )
+    public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
       JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
@@ -46,7 +45,6 @@ namespace SpeckleRhino
       };
 
       Browser = _originalBrowser;
-      mainForm = _mainForm;
 
       UserAccounts = new List<SpeckleAccount>();
 
@@ -56,55 +54,86 @@ namespace SpeckleRhino
 
       ReadUserAccounts();
 
-      RhinoDoc.NewDocument += ( sender, e ) =>
-      {
-        Debug.WriteLine( "NEW DOC" );
-        NotifySpeckleFrame( "purge-clients", "", "" );
-        RemoveAllClients();
-      };
+      RhinoDoc.NewDocument += RhinoDoc_NewDocument;
+        
+      RhinoDoc.EndOpenDocument += RhinoDoc_EndOpenDocument;
 
-      RhinoDoc.EndOpenDocument += ( sender, e ) =>
-      {
-              // this seems to cover the copy paste issues
-              if ( e.Merge ) return;
-              // purge clients from ui
-              NotifySpeckleFrame( "client-purge", "", "" );
-              // purge clients from here
-              RemoveAllClients();
-              // read clients from document strings
-              InstantiateFileClients();
-      };
+      RhinoDoc.BeginSaveDocument += RhinoDoc_BeginSaveDocument;
 
-      RhinoDoc.BeginSaveDocument += ( sender, e ) =>
-      {
-        Debug.WriteLine( "BEGIN SAVE DOC" );
-        SaveFileClients();
-      };
+      RhinoDoc.SelectObjects += RhinoDoc_SelectObjects;
 
-      // selection stuff
-      RhinoDoc.SelectObjects += ( sender, e ) =>
-      {
-        if ( SpeckleIsReady )
-          NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
-      };
+      RhinoDoc.DeselectObjects += RhinoDoc_DeselectObjects;
 
-      RhinoDoc.DeselectObjects += ( sender, e ) =>
-      {
-        if ( SpeckleIsReady )
-          NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
-      };
+      RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAllObjects;
 
-      RhinoDoc.DeselectAllObjects += ( sender, e ) =>
-      {
-        if ( SpeckleIsReady )
-          NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
-      };
-
-      RhinoApp.Idle += ( sender, e ) =>
-      {
-              //Debug.WriteLine("App Idle event fired.");
-            };
     }
+
+    public void Dispose( )
+    {
+
+      this.RemoveAllClients();
+
+      RhinoDoc.NewDocument -= RhinoDoc_NewDocument;
+
+      RhinoDoc.EndOpenDocument -= RhinoDoc_EndOpenDocument;
+
+      RhinoDoc.BeginSaveDocument -= RhinoDoc_BeginSaveDocument;
+
+      RhinoDoc.SelectObjects -= RhinoDoc_SelectObjects;
+
+      RhinoDoc.DeselectObjects -= RhinoDoc_DeselectObjects;
+
+      RhinoDoc.DeselectAllObjects -= RhinoDoc_DeselectAllObjects;
+    }
+
+    #region Global Events
+
+    private void RhinoDoc_NewDocument( object sender, DocumentEventArgs e )
+    {
+      Debug.WriteLine( "NEW DOC" );
+      NotifySpeckleFrame( "purge-clients", "", "" );
+      RemoveAllClients();
+    }
+
+    private void RhinoDoc_DeselectAllObjects( object sender, RhinoDeselectAllObjectsEventArgs e )
+    {
+      if ( SpeckleIsReady )
+        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+    }
+
+    private void RhinoDoc_DeselectObjects( object sender, RhinoObjectSelectionEventArgs e )
+    {
+      if ( SpeckleIsReady )
+        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+    }
+
+    private void RhinoDoc_SelectObjects( object sender, RhinoObjectSelectionEventArgs e )
+    {
+      Debug.WriteLine( "SELECT OBJS" );
+      if ( SpeckleIsReady )
+        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+    }
+
+    private void RhinoDoc_EndOpenDocument( object sender, DocumentOpenEventArgs e )
+    {
+      // this seems to cover the copy paste issues
+      if ( e.Merge ) return;
+      // purge clients from ui
+      NotifySpeckleFrame( "client-purge", "", "" );
+      // purge clients from here
+      RemoveAllClients();
+      // read clients from document strings
+      InstantiateFileClients();
+    }
+
+    private void RhinoDoc_BeginSaveDocument( object sender, DocumentSaveEventArgs e )
+    {
+      Debug.WriteLine( "BEGIN SAVE DOC" );
+      SaveFileClients();
+    }
+
+
+    #endregion
 
     #region General Utils
 
@@ -166,8 +195,6 @@ namespace SpeckleRhino
           ms.Seek( 0, SeekOrigin.Begin );
           RhinoReceiver client = ( RhinoReceiver ) new BinaryFormatter().Deserialize( ms );
           client.Context = this;
-          // is there maybe a race condition here, where on ready is triggered 
-          // faster than the context get set?
         }
       }
 
@@ -220,7 +247,7 @@ namespace SpeckleRhino
 
       strPath = strPath + @"\SpeckleSettings\";
 
-      string fileName = pieces[0] + "." + pieces[2] + ".txt";
+      string fileName = pieces[ 0 ] + "." + pieces[ 2 ] + ".txt";
 
       System.IO.StreamWriter file = new System.IO.StreamWriter( strPath + fileName );
       file.WriteLine( payload );
@@ -239,12 +266,6 @@ namespace SpeckleRhino
     public bool AddReceiverClient( string _payload )
     {
       var myReceiver = new RhinoReceiver( _payload, this );
-      return true;
-    }
-
-    public bool AddSenderClientFromLayers( string _payload )
-    {
-      // TODO
       return true;
     }
 
@@ -282,11 +303,15 @@ namespace SpeckleRhino
     public void NotifySpeckleFrame( string EventType, string StreamId, string EventInfo )
     {
       if ( !SpeckleIsReady )
-      {
         return;
-      }
       var script = string.Format( "window.EventBus.$emit('{0}', '{1}', '{2}')", EventType, StreamId, EventInfo );
+      try { 
       Browser.GetMainFrame().EvaluateScriptAsync( script );
+      }
+      catch
+      {
+        Debug.WriteLine( "For some reason, this browser was not initialised." );
+      }
     }
     #endregion
 
@@ -390,7 +415,7 @@ namespace SpeckleRhino
       System.Diagnostics.Process.Start( url );
     }
 
-    public void setName( string clientId, string name)
+    public void setName( string clientId, string name )
     {
       var myClient = UserClients.FirstOrDefault( c => c.GetClientId() == clientId );
       if ( myClient != null && myClient is RhinoSender )
@@ -399,7 +424,6 @@ namespace SpeckleRhino
         ( ( RhinoSender ) myClient ).Client.BroadcastMessage( new { eventType = "update-name" } );
       }
     }
-
 
     #endregion
 
@@ -461,7 +485,6 @@ namespace SpeckleRhino
 
       return JsonConvert.SerializeObject( layerInfoList );
     }
-
     #endregion
   }
 
