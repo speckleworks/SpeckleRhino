@@ -40,12 +40,15 @@ namespace SpeckleRhino
     private void RhinoDoc_BeginOpenDocument( object sender, DocumentOpenEventArgs e )
     {
       MessageBox.Show( "Begin open doc!" );
+#if WINR5
+#else
       Store?.Dispose();
       Store = null;
 
       chromeBrowser.Dispose();
       Rhino.RhinoDoc.BeginOpenDocument -= RhinoDoc_BeginOpenDocument;
       this.Dispose();
+#endif
     }
 
     public void InitializeChromium( )
