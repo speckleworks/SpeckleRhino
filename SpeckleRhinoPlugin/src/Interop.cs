@@ -250,7 +250,7 @@ namespace SpeckleRhino
 
     public bool AddSenderClientFromSelection( string _payload )
     {
-      var mySender = new RhinoSender( _payload, this, SenderType.BySelection );
+      var mySender = new RhinoSender( _payload, this );
       return true;
     }
 
@@ -396,6 +396,7 @@ namespace SpeckleRhino
       if ( myClient != null && myClient is RhinoSender )
       {
         ( ( RhinoSender ) myClient ).Client.Stream.Name = name;
+        ( ( RhinoSender ) myClient ).Client.BroadcastMessage( new { eventType = "update-name" } );
       }
     }
 

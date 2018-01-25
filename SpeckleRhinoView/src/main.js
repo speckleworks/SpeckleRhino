@@ -43,7 +43,7 @@ new Vue( {
   mounted( ) {
     // Populate with existing accounts
     this.$store.dispatch( 'getUserAccounts' )
-    console.log( this.$store ) 
+    console.log( this.$store )
     EventBus.$on( 'client-purge', ( ) => {
       console.log( 'purge-purge' )
       this.$store.commit( 'PURGE_CLIENTS' )
@@ -85,6 +85,11 @@ new Vue( {
       this.$store.commit( 'SET_LOADING', { streamId: streamId, status: false } )
     } )
 
+    EventBus.$on( 'client-progress-message', ( streamId, data ) => {
+      console.log( 'client-progress-message', data )
+      this.$store.commit( 'SET_PROGRESS_MESSAGE', { streamId: streamId, message: data } )
+    } )
+
     EventBus.$on( 'client-expired', ( streamId, data ) => {
       console.log( 'client-expired', streamId, data )
       this.$store.commit( 'SET_EXPIRED', { streamId: streamId, status: true } )
@@ -104,9 +109,9 @@ new Vue( {
       this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
     } )
 
-    EventBus.$on( 'set-gl-load', (streamId, state ) => {
-      this.$store.commit('SET_GL_LOAD', state === 'true' )
-    })
+    EventBus.$on( 'set-gl-load', ( streamId, state ) => {
+      this.$store.commit( 'SET_GL_LOAD', state === 'true' )
+    } )
 
     // tell .net that the app is ± ready.
     Interop.appReady( )
