@@ -27,11 +27,15 @@ namespace SpeckleRhino
       InitializeComponent();
       // Start the browser after initialize global component
       InitializeChromium();
-      
+
       // Set the user control property on our plug-in
       SpecklePlugIn.Instance.PanelUserControl = this;
 
+#if WINR5
+#else
       Rhino.RhinoDoc.BeginOpenDocument += RhinoDoc_BeginOpenDocument;
+#endif
+
     }
 
     // important to flush this before any open happens:
@@ -39,25 +43,21 @@ namespace SpeckleRhino
     // it still exists - somewhere. 
     private void RhinoDoc_BeginOpenDocument( object sender, DocumentOpenEventArgs e )
     {
-      MessageBox.Show( "Begin open doc!" );
-#if WINR5
-#else
       Store?.Dispose();
       Store = null;
 
       chromeBrowser.Dispose();
       Rhino.RhinoDoc.BeginOpenDocument -= RhinoDoc_BeginOpenDocument;
       this.Dispose();
-#endif
     }
 
     public void InitializeChromium( )
     {
-      MessageBox.Show( "Initialising Chromium! " + Cef.IsInitialized );
       if ( Cef.IsInitialized )
       {
 
 #if DEBUG
+
         HttpWebRequest request = ( HttpWebRequest ) WebRequest.Create( @"http://localhost:9090/" );
         request.Timeout = 100;
         request.Method = "HEAD";
@@ -74,20 +74,22 @@ namespace SpeckleRhino
           // IF DIMITRIE ON PARALLELS
           chromeBrowser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
         }
+
 #else
-            var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
-            Debug.WriteLine(path, "SPK");
+        
+        var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
+        Debug.WriteLine(path, "SPK");
 
-            var indexPath = string.Format(@"{0}\app\index.html", path);
+        var indexPath = string.Format(@"{0}\app\index.html", path);
 
-            if (!File.Exists(indexPath))
-                Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
+        if (!File.Exists(indexPath))
+          Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
 
-            indexPath = indexPath.Replace("\\", "/");
+         indexPath = indexPath.Replace("\\", "/");
 
-            chromeBrowser = new ChromiumWebBrowser(indexPath);
+         chromeBrowser = new ChromiumWebBrowser(indexPath);
 
-            //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
+         //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
 
         // Allow the use of local resources in the browser

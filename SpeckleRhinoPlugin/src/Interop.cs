@@ -195,8 +195,6 @@ namespace SpeckleRhino
           ms.Seek( 0, SeekOrigin.Begin );
           RhinoReceiver client = ( RhinoReceiver ) new BinaryFormatter().Deserialize( ms );
           client.Context = this;
-          // is there maybe a race condition here, where on ready is triggered 
-          // faster than the context get set?
         }
       }
 
@@ -268,12 +266,6 @@ namespace SpeckleRhino
     public bool AddReceiverClient( string _payload )
     {
       var myReceiver = new RhinoReceiver( _payload, this );
-      return true;
-    }
-
-    public bool AddSenderClientFromLayers( string _payload )
-    {
-      // TODO
       return true;
     }
 
@@ -432,7 +424,6 @@ namespace SpeckleRhino
         ( ( RhinoSender ) myClient ).Client.BroadcastMessage( new { eventType = "update-name" } );
       }
     }
-
 
     #endregion
 
