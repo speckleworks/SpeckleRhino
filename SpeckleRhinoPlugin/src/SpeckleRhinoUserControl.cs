@@ -27,12 +27,25 @@ namespace SpeckleRhino
       InitializeComponent();
       // Start the browser after initialize global component
       InitializeChromium();
-
+      
       // Set the user control property on our plug-in
       SpecklePlugIn.Instance.PanelUserControl = this;
 
-      //When Rhino closes, we need to shutdown Cef.
-      RhinoApp.Closing += OnClosing;
+      Rhino.RhinoDoc.BeginOpenDocument += RhinoDoc_BeginOpenDocument;
+    }
+
+    // important to flush this before any open happens:
+    // somehow this instance of UserControl never really gets disposed.
+    // it still exists - somewhere. 
+    private void RhinoDoc_BeginOpenDocument( object sender, DocumentOpenEventArgs e )
+    {
+      MessageBox.Show( "Begin open doc!" );
+      Store?.Dispose();
+      Store = null;
+
+      chromeBrowser.Dispose();
+      Rhino.RhinoDoc.BeginOpenDocument -= RhinoDoc_BeginOpenDocument;
+      this.Dispose();
     }
 
     public void InitializeChromium( )
@@ -40,7 +53,7 @@ namespace SpeckleRhino
       MessageBox.Show( "Initialising Chromium! " + Cef.IsInitialized );
       if ( Cef.IsInitialized )
       {
-        // Create a browser component.
+
 #if DEBUG
         HttpWebRequest request = ( HttpWebRequest ) WebRequest.Create( @"http://localhost:9090/" );
         request.Timeout = 100;
@@ -99,14 +112,6 @@ namespace SpeckleRhino
         Debug.WriteLine( "For some reason, Cef didn't initialize", "SPK" );
       }
 
-    }
-
-    private void OnClosing( object sender, EventArgs e )
-    {
-      MessageBox.Show( "OnClosing - cef will shutdown!" );
-      chromeBrowser.Dispose();
-      Cef.Shutdown();
-      SpecklePlugIn.Instance.PanelUserControl = null;
     }
 
     /// <summary>
