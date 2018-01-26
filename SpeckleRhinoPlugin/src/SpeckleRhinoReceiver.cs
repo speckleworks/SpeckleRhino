@@ -217,7 +217,7 @@ namespace SpeckleRhino
                 count++;
             }
 
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         public SpeckleLayer GetLayerFromIndex(int index)
@@ -366,7 +366,7 @@ namespace SpeckleRhino
                 }
             }
 
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         public void BakeLayer(string layerId)
@@ -413,7 +413,7 @@ namespace SpeckleRhino
                     }
                 }
             }
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         #endregion
@@ -428,7 +428,7 @@ namespace SpeckleRhino
         public void ToggleVisibility(bool status)
         {
             this.Display.Enabled = status;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         public void ToggleLayerHover(string layerId, bool status)
@@ -442,7 +442,7 @@ namespace SpeckleRhino
             }
             else
                 Display.HoverRange = null;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         public void ToggleLayerVisibility(string layerId, bool status)
@@ -452,7 +452,7 @@ namespace SpeckleRhino
 
             for (int i = (int)myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++)
                 Display.VisibleList[i] = status;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
         #endregion
 
@@ -462,14 +462,14 @@ namespace SpeckleRhino
         {
             Client.Dispose(delete);
             Display.Enabled = false;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         public void Dispose()
         {
             Client.Dispose();
             Display.Enabled = false;
-            Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+            Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
         }
 
         protected RhinoReceiver(SerializationInfo info, StreamingContext context)

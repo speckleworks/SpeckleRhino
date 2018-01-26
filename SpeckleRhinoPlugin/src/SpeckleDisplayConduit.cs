@@ -77,7 +77,9 @@ namespace SpeckleRhino
       base.PostDrawObjects( e );
       int count = 0;
 
-      foreach ( var obj in Geometry )
+      var LocalCopy = Geometry.ToArray();
+
+      foreach ( var obj in LocalCopy )
       {
         if ( VisibleList[ count ] && obj != null && !obj.IsDocumentControlled)
           switch ( obj.ObjectType )
@@ -135,11 +137,13 @@ namespace SpeckleRhino
       base.DrawOverlay( e );
       if ( HoverRange == null ) return;
 
+      var LocalCopy = Geometry.ToArray();
+
       for ( int i = ( int ) HoverRange.Value.T0; i < HoverRange.Value.T1; i++ )
       {
-        if ( Geometry[ i ] != null )
+        if ( LocalCopy[ i ] != null )
         {
-          var obj = Geometry[ i ];
+          var obj = LocalCopy[ i ];
           if ( obj.IsDocumentControlled ) continue;
 
           switch ( obj.ObjectType)

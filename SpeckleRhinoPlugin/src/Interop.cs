@@ -55,7 +55,7 @@ namespace SpeckleRhino
       ReadUserAccounts();
 
       RhinoDoc.NewDocument += RhinoDoc_NewDocument;
-        
+
       RhinoDoc.EndOpenDocument += RhinoDoc_EndOpenDocument;
 
       RhinoDoc.BeginSaveDocument += RhinoDoc_BeginSaveDocument;
@@ -68,7 +68,7 @@ namespace SpeckleRhino
 
     }
 
-    public void SetBrowser(ChromiumWebBrowser _Browser)
+    public void SetBrowser( ChromiumWebBrowser _Browser )
     {
       Browser = _Browser;
     }
@@ -121,6 +121,7 @@ namespace SpeckleRhino
 
     private void RhinoDoc_EndOpenDocument( object sender, DocumentOpenEventArgs e )
     {
+      Debug.WriteLine( "END OPEN DOC" );
       // this seems to cover the copy paste issues
       if ( e.Merge ) return;
       // purge clients from ui
@@ -189,10 +190,17 @@ namespace SpeckleRhino
 
     public void InstantiateFileClients( )
     {
+      if ( !SpeckleIsReady ) return;
+
+      Debug.WriteLine( "Instantiate file clients." );
+
       string[ ] receiverKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames( "speckle-client-receivers" );
 
       foreach ( string rec in receiverKeys )
       {
+        //if ( UserClients.Any( cl => cl.GetClientId() == rec ) )
+        //  continue;
+
         byte[ ] serialisedClient = Convert.FromBase64String( RhinoDoc.ActiveDoc.Strings.GetValue( "speckle-client-receivers", rec ) );
         using ( var ms = new MemoryStream() )
         {
@@ -207,6 +215,9 @@ namespace SpeckleRhino
 
       foreach ( string sen in senderKeys )
       {
+        //if ( UserClients.Any( cl => cl.GetClientId() == sen ) )
+        //  continue;
+
         byte[ ] serialisedClient = Convert.FromBase64String( RhinoDoc.ActiveDoc.Strings.GetValue( "speckle-client-senders", sen ) );
 
         using ( var ms = new MemoryStream() )
@@ -302,16 +313,26 @@ namespace SpeckleRhino
       return true;
     }
 
+    public string GetAllClients( )
+    {
+      return JsonConvert.SerializeObject( UserClients );
+    }
+
     #endregion
 
     #region To UI (Generic)
     public void NotifySpeckleFrame( string EventType, string StreamId, string EventInfo )
     {
       if ( !SpeckleIsReady )
+      {
+        Debug.WriteLine( "Speckle wwas not ready, trying to send " + EventType );
         return;
+      }
+
       var script = string.Format( "window.EventBus.$emit('{0}', '{1}', '{2}')", EventType, StreamId, EventInfo );
-      try { 
-      Browser.GetMainFrame().EvaluateScriptAsync( script );
+      try
+      {
+        Browser.GetMainFrame().EvaluateScriptAsync( script );
       }
       catch
       {

@@ -17,32 +17,15 @@ namespace SpeckleRhino
   public partial class SpeckleRhinoUserControl : UserControl
   {
 
-    public ChromiumWebBrowser chromeBrowser;
-
-    public bool CefInit = false;
-
-    public int myPanelId = 0;
-
     public SpeckleRhinoUserControl( )
     {
-      myPanelId = ( new Random() ).Next( 0, 10000 );
-      Debug.WriteLine( "New Panel ID: " + myPanelId );
-
       SpecklePlugIn.Store.RemoveAllClients();
-      //SpecklePlugIn.Store.SpeckleIsReady = false;
 
       InitializeComponent();
-      // Start the browser after initialize global component
-      InitializeChromium();
-
+      this.Controls.Add( SpecklePlugIn.Browser );
+      
       // Set the user control property on our plug-in
       SpecklePlugIn.Instance.PanelUserControl = this;
-
-    }
-
-    public void InitializeChromium( )
-    {
-      this.Controls.Add( SpecklePlugIn.Browser );
     }
 
     /// <summary>

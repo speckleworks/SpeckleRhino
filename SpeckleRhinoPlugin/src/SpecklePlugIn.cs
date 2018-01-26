@@ -47,10 +47,16 @@ namespace SpeckleRhino
 
       Panels.RegisterPanel( this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle );
 
+      // initialise cef
       InitializeCef();
+
+      // initialise one browser instance
       InitializeChromium();
 
+      // initialise one store
       Store = new Interop( Browser );
+
+      // make them talk together
       Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
 
       return base.OnLoad( ref errorMessage );
