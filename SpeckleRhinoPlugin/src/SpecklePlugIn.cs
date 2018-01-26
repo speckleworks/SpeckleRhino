@@ -8,6 +8,7 @@ using System.Reflection;
 using CefSharp.WinForms;
 using System.Net;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace SpeckleRhino
 {
@@ -120,19 +121,19 @@ namespace SpeckleRhino
       }
 
 #else
-        var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
-        Debug.WriteLine(path, "SPK");
+      var path = Directory.GetParent( Assembly.GetExecutingAssembly().Location );
+      Debug.WriteLine( path, "SPK" );
 
-        var indexPath = string.Format(@"{0}\app\index.html", path);
+      var indexPath = string.Format( @"{0}\app\index.html", path );
 
-        if (!File.Exists(indexPath))
-          Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
+      if ( !File.Exists( indexPath ) )
+        Debug.WriteLine( "Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK" );
 
-         indexPath = indexPath.Replace("\\", "/");
+      indexPath = indexPath.Replace( "\\", "/" );
 
-         chromeBrowser = new ChromiumWebBrowser(indexPath);
+      Browser = new ChromiumWebBrowser( indexPath );
 
-         //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
+      //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
 
       // Allow the use of local resources in the browser
