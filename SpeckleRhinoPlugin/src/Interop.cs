@@ -68,6 +68,11 @@ namespace SpeckleRhino
 
     }
 
+    public void SetBrowser(ChromiumWebBrowser _Browser)
+    {
+      Browser = _Browser;
+    }
+
     public void Dispose( )
     {
 
