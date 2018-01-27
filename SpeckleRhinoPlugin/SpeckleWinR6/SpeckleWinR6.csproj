@@ -149,7 +149,7 @@
   </Target>
   <Target Name="AfterBuild">
     <ItemGroup>
-     <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+      <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
       <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
