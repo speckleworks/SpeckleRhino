@@ -115,9 +115,9 @@ namespace SpeckleRhino
             }
             catch (WebException)
             {
-                Browser = new ChromiumWebBrowser(@"http://localhost:9090/");
+                //Browser = new ChromiumWebBrowser(@"http://localhost:9090/");
                 // IF DIMITRIE ON PARALLELS
-                //Browser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
+                Browser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
             }
 
 #else
