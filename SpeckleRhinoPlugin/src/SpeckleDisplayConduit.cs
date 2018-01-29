@@ -152,7 +152,7 @@ namespace SpeckleRhino
                 if (LocalCopy[i] != null)
                 {
                     var obj = LocalCopy[i];
-                    if (obj.IsDocumentControlled) continue;
+                    //if (obj.IsDocumentControlled) continue;
 
                     switch (obj.ObjectType)
                     {

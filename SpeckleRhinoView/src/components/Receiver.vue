@@ -63,9 +63,9 @@
         <!--         <v-btn class='xs-actions' icon @click.native='toggleLog' small>
           <v-icon class='xs-actions'>{{ showLog ? 'keyboard_arrow_up' : 'list' }}</v-icon>
         </v-btn> -->
-        <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
+        <!-- <v-btn class='xs-actions' icon @click.native='toggleChildren' small>
           <v-icon class='xs-actions'>{{ showChildren ? 'keyboard_arrow_up' : 'history' }}</v-icon>
-        </v-btn>
+        </v-btn> -->
         <extra-view-menu :streamId='client.stream.streamId' :restApi='client.BaseUrl'></extra-view-menu>
       </v-card-actions>
     </v-slide-y-transition>
