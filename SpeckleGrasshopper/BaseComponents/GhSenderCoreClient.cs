@@ -374,7 +374,6 @@ namespace SpeckleGrasshopper
 
       // create placeholders for stream update payload
       List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
-      int m = 0;
       foreach ( var myResponse in responses )
         foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId } );
 
@@ -564,7 +563,6 @@ namespace SpeckleGrasshopper
     Rectangle BaseRectangle;
     Rectangle StreamIdBounds;
     Rectangle StreamNameBounds;
-    Rectangle PauseButtonBounds;
 
     public GhSenderClientAttributes( GhSenderClient component ) : base( component )
     {
