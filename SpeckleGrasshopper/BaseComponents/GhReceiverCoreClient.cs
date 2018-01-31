@@ -42,7 +42,6 @@ namespace SpeckleGrasshopper
 
     public SpeckleApiClient myReceiver;
     List<SpeckleLayer> Layers;
-    List<SpeckleObjectPlaceholder> PlaceholderObjects;
     List<SpeckleObject> SpeckleObjects;
     List<object> ConvertedObjects;
 
