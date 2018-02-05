@@ -608,7 +608,15 @@ namespace SpeckleRhinoConverter
       return new Polyline( poly.Value.ToPoints() ).ToNurbsCurve();
     }
 
-    // TODO: Polycurve
+    public static SpecklePolyline ToSpeckle( this PolylineCurve poly )
+    {
+      Polyline polyline;
+      if ( poly.TryGetPolyline( out polyline ) )
+      {
+        return new SpecklePolyline( polyline.ToFlatArray() );
+      }
+      return null;
+    }
 
     public static SpecklePolycurve ToSpeckle( this PolyCurve p )
     {
