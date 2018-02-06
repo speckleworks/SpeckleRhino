@@ -36,6 +36,8 @@ namespace SpeckleRhino
 
     public bool SpeckleIsReady = false;
 
+    System.Timers.Timer SelectionSender;
+
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
@@ -66,6 +68,9 @@ namespace SpeckleRhino
 
       RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAllObjects;
 
+      SelectionSender = new System.Timers.Timer( 200 );
+      SelectionSender.Enabled = false; SelectionSender.AutoReset = false;
+      SelectionSender.Elapsed += SelectionSender_Elapsed;
     }
 
     public void SetBrowser( ChromiumWebBrowser _Browser )
@@ -89,34 +94,43 @@ namespace SpeckleRhino
       RhinoDoc.DeselectObjects -= RhinoDoc_DeselectObjects;
 
       RhinoDoc.DeselectAllObjects -= RhinoDoc_DeselectAllObjects;
+
+      SelectionSender.Dispose();
     }
 
     #region Global Events
 
     private void RhinoDoc_NewDocument( object sender, DocumentEventArgs e )
     {
-      Debug.WriteLine( "NEW DOC" );
+      Debug.WriteLine( "New document event" );
       NotifySpeckleFrame( "purge-clients", "", "" );
       RemoveAllClients();
     }
 
     private void RhinoDoc_DeselectAllObjects( object sender, RhinoDeselectAllObjectsEventArgs e )
     {
+      Debug.WriteLine( "Deselect all event" );
       if ( SpeckleIsReady )
         NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
     }
 
     private void RhinoDoc_DeselectObjects( object sender, RhinoObjectSelectionEventArgs e )
     {
+      Debug.WriteLine( "Deselect event" );
       if ( SpeckleIsReady )
-        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+        SelectionSender.Start();
     }
 
     private void RhinoDoc_SelectObjects( object sender, RhinoObjectSelectionEventArgs e )
     {
-      Debug.WriteLine( "SELECT OBJS" );
+      Debug.WriteLine( "Select objs event" );
       if ( SpeckleIsReady )
-        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+        SelectionSender.Start();
+    }
+
+    private void SelectionSender_Elapsed( object sender, System.Timers.ElapsedEventArgs e )
+    {
+      NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
     }
 
     private void RhinoDoc_EndOpenDocument( object sender, DocumentOpenEventArgs e )

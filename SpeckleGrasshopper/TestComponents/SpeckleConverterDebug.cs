@@ -54,9 +54,16 @@ namespace SpeckleGrasshopper
       object myObj = null;
       DA.GetData( 0, ref myObj );
 
-      var result = SpeckleCore.Converter.ToAbstract( myObj.GetType().GetProperty( "Value" ) );
-      DA.SetData( 0, JsonConvert.SerializeObject( result, Formatting.Indented ) );
-      DA.SetData( 1, result );
+      //var result = myObj.GetType().GetProperty( "Value" );
+      object result = null;
+      object conv;
+      if ( result != null )
+        conv = SpeckleCore.Converter.Serialise( result );
+      else
+        conv = SpeckleCore.Converter.Serialise( myObj );
+
+      DA.SetData( 0, JsonConvert.SerializeObject( conv, Formatting.Indented ) );
+      DA.SetData( 1, conv );
     }
 
     /// <summary>
