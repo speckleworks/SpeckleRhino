@@ -47,8 +47,6 @@ namespace SpeckleGrasshopper
 
     Action expireComponentAction;
 
-    RhinoConverter Converter;
-
     private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhReceiverClient( )
@@ -134,8 +132,6 @@ namespace SpeckleGrasshopper
 
     public void InitReceiverEventsAndGlobals( )
     {
-      Converter = new RhinoConverter();
-
       ObjectCache = new Dictionary<string, SpeckleObject>();
 
       SpeckleObjects = new List<SpeckleObject>();
@@ -274,7 +270,7 @@ namespace SpeckleGrasshopper
              SpeckleObjects.Add( ObjectCache[ objId ] );
 
            this.Message = "Converting objects";
-           ConvertedObjects = Converter.ToNative( SpeckleObjects ).ToList();
+           ConvertedObjects = SpeckleCore.Converter.Deserialise( SpeckleObjects );
 
            if(ConvertedObjects.Count != SpeckleObjects.Count)
            {
@@ -361,7 +357,7 @@ namespace SpeckleGrasshopper
         if ( myReceiver != null )
           myReceiver.Dispose( true );
 
-        myReceiver = new SpeckleApiClient( RestApi, Converter, true );
+        myReceiver = new SpeckleApiClient( RestApi, true );
 
         InitReceiverEventsAndGlobals();
 

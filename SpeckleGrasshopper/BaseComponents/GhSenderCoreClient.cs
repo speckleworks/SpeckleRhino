@@ -128,7 +128,7 @@ namespace SpeckleGrasshopper
 
         if ( myForm.restApi != null && myForm.apitoken != null )
         {
-          mySender = new SpeckleApiClient( myForm.restApi, new RhinoConverter() );
+          mySender = new SpeckleApiClient( myForm.restApi );
           RestApi = myForm.restApi;
           mySender.IntializeSender( myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString() ).ContinueWith( task =>
                 {
@@ -143,7 +143,6 @@ namespace SpeckleGrasshopper
       }
       else
       {
-        mySender.Converter = new RhinoConverter();
       }
 
       mySender.OnReady += ( sender, e ) =>
@@ -316,11 +315,9 @@ namespace SpeckleGrasshopper
         return;
       }
 
-      var Converter = new RhinoConverter();
-
       this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
-      var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
+      var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
          {
            if ( ObjectCache.ContainsKey( obj.Hash ) )
              return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };
@@ -337,7 +334,7 @@ namespace SpeckleGrasshopper
 
       foreach(SpeckleObject convertedObject in convertedObjects)
       {
-        long size = RhinoConverter.getBytes( convertedObject ).Length;
+        long size = Converter.getBytes( convertedObject ).Length;
         currentBucketSize += size;
         totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );
