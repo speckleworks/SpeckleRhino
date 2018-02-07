@@ -54,6 +54,7 @@ namespace SpeckleGrasshopper
           "Receives data from Speckle.",
           "Speckle", "I/O" )
     {
+      var hack = new ConverterHack();
     }
 
     public override void CreateAttributes( )

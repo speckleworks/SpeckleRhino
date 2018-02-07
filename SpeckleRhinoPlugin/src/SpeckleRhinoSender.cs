@@ -240,7 +240,7 @@ namespace SpeckleRhino
       SendStaggeredUpdate( true );
     }
 
-    // TODO: This method, or an abstracted  version of it, should move to Speckle Core.
+    // TODO: This method, or an abstracted version of it, should move to Speckle Core.
     public async void SendStaggeredUpdate( bool force = false )
     {
 

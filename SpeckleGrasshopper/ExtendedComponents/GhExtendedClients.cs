@@ -71,10 +71,9 @@ namespace SpeckleGrasshopper
       {
         solutionPrepared = false;
 
-        var Converter = new SpeckleRhinoConverter.RhinoConverter();
         var BucketObjects = GetData();
 
-        var convertedObjects = Converter.ToSpeckle( BucketObjects ).Select( obj =>
+        var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
            {
              if ( ObjectCache.ContainsKey( obj.Hash ) )
                return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };

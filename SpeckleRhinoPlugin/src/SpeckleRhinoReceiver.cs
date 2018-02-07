@@ -44,7 +44,7 @@ namespace SpeckleRhino
 
       StreamId = ( string ) payload.streamId;
 
-      Client = new SpeckleApiClient( ( string ) payload.account.restApi, new RhinoConverter(), true );
+      Client = new SpeckleApiClient( ( string ) payload.account.restApi, true );
 
       Client.OnReady += Client_OnReady;
       Client.OnLogData += Client_OnLogData;
@@ -190,8 +190,6 @@ namespace SpeckleRhino
     #region display & helpers
     public void DisplayContents( )
     {
-      RhinoConverter rhinoConverter = new RhinoConverter();
-
       Display.Geometry = new List<GeometryBase>();
       Display.Colors = new List<System.Drawing.Color>();
       Display.VisibleList = new List<bool>();
@@ -199,7 +197,7 @@ namespace SpeckleRhino
       int count = 0;
       foreach ( SpeckleObject myObject in Objects )
       {
-        var gb = rhinoConverter.ToNative( myObject );
+        var gb = Converter.Deserialise( myObject );
 
         Display.Colors.Add( GetColorFromLayer( GetLayerFromIndex( count ) ) );
 

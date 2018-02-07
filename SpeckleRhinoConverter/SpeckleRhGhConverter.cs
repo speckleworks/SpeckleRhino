@@ -13,11 +13,14 @@ using System.Reflection;
 
 namespace SpeckleRhinoConverter
 {
+
+  public class ConverterHack { /*makes sure the assembly is loaded*/ }
+
   /// <summary>
   /// These methods extend both the SpeckleObject types with a .ToNative() method as well as 
   /// the base RhinoCommon types with a .ToSpeckle() method for easier conversion logic.
   /// </summary>`
-  public static class SpeckleTypeExtensions
+  public static class SpeckleRhinoConverter
   {
 
     // TODO: 
@@ -232,7 +235,7 @@ namespace SpeckleRhinoConverter
     // Rectangles now and forever forward will become polylines
     public static SpecklePolyline ToSpeckle( this Rectangle3d rect )
     {
-      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ), rect.Corner(0) } ).ToFlatArray() );
+      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ), rect.Corner( 0 ) } ).ToFlatArray() );
     }
 
     // Circle
@@ -495,6 +498,13 @@ namespace SpeckleRhinoConverter
       }
 
       m.VertexColors.AppendColors( mesh.Colors.Select( c => System.Drawing.Color.FromArgb( ( int ) c ) ).ToArray() );
+
+      if ( mesh.TextureCoordinates != null )
+        for ( int j = 0; j < mesh.TextureCoordinates.Length; j += 2 )
+        {
+          m.TextureCoordinates.Add( mesh.TextureCoordinates[ j ], mesh.TextureCoordinates[ j + 1 ] );
+        }
+
       m.UserDictionary.ReplaceContentsWith( mesh.Properties.ToNative() );
       return m;
     }
