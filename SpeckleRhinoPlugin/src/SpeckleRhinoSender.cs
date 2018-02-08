@@ -303,7 +303,7 @@ namespace SpeckleRhino
         count++;
 
         // object conversion
-        var convertedObject = Converter.Serialise( obj.Geometry );
+        var convertedObject = Converter.Serialize( obj.Geometry );
         convertedObject.ApplicationId = obj.Id.ToString();
         allObjects.Add( convertedObject );
 
