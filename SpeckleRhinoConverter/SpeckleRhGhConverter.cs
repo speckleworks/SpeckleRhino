@@ -618,13 +618,13 @@ namespace SpeckleRhinoConverter
             profile.Reverse();
           break;
         case "Arc":
-          profile =( ( SpeckleArc ) extrusion.Profile ).ToNative();
+          profile = ( ( SpeckleArc ) extrusion.Profile ).ToNative();
           break;
         case "Circle":
           profile = ( ( SpeckleCircle ) extrusion.Profile ).ToNative();
           break;
         case "Ellipse":
-          profile =( ( SpeckleEllipse ) extrusion.Profile ).ToNative();
+          profile = ( ( SpeckleEllipse ) extrusion.Profile ).ToNative();
           break;
         case "Line":
           profile = ( ( SpeckleLine ) extrusion.Profile ).ToNative();
@@ -638,7 +638,7 @@ namespace SpeckleRhinoConverter
 
       var myExtrusion = Extrusion.Create( profile.ToNurbsCurve(), extrusion.Length, extrusion.Capped );
 
-      var res = myExtrusion.SetPathAndUp( extrusion.PathStart.ToNative().Location, extrusion.PathEnd.ToNative().Location, extrusion.PathTangent.ToNative());
+      var res = myExtrusion.SetPathAndUp( extrusion.PathStart.ToNative().Location, extrusion.PathEnd.ToNative().Location, extrusion.PathTangent.ToNative() );
       var resss = res;
 
       myExtrusion.UserDictionary.ReplaceContentsWith( extrusion.Properties.ToNative() );
@@ -664,32 +664,26 @@ namespace SpeckleRhinoConverter
       return new SpeckleAnnotation( textdot.Text, textHeight, faceName, bold, italic, plane.ToSpeckle(), textdot.Point.ToSpeckle(), properties: textdot.UserDictionary.ToSpeckle() );
     }
 
-
-    // TODO: merge these two methods together into a single object  ToNative(this SpeckleAnnotation)
-    public static TextDot ToNativeTextDot( this SpeckleAnnotation textdot )
+    public static object ToNative( this SpeckleAnnotation annot )
     {
-      var myTextdot = new TextDot( textdot.Text, textdot.Location.ToNative().Location );
-      myTextdot.UserDictionary.ReplaceContentsWith( textdot.Properties.ToNative() );
-      return myTextdot;
-    }
-
-    public static TextEntity ToNativeTextEntity( this SpeckleAnnotation textentity )
-    {
-      Rhino.DocObjects.Tables.FontTable fontTable = Rhino.RhinoDoc.ActiveDoc.Fonts;
-
-
-      TextEntity textEntity = new TextEntity();
-      textEntity.Text = textentity.Text;
-      textEntity.Plane = textentity.Plane.ToNative();
-      textEntity.TextHeight = textentity.TextHeight;
-      int fontIndex = fontTable.FindOrCreate( textentity.FaceName, textentity.Bold, textentity.Italic );
-      textEntity.FontIndex = fontIndex;
-      return textEntity;
-    }
-
-    public static object ToNative( this SpeckleAnnotation textdot)
-    {
-
+      if ( annot.Plane != null )
+      {
+        // TEXT ENTITIY 
+        TextEntity textEntity = new TextEntity();
+        textEntity.Text = annot.Text;
+        textEntity.Plane = annot.Plane.ToNative();
+        textEntity.TextHeight = annot.TextHeight;
+        int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
+        textEntity.FontIndex = fontIndex;
+        return textEntity;
+      }
+      else
+      {
+        // TEXT DOT!
+        var myTextdot = new TextDot( annot.Text, annot.Location.ToNative().Location );
+        myTextdot.UserDictionary.ReplaceContentsWith( annot.Properties.ToNative() );
+        return myTextdot;
+      }
     }
   }
 }
