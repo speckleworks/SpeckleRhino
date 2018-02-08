@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using System.Dynamic;
 
 using SpeckleCore;
+using SpeckleRhinoConverter;
 using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper
@@ -23,9 +24,6 @@ namespace SpeckleGrasshopper
 
   public class EncodeToSpeckle : GH_Component
   {
-
-    Converter c = new SpeckleRhinoConverter.RhinoConverter();
-
     public EncodeToSpeckle( )
       : base( "Serialiser", "SRL",
           "Serialises a Rhino object to a Speckle object.",
@@ -54,13 +52,14 @@ namespace SpeckleGrasshopper
       object myObj = null;
       DA.GetData( 0, ref myObj );
 
-      //var result = myObj.GetType().GetProperty( "Value" );
-      object result = null;
+      var result = myObj.GetType().GetProperty( "Value" ).GetValue(myObj);
+
+      //object result = null;
       object conv;
       if ( result != null )
-        conv = SpeckleCore.Converter.Serialise( result );
+        conv = SpeckleCore.Converter.Serialize( result );
       else
-        conv = SpeckleCore.Converter.Serialise( myObj );
+        conv = SpeckleCore.Converter.Serialize( myObj );
 
       DA.SetData( 0, JsonConvert.SerializeObject( conv, Formatting.Indented ) );
       DA.SetData( 1, conv );
@@ -80,9 +79,6 @@ namespace SpeckleGrasshopper
 
   public class DecodeFromSpeckle : GH_Component
   {
-
-    Converter c = new SpeckleRhinoConverter.RhinoConverter();
-
     public DecodeFromSpeckle( )
       : base( "Deserialiser", "DSR",
           "Deserialises Speckle (geometry) objects to Rhino objects.",
@@ -109,7 +105,7 @@ namespace SpeckleGrasshopper
         return;
 
       var cast = myObj as Grasshopper.Kernel.Types.GH_ObjectWrapper;
-      var result = c.ToNative( ( SpeckleObject ) cast.Value );
+      var result = Converter.Deserialize( ( SpeckleObject ) cast.Value );
       //var result = SpeckleCore.Converter.FromAbstract( (SpeckleAbstract) cast.Value );
       DA.SetData( 0, new Grasshopper.Kernel.Types.GH_ObjectWrapper( result ) );
     }
