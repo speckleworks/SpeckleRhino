@@ -39,7 +39,7 @@
             </v-tooltip>
           </v-fade-transition>
           </span>
-          <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text'>{{ client.stream.streamId }}</code> <span v-show='client.progressMessage==null'>{{paused ? "(paused)" : ""}} updated:
+          <div class='caption' style='display: block; width:100%'> <span class='grey--text text--darkenx'><code class='grey darken-2 white--text' style='user-select: all; cursor: pointer;'>{{ client.stream.streamId }}</code> <span v-show='client.progressMessage==null'>{{paused ? "(paused)" : ""}} updated:
               <timeago :auto-update='10' :since='client.lastUpdate'></timeago> </span>{{client.progressMessage}} </span>
           </div>
         </v-card-title>

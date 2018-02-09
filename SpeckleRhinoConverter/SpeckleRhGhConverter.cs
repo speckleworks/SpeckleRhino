@@ -648,20 +648,28 @@ namespace SpeckleRhinoConverter
     // Texts & Annotations
     public static SpeckleAnnotation ToSpeckle( this TextEntity textentity )
     {
-      Rhino.DocObjects.Tables.FontTable fontTable = Rhino.RhinoDoc.ActiveDoc.Fonts;
-      Rhino.DocObjects.Font font = fontTable[ textentity.FontIndex ];
+      Rhino.DocObjects.Font font = Rhino.RhinoDoc.ActiveDoc.Fonts[ textentity.FontIndex ];
 
-      return new SpeckleAnnotation( textentity.Text, textentity.TextHeight, font.FaceName, font.Bold, font.Italic, textentity.Plane.ToSpeckle(), textentity.Plane.Origin.ToSpeckle(), properties: textentity.UserDictionary.ToSpeckle() );
+      var myAnnotation = new SpeckleAnnotation();
+      myAnnotation.Text = textentity.Text;
+      myAnnotation.Plane = textentity.Plane.ToSpeckle();
+      myAnnotation.FaceName = font.FaceName;
+      myAnnotation.TextHeight = textentity.TextHeight;
+      myAnnotation.Bold = font.Bold;
+      myAnnotation.Italic = font.Italic;
+      myAnnotation.SetHashes( myAnnotation );
+
+      return myAnnotation;
     }
 
     public static SpeckleAnnotation ToSpeckle( this TextDot textdot )
     {
-      Rhino.Geometry.Plane plane = Plane.Unset;
-      double textHeight = double.NaN;
-      string faceName = "";
-      bool bold = new bool();
-      bool italic = new bool();
-      return new SpeckleAnnotation( textdot.Text, textHeight, faceName, bold, italic, plane.ToSpeckle(), textdot.Point.ToSpeckle(), properties: textdot.UserDictionary.ToSpeckle() );
+      var myAnnotation = new SpeckleAnnotation();
+      myAnnotation.Text = textdot.Text;
+      myAnnotation.Location = textdot.Point.ToSpeckle();
+      myAnnotation.SetHashes( myAnnotation );
+
+      return myAnnotation;
     }
 
     public static object ToNative( this SpeckleAnnotation annot )
@@ -669,12 +677,19 @@ namespace SpeckleRhinoConverter
       if ( annot.Plane != null )
       {
         // TEXT ENTITIY 
-        TextEntity textEntity = new TextEntity();
-        textEntity.Text = annot.Text;
-        textEntity.Plane = annot.Plane.ToNative();
-        textEntity.TextHeight = annot.TextHeight;
-        int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
-        textEntity.FontIndex = fontIndex;
+        TextEntity textEntity = new TextEntity() {
+          Text = annot.Text,
+          Plane = annot.Plane.ToNative(),
+          FontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic ),
+          TextHeight = annot.TextHeight
+        };
+
+        //textEntity.Text = annot.Text;
+        //textEntity.Plane = annot.Plane.ToNative();
+       
+        //int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
+        //textEntity.FontIndex = fontIndex;
+        //textEntity.TextHeight = annot.TextHeight;
         return textEntity;
       }
       else
