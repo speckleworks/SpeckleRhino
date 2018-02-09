@@ -13,117 +13,99 @@ using SpeckleRhinoConverter;
 
 namespace SpeckleRhino
 {
-  ///<summary>
-  /// <para>Every RhinoCommon .rhp assembly must have one and only one PlugIn-derived
-  /// class. DO NOT create instances of this class yourself. It is the
-  /// responsibility of Rhino to create an instance of this class.</para>
-  /// <para>To complete plug-in information, please also see all PlugInDescription
-  /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
-  /// "Show All Files" to see it in the "Solution Explorer" window).</para>
-  ///</summary>
-  public class SpecklePlugIn : Rhino.PlugIns.PlugIn
-  {
-
-    public static Interop Store;
-    public static ChromiumWebBrowser Browser;
-
-    public SpecklePlugIn( )
+    ///<summary>
+    /// <para>Every RhinoCommon .rhp assembly must have one and only one PlugIn-derived
+    /// class. DO NOT create instances of this class yourself. It is the
+    /// responsibility of Rhino to create an instance of this class.</para>
+    /// <para>To complete plug-in information, please also see all PlugInDescription
+    /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
+    /// "Show All Files" to see it in the "Solution Explorer" window).</para>
+    ///</summary>
+    public class SpecklePlugIn : Rhino.PlugIns.PlugIn
     {
-      Instance = this;
-      var hack = new ConverterHack();
-    }
 
-    ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
-    public static SpecklePlugIn Instance
-    {
-      get; private set;
-    }
+        public static Interop Store;
+        public static ChromiumWebBrowser Browser;
 
-    /// <summary>
-    /// The tabbed dockbar user control
-    /// </summary>
-    public SpeckleRhinoUserControl PanelUserControl { get; set; }
+        public SpecklePlugIn()
+        {
+            Instance = this;
+            var hack = new ConverterHack();
+        }
 
-    protected override LoadReturnCode OnLoad( ref string errorMessage )
-    {
-      var panel_type = typeof( SpeckleRhinoUserControl );
+        ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
+        public static SpecklePlugIn Instance
+        {
+            get; private set;
+        }
 
-      Panels.RegisterPanel( this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle );
+        /// <summary>
+        /// The tabbed dockbar user control
+        /// </summary>
+        public SpeckleRhinoUserControl PanelUserControl { get; set; }
 
-<<<<<<< HEAD
+        protected override LoadReturnCode OnLoad(ref string errorMessage)
+        {
+            var panel_type = typeof(SpeckleRhinoUserControl);
+
+            Panels.RegisterPanel(this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle);
             // initialise cef
             if (!Cef.IsInitialized)
                 InitializeCef();
-=======
-      // initialise cef
-      InitializeCef();
->>>>>>> 51c6f87890f5ff70e9f0b4a870a51ef4fae8f0d0
 
-      // initialise one browser instance
-      InitializeChromium();
+            // initialise one browser instance
+            InitializeChromium();
 
-      // initialise one store
-      Store = new Interop( Browser );
+            // initialise one store
+            Store = new Interop(Browser);
 
-      // make them talk together
-      Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
+            // make them talk together
+            Browser.RegisterAsyncJsObject("Interop", SpecklePlugIn.Store);
 
-      return base.OnLoad( ref errorMessage );
-    }
+            return base.OnLoad(ref errorMessage);
+        }
 
-    protected override void OnShutdown( )
-    {
-      Browser.Dispose();
-      Cef.Shutdown();
+        protected override void OnShutdown()
+        {
+            Browser.Dispose();
+            Cef.Shutdown();
 
-      Store.Dispose();
-      SpecklePlugIn.Instance.PanelUserControl?.Dispose();
-      base.OnShutdown();
-    }
+            Store.Dispose();
+            SpecklePlugIn.Instance.PanelUserControl?.Dispose();
+            base.OnShutdown();
+        }
 
-<<<<<<< HEAD
         void InitializeCef()
         {
 
 
             Cef.EnableHighDPISupport();
-=======
-    void InitializeCef( )
-    {
-      Cef.EnableHighDPISupport();
->>>>>>> 51c6f87890f5ff70e9f0b4a870a51ef4fae8f0d0
 
-      string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-      string assemblyPath = Path.GetDirectoryName( assemblyLocation );
-      string pathSubprocess = Path.Combine( assemblyPath, "CefSharp.BrowserSubprocess.exe" );
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            string assemblyPath = Path.GetDirectoryName(assemblyLocation);
+            string pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
 
-      CefSettings settings = new CefSettings
-      {
-        LogSeverity = LogSeverity.Verbose,
-        LogFile = "ceflog.txt",
-        BrowserSubprocessPath = pathSubprocess,
-      };
+            CefSettings settings = new CefSettings
+            {
+                LogSeverity = LogSeverity.Verbose,
+                LogFile = "ceflog.txt",
+                BrowserSubprocessPath = pathSubprocess,
+            };
 
 #if WINR5
             //Not needed in Rhino 6
             settings.CefCommandLineArgs.Add("disable-gpu", "1");
 #endif
 
-<<<<<<< HEAD
             // Initialize cef with the provided settings
 
             Cef.Initialize(settings);
 
         }
-=======
-      // Initialize cef with the provided settings
-      if ( !Cef.IsInitialized )
-        Cef.Initialize( settings );
-    }
->>>>>>> 51c6f87890f5ff70e9f0b4a870a51ef4fae8f0d0
 
-    public void InitializeChromium( )
-    {
+
+        public void InitializeChromium()
+        {
 
 #if !DEBUG
 
@@ -160,16 +142,16 @@ namespace SpeckleRhino
             //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
 
-      // Allow the use of local resources in the browser
-      Browser.BrowserSettings = new BrowserSettings
-      {
-        FileAccessFromFileUrls = CefState.Enabled,
-        UniversalAccessFromFileUrls = CefState.Enabled
-      };
+            // Allow the use of local resources in the browser
+            Browser.BrowserSettings = new BrowserSettings
+            {
+                FileAccessFromFileUrls = CefState.Enabled,
+                UniversalAccessFromFileUrls = CefState.Enabled
+            };
 
 
-      Browser.Dock = DockStyle.Fill;
+            Browser.Dock = DockStyle.Fill;
+        }
+
     }
-
-  }
 }
