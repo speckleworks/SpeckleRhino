@@ -13,7 +13,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SpeckleRhino</RootNamespace>
-    <AssemblyName>SpeckleWindowsR5</AssemblyName>
+    <AssemblyName>SpeckleWinR5</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -172,7 +172,7 @@
   </Target>
   <Target Name="AfterBuild">
     <ItemGroup>
-     <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+      <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
       <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />

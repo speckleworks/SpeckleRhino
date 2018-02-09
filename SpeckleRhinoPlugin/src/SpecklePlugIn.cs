@@ -49,7 +49,8 @@ namespace SpeckleRhino
             Panels.RegisterPanel(this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle);
 
             // initialise cef
-            InitializeCef();
+            if (!Cef.IsInitialized)
+                InitializeCef();
 
             // initialise one browser instance
             InitializeChromium();
@@ -75,6 +76,8 @@ namespace SpeckleRhino
 
         void InitializeCef()
         {
+
+
             Cef.EnableHighDPISupport();
 
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
@@ -89,19 +92,20 @@ namespace SpeckleRhino
             };
 
 #if WINR5
-      //Not needed in Rhino 6
-      settings.CefCommandLineArgs.Add("disable-gpu", "1");
+            //Not needed in Rhino 6
+            settings.CefCommandLineArgs.Add("disable-gpu", "1");
 #endif
 
             // Initialize cef with the provided settings
-            if (!Cef.IsInitialized)
-                Cef.Initialize(settings);
+
+            Cef.Initialize(settings);
+
         }
 
         public void InitializeChromium()
         {
 
-#if DEBUG
+#if !DEBUG
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(@"http://localhost:9090/");
             request.Timeout = 100;
@@ -121,19 +125,19 @@ namespace SpeckleRhino
             }
 
 #else
-      var path = Directory.GetParent( Assembly.GetExecutingAssembly().Location );
-      Debug.WriteLine( path, "SPK" );
+            var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
+            Debug.WriteLine(path, "SPK");
 
-      var indexPath = string.Format( @"{0}\app\index.html", path );
+            var indexPath = string.Format(@"{0}\app\index.html", path);
 
-      if ( !File.Exists( indexPath ) )
-        Debug.WriteLine( "Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK" );
+            if (!File.Exists(indexPath))
+                Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
 
-      indexPath = indexPath.Replace( "\\", "/" );
+            indexPath = indexPath.Replace("\\", "/");
 
-      Browser = new ChromiumWebBrowser( indexPath );
+            Browser = new ChromiumWebBrowser(indexPath);
 
-      //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
+            //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
 
             // Allow the use of local resources in the browser
