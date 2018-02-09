@@ -573,14 +573,22 @@ namespace SpeckleRhinoConverter
 
     public static Brep ToNative( this SpeckleBrep brep )
     {
-      if ( brep.Provenance == "ON" )
+      try
       {
-        var myBrep = ( Brep ) Converter.getObjFromString( brep.Base64 );
-        myBrep.UserDictionary.ReplaceContentsWith( brep.Properties.ToNative() );
-        return myBrep;
+        if ( brep.Provenance == "ON" )
+        {
+          var myBrep = ( Brep ) Converter.getObjFromString( brep.Base64 );
+          myBrep.UserDictionary.ReplaceContentsWith( brep.Properties.ToNative() );
+          return myBrep;
+        }
+        else
+          throw new Exception( "Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other." );
       }
-      else
-        throw new Exception( "Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other." );
+      catch
+      {
+        // Fail silently
+        return null;
+      }
     }
 
     // Extrusions
@@ -677,7 +685,8 @@ namespace SpeckleRhinoConverter
       if ( annot.Plane != null )
       {
         // TEXT ENTITIY 
-        TextEntity textEntity = new TextEntity() {
+        TextEntity textEntity = new TextEntity()
+        {
           Text = annot.Text,
           Plane = annot.Plane.ToNative(),
           FontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic ),
@@ -686,7 +695,7 @@ namespace SpeckleRhinoConverter
 
         //textEntity.Text = annot.Text;
         //textEntity.Plane = annot.Plane.ToNative();
-       
+
         //int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
         //textEntity.FontIndex = fontIndex;
         //textEntity.TextHeight = annot.TextHeight;
