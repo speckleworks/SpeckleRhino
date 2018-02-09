@@ -443,6 +443,9 @@ namespace SpeckleGrasshopper
         foreach ( object o in myParam.VolatileData.AllData( false ) )
           data.Add( o );
       }
+
+      data = data.Select( obj => obj.GetType().GetProperty( "Value" ).GetValue( obj ) ).ToList();
+
       return data;
     }
 
