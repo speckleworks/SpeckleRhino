@@ -107,7 +107,7 @@ namespace SpeckleRhino
         public void InitializeChromium()
         {
 
-#if !DEBUG
+#if DEBUG
 
       HttpWebRequest request = ( HttpWebRequest ) WebRequest.Create( @"http://localhost:9090/" );
       request.Timeout = 100;
