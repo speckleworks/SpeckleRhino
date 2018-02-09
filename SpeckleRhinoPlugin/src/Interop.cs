@@ -36,6 +36,8 @@ namespace SpeckleRhino
 
     public bool SpeckleIsReady = false;
 
+    public bool SelectionInfoNeedsToBeSentYeMighty = false; // should be false
+
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
@@ -66,6 +68,17 @@ namespace SpeckleRhino
 
       RhinoDoc.DeselectAllObjects += RhinoDoc_DeselectAllObjects;
 
+      RhinoApp.Idle += RhinoApp_Idle;
+    }
+
+    private void RhinoApp_Idle( object sender, EventArgs e )
+    {
+      //System.Diagnostics.Debug.WriteLine( "I am idle...  " + SelectionInfoNeedsToBeSentYeMighty );
+      if ( SelectionInfoNeedsToBeSentYeMighty )
+      {
+        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+        SelectionInfoNeedsToBeSentYeMighty = false;
+      }
     }
 
     public void SetBrowser( ChromiumWebBrowser _Browser )
@@ -89,34 +102,38 @@ namespace SpeckleRhino
       RhinoDoc.DeselectObjects -= RhinoDoc_DeselectObjects;
 
       RhinoDoc.DeselectAllObjects -= RhinoDoc_DeselectAllObjects;
+
+      RhinoApp.Idle -= RhinoApp_Idle;
     }
 
     #region Global Events
 
     private void RhinoDoc_NewDocument( object sender, DocumentEventArgs e )
     {
-      Debug.WriteLine( "NEW DOC" );
+      Debug.WriteLine( "New document event" );
       NotifySpeckleFrame( "purge-clients", "", "" );
       RemoveAllClients();
     }
 
     private void RhinoDoc_DeselectAllObjects( object sender, RhinoDeselectAllObjectsEventArgs e )
     {
-      if ( SpeckleIsReady )
-        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+      Debug.WriteLine( "Deselect all event" );
+      SelectionInfoNeedsToBeSentYeMighty = true;
+      return;
     }
 
     private void RhinoDoc_DeselectObjects( object sender, RhinoObjectSelectionEventArgs e )
     {
-      if ( SpeckleIsReady )
-        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+      Debug.WriteLine( "Deselect event" );
+      SelectionInfoNeedsToBeSentYeMighty = true;
+      return;
     }
 
     private void RhinoDoc_SelectObjects( object sender, RhinoObjectSelectionEventArgs e )
     {
-      Debug.WriteLine( "SELECT OBJS" );
-      if ( SpeckleIsReady )
-        NotifySpeckleFrame( "object-selection", "", this.getLayersAndObjectsInfo() );
+      Debug.WriteLine( "Select objs event" );
+      SelectionInfoNeedsToBeSentYeMighty = true;
+      return;
     }
 
     private void RhinoDoc_EndOpenDocument( object sender, DocumentOpenEventArgs e )
@@ -463,12 +480,15 @@ namespace SpeckleRhino
       if ( !ignoreSelection )
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects( false, false ).ToList();
-        if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null ) return JsonConvert.SerializeObject( layerInfoList );
+        if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
+          return JsonConvert.SerializeObject( layerInfoList );
       }
       else
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
-        if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null ) return JsonConvert.SerializeObject( layerInfoList );
+        if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
+          return JsonConvert.SerializeObject( layerInfoList );
+
         foreach ( Layer ll in RhinoDoc.ActiveDoc.Layers )
         {
           layerInfoList.Add( new LayerSelection()

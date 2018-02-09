@@ -51,7 +51,7 @@ namespace SpeckleRhino
 
       dynamic InitPayload = JsonConvert.DeserializeObject<ExpandoObject>( _payload );
 
-      Client = new SpeckleApiClient( ( string ) InitPayload.account.restApi, new RhinoConverter(), true );
+      Client = new SpeckleApiClient( ( string ) InitPayload.account.restApi, true );
 
       StreamName = ( string ) InitPayload.streamName;
 
@@ -240,7 +240,7 @@ namespace SpeckleRhino
       SendStaggeredUpdate( true );
     }
 
-    // TODO: This method, or an abstracted  version of it, should move to Speckle Core.
+    // TODO: This method, or an abstracted version of it, should move to Speckle Core.
     public async void SendStaggeredUpdate( bool force = false )
     {
 
@@ -267,8 +267,6 @@ namespace SpeckleRhino
       List<SpeckleLayer> pLayers = new List<SpeckleLayer>();
       List<SpeckleObject> convertedObjects = new List<SpeckleObject>();
       List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
-
-      RhinoConverter converter = new RhinoConverter();
 
       long totalBucketSize = 0;
       long currentBucketSize = 0;
@@ -305,7 +303,7 @@ namespace SpeckleRhino
         count++;
 
         // object conversion
-        var convertedObject = converter.ToSpeckle( obj.Geometry );
+        var convertedObject = Converter.Serialize( obj.Geometry );
         convertedObject.ApplicationId = obj.Id.ToString();
         allObjects.Add( convertedObject );
 
@@ -318,7 +316,7 @@ namespace SpeckleRhino
         }
 
         // size checking & bulk object creation payloads creation
-        long size = RhinoConverter.getBytes( convertedObject ).Length;
+        long size = Converter.getBytes( convertedObject ).Length;
         currentBucketSize += size;
         totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );

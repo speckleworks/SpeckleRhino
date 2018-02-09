@@ -45,25 +45,23 @@
           <div v-if='streams.length==0&&!fail'>No streams found for this account.<span class='caption'>({{account.serverName}})</span></div>
           <div v-if='!fail'>
             <v-layout>
-              <div class='title ml-3 mb-2'>
-                Here are your {{ streams.length }} streams:
-              </div>
+              <v-flex>
+                <v-card class='elevation-0'>
+                  You have {{ streams.length }} streams at this account.
+                  <v-text-field name="input-1" label="Filter" id="testing" v-model='filterText'></v-text-field>
+                </v-card>
+              </v-flex>
             </v-layout>
-            <v-layout style='height: 75vh; overflow-y: scroll; position: relative; overflow-y:scroll; overflow-x:hidden;'>
-              <v-list>
-                <template v-for='stream in streams'>
-                  <v-list-tile>
-                    <v-list-tile-content>
-                      <v-list-tile-title>
-                      <div class='subheading'>{{stream.name}}</div>
-                      </v-list-tile-title>
-                      <v-list-tile-sub-title class='caption'><code>{{stream.streamId}}</code> | Last update:
-                        <timeago :auto-update='10000000' :since='stream.updatedAt'></timeago>
-                      </v-list-tile-sub-title>
-                    </v-list-tile-content>
-                  </v-list-tile>
+            <v-layout style='height: 60vh; overflow-y: scroll; position: relative; overflow-y:scroll; overflow-x:hidden;'>
+              <v-flex>
+                <template v-for='stream in filteredStreams'>
+                  <v-card class='pb-2  elevation-0'>
+                    <div class='subheading'>{{stream.name}}</div>
+                    <code style='user-select: all; cursor: pointer;'>{{stream.streamId}}</code> | Last update:
+                    <timeago :auto-update='10000000' :since='stream.updatedAt'></timeago>
+                  </v-card>
                 </template>
-              </v-list>
+              </v-flex>
             </v-layout>
           </div>
           <v-alert v-model='fail' color="error" icon="warning">
@@ -90,7 +88,14 @@ export default {
     account: Object,
     expanded: Boolean
   },
-  computed: {},
+  computed: {
+    filteredStreams( ) {
+      if ( this.filterText == '' || !this.filterText )
+        return this.streams.reverse( )
+      else
+        return this.streams.filter( stream => stream.name.includes( this.filterText ) ).reverse( )
+    }
+  },
   watch: {
     pingDialog( value ) {
       console.log( value + "yo" )
@@ -118,7 +123,8 @@ export default {
       gotStreams: false,
       streams: [ ],
       fail: false,
-      error: null
+      error: null,
+      filterText: ''
     }
   },
   methods: {

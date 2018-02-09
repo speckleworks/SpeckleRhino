@@ -4,9 +4,11 @@ This repository contains various projects for building Speckle Clients for Rhino
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mtfs3owdpy72yuh3/branch/master?svg=true)](https://ci.appveyor.com/project/SpeckleWorks/specklerhino/branch/master)
 
-Download the [latest build](https://ci.appveyor.com/api/projects/speckleworks/specklerhino/artifacts/release.zip?branch=master) from the `master` branch.
+## Usage
 
-If you just want to install Speckle for Rhino, download the [latest release](https://ci.appveyor.com/api/projects/SpeckleWorks/SpeckleRhino/artifacts/specklerhino.rhi?branch=master&job=Configuration%3DRelease).
+If you want to install Speckle for Rhino, download the [latest release](https://ci.appveyor.com/api/projects/SpeckleWorks/SpeckleRhino/artifacts/specklerhino.rhi?branch=master&job=Configuration%3DRelease).
+
+Alternatively, you can download the [latest build](https://ci.appveyor.com/api/projects/speckleworks/specklerhino/artifacts/release.zip?branch=master) from the `master` branch.
 
 ## Building Speckle for Rhino
 

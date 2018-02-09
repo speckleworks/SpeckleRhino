@@ -42,13 +42,10 @@ namespace SpeckleGrasshopper
 
     public SpeckleApiClient myReceiver;
     List<SpeckleLayer> Layers;
-    List<SpeckleObjectPlaceholder> PlaceholderObjects;
     List<SpeckleObject> SpeckleObjects;
     List<object> ConvertedObjects;
 
     Action expireComponentAction;
-
-    RhinoConverter Converter;
 
     private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
@@ -57,6 +54,7 @@ namespace SpeckleGrasshopper
           "Receives data from Speckle.",
           "Speckle", "I/O" )
     {
+      var hack = new ConverterHack();
     }
 
     public override void CreateAttributes( )
@@ -135,8 +133,6 @@ namespace SpeckleGrasshopper
 
     public void InitReceiverEventsAndGlobals( )
     {
-      Converter = new RhinoConverter();
-
       ObjectCache = new Dictionary<string, SpeckleObject>();
 
       SpeckleObjects = new List<SpeckleObject>();
@@ -275,7 +271,7 @@ namespace SpeckleGrasshopper
              SpeckleObjects.Add( ObjectCache[ objId ] );
 
            this.Message = "Converting objects";
-           ConvertedObjects = Converter.ToNative( SpeckleObjects ).ToList();
+           ConvertedObjects = SpeckleCore.Converter.Deserialize( SpeckleObjects );
 
            if(ConvertedObjects.Count != SpeckleObjects.Count)
            {
@@ -362,7 +358,7 @@ namespace SpeckleGrasshopper
         if ( myReceiver != null )
           myReceiver.Dispose( true );
 
-        myReceiver = new SpeckleApiClient( RestApi, Converter, true );
+        myReceiver = new SpeckleApiClient( RestApi, true );
 
         InitReceiverEventsAndGlobals();
 
