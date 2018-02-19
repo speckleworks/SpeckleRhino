@@ -526,7 +526,7 @@ namespace SpeckleRhino
         }
       }
 
-      return JsonConvert.SerializeObject( layerInfoList );
+      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject( layerInfoList )));
     }
     #endregion
   }
