@@ -339,6 +339,15 @@ namespace SpeckleRhino
           currentBucketObjects = new List<SpeckleObject>();
           currentBucketSize = 0;
         }
+
+        // catch overflows early
+        if( totalBucketSize >= 50e6 )
+        {
+          Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize / 1000 + "(kb)" ) );
+          IsSendingUpdate = false;
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+          return;
+        }
       }
 
       // last bucket
@@ -347,10 +356,10 @@ namespace SpeckleRhino
 
       Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
 
-      if ( objectUpdatePayloads.Count > 100 || totalBucketSize >= 10e6 )
+      if ( objectUpdatePayloads.Count > 100 || totalBucketSize >= 50e6 )
       {
         // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
-        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." ) );
+        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize/1000 + "(kb)" ) );
         IsSendingUpdate = false;
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;

@@ -232,8 +232,10 @@ namespace SpeckleRhino
       Display.Colors = new List<System.Drawing.Color>();
       Display.VisibleList = new List<bool>();
 
+      var localCopy = Objects.ToList();
+
       int count = 0;
-      foreach ( SpeckleObject myObject in Objects )
+      foreach ( SpeckleObject myObject in localCopy )
       {
         var gb = Converter.Deserialize( myObject );
 
