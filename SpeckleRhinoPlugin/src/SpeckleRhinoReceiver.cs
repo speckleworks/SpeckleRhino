@@ -114,25 +114,44 @@ namespace SpeckleRhino
 
     public void UpdateName( )
     {
-      var response = Client.StreamGetNameAsync( StreamId );
-      Client.Stream.Name = response.Result.Name;
-      Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() ); // i'm lazy
+      try
+      {
+        var response = Client.StreamGetNameAsync( StreamId );
+        Client.Stream.Name = response.Result.Name;
+        Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() ); // i'm lazy
+      }
+      catch ( Exception err )
+      {
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+        return;
+      }
     }
 
     public void UpdateMeta( )
     {
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Metadata update received." ) );
 
-      var streamGetResponse = Client.StreamGet( StreamId );
-      if ( streamGetResponse.Success == false )
+      try
       {
-        Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-        Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+        var streamGetResponse = Client.StreamGet( StreamId );
+
+        if ( streamGetResponse.Success == false )
+        {
+          Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
+          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+        }
+
+        Client.Stream = streamGetResponse.Stream;
+
+        Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
       }
-
-      Client.Stream = streamGetResponse.Stream;
-
-      Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
+      catch(Exception err)
+      {
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+        return;
+      }
 
     }
 
@@ -140,50 +159,69 @@ namespace SpeckleRhino
     {
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Global update received." ) );
 
-      var streamGetResponse = Client.StreamGet( StreamId );
-      if ( streamGetResponse.Success == false )
+      try
       {
-        Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-        Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+        var streamGetResponse = Client.StreamGet( StreamId );
+        if ( streamGetResponse.Success == false )
+        {
+          Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
+          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+        }
+
+
+        Client.Stream = streamGetResponse.Stream;
+        var COPY = Client.Stream;
+        Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
+        Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
+
+        // prepare payload
+        PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
+        payload.Objects = Client.Stream.Objects.Where( o => !Context.SpeckleObjectCache.ContainsKey( o ) );
+
+        // bug in speckle core, no sync method for this :(
+        Client.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
+           {
+             if ( tres.Result.Success == false )
+               Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
+             var copy = tres.Result;
+
+           // add to cache
+           foreach ( var obj in tres.Result.Objects )
+               Context.SpeckleObjectCache[ obj.DatabaseId ] = obj;
+
+           // populate real objects
+           Objects.Clear();
+             foreach ( var objId in Client.Stream.Objects )
+               Objects.Add( Context.SpeckleObjectCache[ objId ] );
+
+             DisplayContents();
+             Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+           } );
       }
-
-      Client.Stream = streamGetResponse.Stream;
-      var COPY = Client.Stream;
-      Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
-      Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
-
-      // prepare payload
-      PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
-      payload.Objects = Client.Stream.Objects.Where( o => !Context.ObjectCache.ContainsKey( o ) );
-
-      // bug in speckle core, no sync method for this :(
-      Client.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
-         {
-           if ( tres.Result.Success == false )
-             Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-           var copy = tres.Result;
-
-              // add to cache
-              foreach ( var obj in tres.Result.Objects )
-             Context.ObjectCache[ obj.DatabaseId ] = obj;
-
-              // populate real objects
-              Objects.Clear();
-           foreach ( var objId in Client.Stream.Objects )
-             Objects.Add( Context.ObjectCache[ objId ] );
-
-           DisplayContents();
-           Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
-         } );
+      catch ( Exception err )
+      {
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+        return;
+      }
 
     }
 
     public void UpdateChildren( )
     {
-      var getStream = Client.StreamGet( StreamId );
-      Client.Stream = getStream.Stream;
+      try
+      {
+        var getStream = Client.StreamGet( StreamId );
+        Client.Stream = getStream.Stream;
 
-      Context.NotifySpeckleFrame( "client-children", StreamId, Client.Stream.ToJson() );
+        Context.NotifySpeckleFrame( "client-children", StreamId, Client.Stream.ToJson() );
+      }
+      catch ( Exception err )
+      {
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+        return;
+      }
     }
     #endregion
 
@@ -264,7 +302,7 @@ namespace SpeckleRhino
 #if WINR6
       var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, -1 );
 #elif WINR5
-            var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent, true);
+      var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, true );
 #endif
 
       if ( parentId == -1 )
@@ -297,7 +335,7 @@ namespace SpeckleRhino
 #if WINR6
         var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, -1 );
 #elif WINR5
-                var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parent + "::" + spkLayer.Name, true);
+        var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, true );
 #endif
 
         //This is always going to be the case. 
@@ -331,7 +369,7 @@ namespace SpeckleRhino
 #if WINR6
               var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, -1 );
 #elif WINR5
-                            var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath(parentLayerName + "::" + layer.Name, true);
+              var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, true );
 #endif
 
               if ( layerExist == -1 )

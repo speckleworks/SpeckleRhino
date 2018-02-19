@@ -32,7 +32,7 @@ namespace SpeckleRhino
     private List<SpeckleAccount> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
 
-    public Dictionary<string, SpeckleObject> ObjectCache;
+    public Dictionary<string, SpeckleObject> SpeckleObjectCache;
 
     public bool SpeckleIsReady = false;
 
@@ -52,7 +52,7 @@ namespace SpeckleRhino
 
       UserClients = new List<ISpeckleRhinoClient>();
 
-      ObjectCache = new Dictionary<string, SpeckleObject>();
+      SpeckleObjectCache = new Dictionary<string, SpeckleObject>();
 
       ReadUserAccounts();
 
