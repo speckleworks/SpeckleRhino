@@ -232,9 +232,6 @@ namespace SpeckleRhino
 
       foreach ( string sen in senderKeys )
       {
-        //if ( UserClients.Any( cl => cl.GetClientId() == sen ) )
-        //  continue;
-
         byte[ ] serialisedClient = Convert.FromBase64String( RhinoDoc.ActiveDoc.Strings.GetValue( "speckle-client-senders", sen ) );
 
         using ( var ms = new MemoryStream() )
