@@ -32,7 +32,7 @@ namespace SpeckleRhino
     private List<SpeckleAccount> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
 
-    public Dictionary<string, SpeckleObject> ObjectCache;
+    public Dictionary<string, SpeckleObject> SpeckleObjectCache;
 
     public bool SpeckleIsReady = false;
 
@@ -52,7 +52,7 @@ namespace SpeckleRhino
 
       UserClients = new List<ISpeckleRhinoClient>();
 
-      ObjectCache = new Dictionary<string, SpeckleObject>();
+      SpeckleObjectCache = new Dictionary<string, SpeckleObject>();
 
       ReadUserAccounts();
 
@@ -232,9 +232,6 @@ namespace SpeckleRhino
 
       foreach ( string sen in senderKeys )
       {
-        //if ( UserClients.Any( cl => cl.GetClientId() == sen ) )
-        //  continue;
-
         byte[ ] serialisedClient = Convert.FromBase64String( RhinoDoc.ActiveDoc.Strings.GetValue( "speckle-client-senders", sen ) );
 
         using ( var ms = new MemoryStream() )
@@ -529,7 +526,7 @@ namespace SpeckleRhino
         }
       }
 
-      return JsonConvert.SerializeObject( layerInfoList );
+      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject( layerInfoList )));
     }
     #endregion
   }

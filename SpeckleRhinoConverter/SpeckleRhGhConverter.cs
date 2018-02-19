@@ -517,7 +517,7 @@ namespace SpeckleRhinoConverter
     {
       var verts = mesh.Vertices.Select( pt => ( Point3d ) pt ).ToFlatArray();
 
-      var tex_coords = mesh.TextureCoordinates.Select( pt => pt ).ToFlatArray();
+      //var tex_coords = mesh.TextureCoordinates.Select( pt => pt ).ToFlatArray();
 
       var Faces = mesh.Faces.SelectMany( face =>
        {
@@ -526,7 +526,7 @@ namespace SpeckleRhinoConverter
        } ).ToArray();
 
       var Colors = mesh.VertexColors.Select( cl => cl.ToArgb() ).ToArray();
-      return new SpeckleMesh( verts, Faces, Colors, tex_coords, properties: mesh.UserDictionary.ToSpeckle() );
+      return new SpeckleMesh( verts, Faces, Colors, null, properties: mesh.UserDictionary.ToSpeckle() );
     }
 
     public static Mesh ToNative( this SpeckleMesh mesh )
@@ -552,11 +552,11 @@ namespace SpeckleRhinoConverter
 
       m.VertexColors.AppendColors( mesh.Colors.Select( c => System.Drawing.Color.FromArgb( ( int ) c ) ).ToArray() );
 
-      if ( mesh.TextureCoordinates != null )
-        for ( int j = 0; j < mesh.TextureCoordinates.Length; j += 2 )
-        {
-          m.TextureCoordinates.Add( mesh.TextureCoordinates[ j ], mesh.TextureCoordinates[ j + 1 ] );
-        }
+      //if ( mesh.TextureCoordinates != null )
+      //  for ( int j = 0; j < mesh.TextureCoordinates.Length; j += 2 )
+      //  {
+      //    m.TextureCoordinates.Add( mesh.TextureCoordinates[ j ], mesh.TextureCoordinates[ j + 1 ] );
+      //  }
 
       m.UserDictionary.ReplaceContentsWith( mesh.Properties.ToNative() );
       return m;

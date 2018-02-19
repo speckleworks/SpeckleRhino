@@ -106,7 +106,8 @@ new Vue( {
 
     EventBus.$on( 'object-selection', ( streamId, data ) => {
       console.log( 'object-selection' )
-      this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( data ) } )
+      if ( data == '[]' ) this.$store.commit( 'SET_SELECTION', { selectionInfo: [ ] } )
+      else this.$store.commit( 'SET_SELECTION', { selectionInfo: JSON.parse( atob( data ) ) } )
     } )
 
     EventBus.$on( 'set-gl-load', ( streamId, state ) => {
