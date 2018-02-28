@@ -66,7 +66,7 @@
         <v-flex>Error: {{ client.error }}
           <v-tooltip left>
             Dismiss.
-            <v-btn dark small fab flat @click.native='hasError=false' slot='activator' class='ma-0'>
+            <v-btn dark small fab flat @click.native='client.error=null' slot='activator' class='ma-0'>
               <v-icon>close</v-icon>
             </v-btn>
           </v-tooltip>

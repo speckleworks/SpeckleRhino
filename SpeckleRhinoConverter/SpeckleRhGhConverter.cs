@@ -517,7 +517,7 @@ namespace SpeckleRhinoConverter
     {
       var verts = mesh.Vertices.Select( pt => ( Point3d ) pt ).ToFlatArray();
 
-      var tex_coords = mesh.TextureCoordinates.Select( pt => pt ).ToFlatArray();
+      //var tex_coords = mesh.TextureCoordinates.Select( pt => pt ).ToFlatArray();
 
       var Faces = mesh.Faces.SelectMany( face =>
        {
@@ -526,7 +526,7 @@ namespace SpeckleRhinoConverter
        } ).ToArray();
 
       var Colors = mesh.VertexColors.Select( cl => cl.ToArgb() ).ToArray();
-      return new SpeckleMesh( verts, Faces, Colors, tex_coords, properties: mesh.UserDictionary.ToSpeckle() );
+      return new SpeckleMesh( verts, Faces, Colors, null, properties: mesh.UserDictionary.ToSpeckle() );
     }
 
     public static Mesh ToNative( this SpeckleMesh mesh )
@@ -552,11 +552,11 @@ namespace SpeckleRhinoConverter
 
       m.VertexColors.AppendColors( mesh.Colors.Select( c => System.Drawing.Color.FromArgb( ( int ) c ) ).ToArray() );
 
-      if ( mesh.TextureCoordinates != null )
-        for ( int j = 0; j < mesh.TextureCoordinates.Length; j += 2 )
-        {
-          m.TextureCoordinates.Add( mesh.TextureCoordinates[ j ], mesh.TextureCoordinates[ j + 1 ] );
-        }
+      //if ( mesh.TextureCoordinates != null )
+      //  for ( int j = 0; j < mesh.TextureCoordinates.Length; j += 2 )
+      //  {
+      //    m.TextureCoordinates.Add( mesh.TextureCoordinates[ j ], mesh.TextureCoordinates[ j + 1 ] );
+      //  }
 
       m.UserDictionary.ReplaceContentsWith( mesh.Properties.ToNative() );
       return m;
@@ -573,14 +573,22 @@ namespace SpeckleRhinoConverter
 
     public static Brep ToNative( this SpeckleBrep brep )
     {
-      if ( brep.Provenance == "ON" )
+      try
       {
-        var myBrep = ( Brep ) Converter.getObjFromString( brep.Base64 );
-        myBrep.UserDictionary.ReplaceContentsWith( brep.Properties.ToNative() );
-        return myBrep;
+        if ( brep.Provenance == "ON" )
+        {
+          var myBrep = ( Brep ) Converter.getObjFromString( brep.Base64 );
+          myBrep.UserDictionary.ReplaceContentsWith( brep.Properties.ToNative() );
+          return myBrep;
+        }
+        else
+          throw new Exception( "Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other." );
       }
-      else
-        throw new Exception( "Unknown brep provenance: " + brep.Provenance + ". Don't know how to convert from one to the other." );
+      catch
+      {
+        // Fail silently
+        return null;
+      }
     }
 
     // Extrusions
@@ -677,7 +685,8 @@ namespace SpeckleRhinoConverter
       if ( annot.Plane != null )
       {
         // TEXT ENTITIY 
-        TextEntity textEntity = new TextEntity() {
+        TextEntity textEntity = new TextEntity()
+        {
           Text = annot.Text,
           Plane = annot.Plane.ToNative(),
           FontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic ),
@@ -686,7 +695,7 @@ namespace SpeckleRhinoConverter
 
         //textEntity.Text = annot.Text;
         //textEntity.Plane = annot.Plane.ToNative();
-       
+
         //int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
         //textEntity.FontIndex = fontIndex;
         //textEntity.TextHeight = annot.TextHeight;

@@ -276,7 +276,6 @@ namespace SpeckleRhino
       int lindex = -1, count = 0, orderIndex = 0;
       foreach ( RhinoObject obj in objs )
       {
-
         // layer list creation
         Layer layer = RhinoDoc.ActiveDoc.Layers[ obj.Attributes.LayerIndex ];
         if ( lindex != obj.Attributes.LayerIndex )
@@ -303,16 +302,19 @@ namespace SpeckleRhino
         count++;
 
         // object conversion
-        var convertedObject = Converter.Serialize( obj.Geometry );
+        SpeckleObject convertedObject;
+
+        convertedObject = Converter.Serialize( obj.Geometry );
         convertedObject.ApplicationId = obj.Id.ToString();
         allObjects.Add( convertedObject );
 
+        Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Converted " + count + " objects out of " + objs.Count() + "." );
+
         // check cache and see what the response from the server is when sending placeholders
         // in the ObjectCreateBulkAsyncRoute
-
-        if ( Context.ObjectCache.ContainsKey( convertedObject.Hash ) )
+        if ( Context.SpeckleObjectCache.ContainsKey( convertedObject.Hash ) )
         {
-          convertedObject = new SpeckleObjectPlaceholder() { Hash = convertedObject.Hash, DatabaseId = Context.ObjectCache[ convertedObject.Hash ].DatabaseId, ApplicationId = Context.ObjectCache[ convertedObject.Hash ].ApplicationId };
+          convertedObject = new SpeckleObjectPlaceholder() { Hash = convertedObject.Hash, DatabaseId = Context.SpeckleObjectCache[ convertedObject.Hash ].DatabaseId, ApplicationId = Context.SpeckleObjectCache[ convertedObject.Hash ].ApplicationId };
         }
 
         // size checking & bulk object creation payloads creation
@@ -321,12 +323,30 @@ namespace SpeckleRhino
         totalBucketSize += size;
         currentBucketObjects.Add( convertedObject );
 
+        if ( currentBucketSize > 2e6 )
+        {
+          // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
+          Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This stream contains a super big object. These are not supported yet :(" ) );
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+          IsSendingUpdate = false;
+          return;
+        }
+
         if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
           objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
           currentBucketObjects = new List<SpeckleObject>();
           currentBucketSize = 0;
+        }
+
+        // catch overflows early
+        if( totalBucketSize >= 50e6 )
+        {
+          Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize / 1000 + "(kb)" ) );
+          IsSendingUpdate = false;
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+          return;
         }
       }
 
@@ -336,11 +356,12 @@ namespace SpeckleRhino
 
       Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
 
-      if ( objectUpdatePayloads.Count > 100 )
+      if ( objectUpdatePayloads.Count > 100 || totalBucketSize >= 50e6 )
       {
         // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
-        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." ) );
+        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize/1000 + "(kb)" ) );
         IsSendingUpdate = false;
+        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
 
@@ -350,7 +371,17 @@ namespace SpeckleRhino
       foreach ( var payload in objectUpdatePayloads )
       {
         Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count ) );
-        responses.Add( await Client.ObjectCreateBulkAsync( payload ) );
+        try
+        {
+          responses.Add( await Client.ObjectCreateBulkAsync( payload ) );
+        }
+        catch(Exception err)
+        {
+          Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+          IsSendingUpdate = false;
+          return;
+        }
       }
 
       Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Updating stream..." );
@@ -397,7 +428,7 @@ namespace SpeckleRhino
       foreach ( var obj in streamUpdatePayload.Objects )
       {
         obj.DatabaseId = response.Objects[ l ];
-        Context.ObjectCache[ allObjects[ l ].Hash ] = placeholders[ l ];
+        Context.SpeckleObjectCache[ allObjects[ l ].Hash ] = placeholders[ l ];
         l++;
       }
 
