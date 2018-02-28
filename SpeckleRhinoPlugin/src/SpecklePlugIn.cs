@@ -78,18 +78,17 @@ namespace SpeckleRhino
         void InitializeCef()
         {
 
-
             Cef.EnableHighDPISupport();
 
-            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            string assemblyPath = Path.GetDirectoryName(assemblyLocation);
-            string pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
-
-            CefSettings settings = new CefSettings
+            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            var assemblyPath = Path.GetDirectoryName(assemblyLocation);
+            var pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
+            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+            var settings = new CefSettings
             {
                 LogSeverity = LogSeverity.Verbose,
                 LogFile = "ceflog.txt",
-                BrowserSubprocessPath = pathSubprocess,
+                BrowserSubprocessPath = pathSubprocess
             };
 
 #if WINR5
@@ -121,9 +120,9 @@ namespace SpeckleRhino
       }
       catch ( WebException )
       {
-        //Browser = new ChromiumWebBrowser(@"http://localhost:9090/");
+        Browser = new ChromiumWebBrowser(@"http://localhost:9090/");
         // IF DIMITRIE ON PARALLELS
-        Browser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
+        //Browser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
       }
 
 #else
