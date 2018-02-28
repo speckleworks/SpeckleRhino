@@ -8,7 +8,7 @@ using Grasshopper.Kernel.Types;
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class GetUserDataComponent : GH_Component
     {

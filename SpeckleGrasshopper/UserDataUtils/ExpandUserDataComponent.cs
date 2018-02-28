@@ -10,7 +10,7 @@ using System.Diagnostics;
 using Grasshopper.Kernel.Parameters;
 using System.Linq;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class ExpandUserDataComponent : GH_Component, IGH_VariableParameterComponent
     {

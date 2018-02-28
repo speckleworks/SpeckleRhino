@@ -2,7 +2,7 @@
 using System.Drawing;
 using Grasshopper.Kernel;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class UserDataUtilsInfo : GH_AssemblyInfo
     {

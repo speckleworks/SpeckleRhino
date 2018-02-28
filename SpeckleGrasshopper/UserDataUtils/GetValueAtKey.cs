@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.IO;
 using Grasshopper.Kernel.Parameters;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class GetValueAtKey : GH_Component
     {

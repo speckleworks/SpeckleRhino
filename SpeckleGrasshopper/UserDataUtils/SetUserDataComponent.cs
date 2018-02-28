@@ -11,7 +11,7 @@ using Grasshopper.Kernel.Types;
 using Rhino.Runtime;
 using Rhino.Collections;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class SetUserDataComponent : GH_Component
     {

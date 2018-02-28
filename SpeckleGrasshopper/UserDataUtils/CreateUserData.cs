@@ -8,7 +8,7 @@ using Grasshopper.Kernel.Parameters;
 using System.Diagnostics;
 using Rhino.Collections;
 
-namespace UserDataUtils
+namespace SpeckleGrasshopper
 {
     public class CreateUserData : GH_Component, IGH_VariableParameterComponent
     {
