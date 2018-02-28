@@ -80,6 +80,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="UserDataUtils\CreateUserData.cs" />
+    <Compile Include="UserDataUtils\CsvUserData.cs" />
+    <Compile Include="UserDataUtils\ExpandUserDataComponent.cs" />
+    <Compile Include="UserDataUtils\GetUserDataComponent.cs" />
+    <Compile Include="UserDataUtils\GetValueAtKey.cs" />
+    <Compile Include="UserDataUtils\SetUserDataComponent.cs" />
+    <Compile Include="UserDataUtils\UserDataUtilsInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -134,7 +141,7 @@
   <Target Name="BeforeBuild">
   </Target>  -->
   <Target Name="AfterBuild">
-  <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
     <Delete Files="$(TargetPath)" />
     <ItemGroup>
       <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />

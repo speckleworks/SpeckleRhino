@@ -455,7 +455,7 @@ namespace SpeckleGrasshopper
       foreach ( var obj in ConvertedObjects )
       {
         //if(obj is Rhino.DocObject) { 
-        obj.GetType();
+        //obj.GetType();
       }
 
       // TODO
