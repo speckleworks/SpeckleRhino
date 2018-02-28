@@ -5,8 +5,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7FFD5395-CC1F-4000-82F6-40E4E019A9EC}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>TestWebUI</RootNamespace>
-    <AssemblyName>TestWebUImacOS</AssemblyName>
+    <RootNamespace>SpeckleRhino</RootNamespace>
+    <AssemblyName>SpeckleMacR5</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -29,39 +29,12 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="RhinoCommon">
-      <HintPath>..\..\..\..\..\..\..\..\..\Applications\RhinoWIP.app\Contents\Resources\RhinoCommon.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Rhino.UI">
-      <HintPath>..\..\..\..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Resources\Rhino.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Eto">
-      <HintPath>..\..\..\..\..\..\..\..\..\Applications\Rhinoceros.app\Contents\Resources\Eto.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\src\EtoForm.cs">
       <Link>EtoForm.cs</Link>
     </Compile>
-    <Compile Include="..\src\TestObject.cs">
-      <Link>TestObject.cs</Link>
-    </Compile>
-    <Compile Include="..\src\TestWebUICommand.cs">
-      <Link>TestWebUICommand.cs</Link>
-    </Compile>
-    <Compile Include="..\src\TestWebUIPlugIn.cs">
-      <Link>TestWebUIPlugIn.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\app\index.html">
