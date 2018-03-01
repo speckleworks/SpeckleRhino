@@ -146,9 +146,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Speckle.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
   </ItemGroup>
   <ItemGroup>
@@ -161,6 +158,9 @@
     <PackageReference Include="RhinoCommon" IncludeAssets="build;compile">
       <Version>5.12.50810.13095</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

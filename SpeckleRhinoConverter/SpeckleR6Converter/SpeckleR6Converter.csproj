@@ -70,7 +70,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grasshopper">
+    <PackageReference Include="Grasshopper" IncludeAssets="build;compile">
       <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
