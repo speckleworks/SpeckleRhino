@@ -101,10 +101,6 @@
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
       <Name>SpeckleCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleRhinoConverter.csproj">
-      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
-      <Name>SpeckleRhinoConverter</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\play25px.png" />
@@ -134,7 +130,7 @@
   <Target Name="BeforeBuild">
   </Target>  -->
   <Target Name="AfterBuild">
-  <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
     <Delete Files="$(TargetPath)" />
     <ItemGroup>
       <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
