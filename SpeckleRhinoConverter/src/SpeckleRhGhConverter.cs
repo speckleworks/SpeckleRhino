@@ -695,7 +695,7 @@ namespace SpeckleRhinoConverter
                     TextHeight = annot.TextHeight
                 };
 #elif R6
-                var dimStyleIndex = Rhino.RhinoDoc.ActiveDoc.DimStyles.Add("test");
+                var dimStyleIndex = Rhino.RhinoDoc.ActiveDoc.DimStyles.Add("Speckle");
                 var dimStyle = new Rhino.DocObjects.DimensionStyle
                 {
                     TextHeight = annot.TextHeight,
@@ -712,7 +712,6 @@ namespace SpeckleRhinoConverter
                     
                 };
 
-                textEntity.TextHeight = annot.TextHeight;
 #endif
 
                 //textEntity.Text = annot.Text;
