@@ -685,16 +685,14 @@ namespace SpeckleRhinoConverter
       if ( annot.Plane != null )
       {
                 // TEXT ENTITIY 
-                TextEntity textEntity;
-#if R5
-                textEntity = new TextEntity()
+                var textEntity = new TextEntity()
                 {
                     Text = annot.Text,
                     Plane = annot.Plane.ToNative(),
                     FontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate(annot.FaceName, annot.Bold, annot.Italic),
                     TextHeight = annot.TextHeight
                 };
-#elif R6
+#if R6
                 var dimStyleIndex = Rhino.RhinoDoc.ActiveDoc.DimStyles.Add("Speckle");
                 var dimStyle = new Rhino.DocObjects.DimensionStyle
                 {
@@ -703,23 +701,10 @@ namespace SpeckleRhinoConverter
                 };
                 Rhino.RhinoDoc.ActiveDoc.DimStyles.Modify(dimStyle, dimStyleIndex, true);
 
-                textEntity = new TextEntity
-                {
-                    DimensionStyleId = Rhino.RhinoDoc.ActiveDoc.DimStyles[dimStyleIndex].Id,
-                    Text = annot.Text,
-                    Plane = annot.Plane.ToNative(),
-                    TextHeight = annot.TextHeight
-                    
-                };
+                textEntity.DimensionStyleId = Rhino.RhinoDoc.ActiveDoc.DimStyles[dimStyleIndex].Id;
 
 #endif
 
-                //textEntity.Text = annot.Text;
-                //textEntity.Plane = annot.Plane.ToNative();
-
-                //int fontIndex = Rhino.RhinoDoc.ActiveDoc.Fonts.FindOrCreate( annot.FaceName, annot.Bold, annot.Italic );
-                //textEntity.FontIndex = fontIndex;
-                //textEntity.TextHeight = annot.TextHeight;
                 return textEntity;
       }
       else

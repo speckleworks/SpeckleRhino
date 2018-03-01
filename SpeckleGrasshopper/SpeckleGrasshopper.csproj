@@ -101,6 +101,10 @@
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
       <Name>SpeckleCore</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleR5Converter\SpeckleR5Converter.csproj">
+      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
+      <Name>SpeckleR5Converter</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\play25px.png" />
