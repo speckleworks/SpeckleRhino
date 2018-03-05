@@ -133,7 +133,8 @@ namespace SpeckleRhino
               {
                 var textObj = ( Rhino.Geometry.TextEntity ) obj;
 #if WINR6
-                e.Display.Draw3dText( textObj.PlainText, Colors[ count ], textObj.Plane, textObj.TextHeight, textObj.Font.FaceName );
+                                var textHeight = Rhino.RhinoDoc.ActiveDoc.DimStyles.FindId(textObj.DimensionStyleId).TextHeight;
+                e.Display.Draw3dText( textObj.PlainText, Colors[ count ], textObj.Plane, textHeight, textObj.Font.FaceName );
 #else
                 e.Display.Draw3dText(textObj.Text, Color.Black, textObj.Plane,textObj.TextHeight ,Rhino.RhinoDoc.ActiveDoc.Fonts[textObj.FontIndex].FaceName);
 #endif
