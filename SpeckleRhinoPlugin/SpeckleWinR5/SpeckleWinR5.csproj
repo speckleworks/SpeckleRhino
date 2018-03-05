@@ -140,13 +140,10 @@
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
       <Name>SpeckleCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\SpeckleRhinoConverter\SpeckleRhinoConverter.csproj">
+    <ProjectReference Include="..\..\SpeckleRhinoConverter\SpeckleR5Converter\SpeckleR5Converter.csproj">
       <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
-      <Name>SpeckleRhinoConverter</Name>
+      <Name>SpeckleR5Converter</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <ItemGroup>
     <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
@@ -161,6 +158,9 @@
     <PackageReference Include="RhinoCommon" IncludeAssets="build;compile">
       <Version>5.12.50810.13095</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
