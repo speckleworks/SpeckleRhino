@@ -57,9 +57,9 @@ namespace SpeckleGrasshopper
       //object result = null;
       object conv;
       if ( result != null )
-        conv = SpeckleCore.Converter.Serialize( result );
+        conv = SpeckleCore.Converter.Serialise( result );
       else
-        conv = SpeckleCore.Converter.Serialize( myObj );
+        conv = SpeckleCore.Converter.Serialise( myObj );
 
       DA.SetData( 0, JsonConvert.SerializeObject( conv, Formatting.Indented ) );
       DA.SetData( 1, conv );
@@ -105,7 +105,7 @@ namespace SpeckleGrasshopper
         return;
 
       var cast = myObj as Grasshopper.Kernel.Types.GH_ObjectWrapper;
-      var result = Converter.Deserialize( ( SpeckleObject ) cast.Value );
+      var result = Converter.Deserialise( ( SpeckleObject ) cast.Value );
       //var result = SpeckleCore.Converter.FromAbstract( (SpeckleAbstract) cast.Value );
       DA.SetData( 0, new Grasshopper.Kernel.Types.GH_ObjectWrapper( result ) );
     }
