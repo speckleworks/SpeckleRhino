@@ -39,7 +39,7 @@ namespace SpeckleRhinoConverter
         else if ( dict[ key ] is string || dict[ key ] is double || dict[ key ] is float || dict[ key ] is int )
           myDictionary.Add( key, dict[ key ] );
         else
-          myDictionary.Add( key, SpeckleCore.Converter.Serialize( dict[ key ] ) );
+          myDictionary.Add( key, SpeckleCore.Converter.Serialise( dict[ key ] ) );
       }
       return myDictionary;
     }

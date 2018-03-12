@@ -57,9 +57,9 @@ namespace SpeckleGrasshopper
       //object result = null;
       object conv;
       if ( result != null )
-        conv = SpeckleCore.Converter.Serialize( result );
+        conv = SpeckleCore.Converter.Serialise( result );
       else
-        conv = SpeckleCore.Converter.Serialize( myObj );
+        conv = SpeckleCore.Converter.Serialise( myObj );
 
       DA.SetData( 0, JsonConvert.SerializeObject( conv, Formatting.Indented ) );
       DA.SetData( 1, conv );
