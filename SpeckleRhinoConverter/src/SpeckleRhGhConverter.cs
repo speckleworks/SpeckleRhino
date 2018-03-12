@@ -58,7 +58,7 @@ namespace SpeckleRhinoConverter
         }
         else if ( dict[ key ] is SpeckleObject )
         {
-          var converted = SpeckleCore.Converter.Deserialize( ( SpeckleObject ) dict[ key ] );
+          var converted = SpeckleCore.Converter.Deserialise( ( SpeckleObject ) dict[ key ] );
 
           if ( converted is GeometryBase )
             myDictionary.Set( key, ( GeometryBase ) converted );
