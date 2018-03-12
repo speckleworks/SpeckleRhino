@@ -237,7 +237,7 @@ namespace SpeckleRhino
       int count = 0;
       foreach ( SpeckleObject myObject in localCopy )
       {
-        var gb = Converter.Deserialize( myObject );
+        var gb = Converter.Deserialise( myObject );
 
         Display.Colors.Add( GetColorFromLayer( GetLayerFromIndex( count ) ) );
 

@@ -271,7 +271,7 @@ namespace SpeckleGrasshopper
              SpeckleObjects.Add( ObjectCache[ objId ] );
 
            this.Message = "Converting objects";
-           ConvertedObjects = SpeckleCore.Converter.Deserialize( SpeckleObjects );
+           ConvertedObjects = SpeckleCore.Converter.Deserialise( SpeckleObjects );
 
            if(ConvertedObjects.Count != SpeckleObjects.Count)
            {
