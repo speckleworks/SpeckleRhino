@@ -18,7 +18,7 @@ In order to build Speckle for Rhino:
 
 1. Clone this repository
 2. run `git submodule update --init` to bring in the SpeckleCore submodule
-3. Navigate to the SpeckleView directory and run npm install from a console. This will install all dependencies for the SpeckleView project.
+3. Navigate to the SpeckleView directory and run `npm install` from a console. This will install all dependencies for the SpeckleView project.
 4. Run `npm run dev` to build the UI and start a local server.
 In a browser, navigate to `http://localhost:9090`. You should see the SpeckleView UI
 5. Open SpeckleRhino.sln from the repository root.
