@@ -140,8 +140,8 @@
        Other similar extension points exist, see Microsoft.Common.targets.  -->
   <Target Name="BeforeBuild">
     <MakeDir Directories="$(TargetDir)\app\dist" />
-    <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\index.html" DestinationFolder="$(TargetDir)\app" />
-    <Copy SourceFiles="$(SolutionDir)\SpeckleRhinoView\dist\build.js" DestinationFolder="$(TargetDir)\app\dist" />
+    <Copy SourceFiles="$(SolutionDir)SpeckleView\index.html" DestinationFolder="$(TargetDir)\app" />
+    <Copy SourceFiles="$(SolutionDir)SpeckleView\dist\build.js" DestinationFolder="$(TargetDir)\app\dist" />
   </Target>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).rhp" />
