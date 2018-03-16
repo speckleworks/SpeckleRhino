@@ -1,0 +1,38 @@
+version: '{build}'
+image: Visual Studio 2017
+configuration: Release
+install:
+  # init and update submodules
+  - git submodule update --recursive --init
+  # update node.js to latest 8.x release
+  - ps: Install-Product node 8
+  - node --version
+  - npm --version
+before_build:
+  - nuget restore
+  # nuget restore SpeckleCore/SpeckleCore/SpeckleCore.sln
+  - mkdir %AppData%\Grasshopper\Libraries\SpeckleSendReceive
+  - mkdir Release
+  # install npm dependencies for SpeckleView and build
+  - cd SpeckleView
+  - npm install
+  - npm run build
+build:
+  project: SpeckleRhino.sln
+  verbosity: minimal
+after_build:
+  # zip everything up into a .rhi package
+  - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleRhinoPlugin\SpeckleWinR6\bin\Release\*
+  - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleRhinoPlugin\SpeckleWinR5\bin\Release\*
+  - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleGrasshopper\bin\Release\*
+artifacts:
+- path: specklerhino.rhi
+  name: release
+notifications:
+- provider: Slack
+  incoming_webhook: https://hooks.slack.com/services/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
+  channel: '#devtalk'
+  template: Build <{{buildUrl}}|#{{buildVersion}}> (<{{commitUrl}}|{{commitId}}>) of {{repositoryName}}@{{branch}}) by {{commitAuthor}} {{status}} in {{duration}}
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: true
