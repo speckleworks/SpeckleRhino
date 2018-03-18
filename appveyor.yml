@@ -17,6 +17,7 @@ before_build:
   - cd SpeckleView
   - npm install
   - npm run build
+  - cd ..
 build:
   project: SpeckleRhino.sln
   verbosity: minimal
