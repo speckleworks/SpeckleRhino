@@ -250,7 +250,10 @@ namespace SpeckleRhino
     public string GetUserAccounts( )
     {
       ReadUserAccounts();
-      return JsonConvert.SerializeObject( UserAccounts );
+      return JsonConvert.SerializeObject( UserAccounts, new JsonSerializerSettings
+      {
+        ContractResolver = new CamelCasePropertyNamesContractResolver()
+      } );
     }
 
     private void ReadUserAccounts( )
