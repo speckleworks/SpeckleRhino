@@ -471,6 +471,7 @@ namespace SpeckleGrasshopper
       foreach ( var obj in ConvertedObjects )
       {
         if ( !( obj is GeometryBase ) ) continue;
+        if ( ( ( GeometryBase ) obj ).IsDocumentControlled ) continue;
         switch ( ( ( GeometryBase ) obj ).ObjectType )
         {
           case Rhino.DocObjects.ObjectType.Point:

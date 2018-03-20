@@ -10,101 +10,109 @@ using System.Net;
 using System.Windows.Forms;
 using System.Diagnostics;
 using SpeckleRhinoConverter;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace SpeckleRhino
 {
-    ///<summary>
-    /// <para>Every RhinoCommon .rhp assembly must have one and only one PlugIn-derived
-    /// class. DO NOT create instances of this class yourself. It is the
-    /// responsibility of Rhino to create an instance of this class.</para>
-    /// <para>To complete plug-in information, please also see all PlugInDescription
-    /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
-    /// "Show All Files" to see it in the "Solution Explorer" window).</para>
-    ///</summary>
-    public class SpecklePlugIn : Rhino.PlugIns.PlugIn
+  ///<summary>
+  /// <para>Every RhinoCommon .rhp assembly must have one and only one PlugIn-derived
+  /// class. DO NOT create instances of this class yourself. It is the
+  /// responsibility of Rhino to create an instance of this class.</para>
+  /// <para>To complete plug-in information, please also see all PlugInDescription
+  /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
+  /// "Show All Files" to see it in the "Solution Explorer" window).</para>
+  ///</summary>
+  public class SpecklePlugIn : Rhino.PlugIns.PlugIn
+  {
+
+    public static Interop Store;
+    public static ChromiumWebBrowser Browser;
+
+    public SpecklePlugIn( )
+    {
+      Instance = this;
+      var hack = new ConverterHack();
+      // Makes sure we always get some camelCaseLove
+      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
+      {
+        ContractResolver = new CamelCasePropertyNamesContractResolver()
+      };
+
+    }
+
+    ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
+    public static SpecklePlugIn Instance
+    {
+      get; private set;
+    }
+
+    /// <summary>
+    /// The tabbed dockbar user control
+    /// </summary>
+    public SpeckleRhinoUserControl PanelUserControl { get; set; }
+
+    protected override LoadReturnCode OnLoad( ref string errorMessage )
+    {
+      var panel_type = typeof( SpeckleRhinoUserControl );
+
+      Panels.RegisterPanel( this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle );
+      // initialise cef
+      if ( !Cef.IsInitialized )
+        InitializeCef();
+
+      // initialise one browser instance
+      InitializeChromium();
+
+      // initialise one store
+      Store = new Interop( Browser );
+
+      // make them talk together
+      Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
+
+      return base.OnLoad( ref errorMessage );
+    }
+
+    protected override void OnShutdown( )
+    {
+      Browser.Dispose();
+      Cef.Shutdown();
+
+      Store.Dispose();
+      SpecklePlugIn.Instance.PanelUserControl?.Dispose();
+      base.OnShutdown();
+    }
+
+    void InitializeCef( )
     {
 
-        public static Interop Store;
-        public static ChromiumWebBrowser Browser;
+      Cef.EnableHighDPISupport();
 
-        public SpecklePlugIn()
-        {
-            Instance = this;
-            var hack = new ConverterHack();
-        }
-
-        ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
-        public static SpecklePlugIn Instance
-        {
-            get; private set;
-        }
-
-        /// <summary>
-        /// The tabbed dockbar user control
-        /// </summary>
-        public SpeckleRhinoUserControl PanelUserControl { get; set; }
-
-        protected override LoadReturnCode OnLoad(ref string errorMessage)
-        {
-            var panel_type = typeof(SpeckleRhinoUserControl);
-
-            Panels.RegisterPanel(this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle);
-            // initialise cef
-            if (!Cef.IsInitialized)
-                InitializeCef();
-
-            // initialise one browser instance
-            InitializeChromium();
-
-            // initialise one store
-            Store = new Interop(Browser);
-
-            // make them talk together
-            Browser.RegisterAsyncJsObject("Interop", SpecklePlugIn.Store);
-
-            return base.OnLoad(ref errorMessage);
-        }
-
-        protected override void OnShutdown()
-        {
-            Browser.Dispose();
-            Cef.Shutdown();
-
-            Store.Dispose();
-            SpecklePlugIn.Instance.PanelUserControl?.Dispose();
-            base.OnShutdown();
-        }
-
-        void InitializeCef()
-        {
-
-            Cef.EnableHighDPISupport();
-
-            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            var assemblyPath = Path.GetDirectoryName(assemblyLocation);
-            var pathSubprocess = Path.Combine(assemblyPath, "CefSharp.BrowserSubprocess.exe");
-            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
-            var settings = new CefSettings
-            {
-                LogSeverity = LogSeverity.Verbose,
-                LogFile = "ceflog.txt",
-                BrowserSubprocessPath = pathSubprocess
-            };
+      var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+      var assemblyPath = Path.GetDirectoryName( assemblyLocation );
+      var pathSubprocess = Path.Combine( assemblyPath, "CefSharp.BrowserSubprocess.exe" );
+      CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+      var settings = new CefSettings
+      {
+        LogSeverity = LogSeverity.Verbose,
+        LogFile = "ceflog.txt",
+        BrowserSubprocessPath = pathSubprocess
+      };
 
 #if WINR5
-            //Not needed in Rhino 6
-            settings.CefCommandLineArgs.Add("disable-gpu", "1");
+      //Not needed in Rhino 6
+      settings.CefCommandLineArgs.Add( "disable-gpu", "1" );
 #endif
 
-            // Initialize cef with the provided settings
+      // Initialize cef with the provided settings
 
-            Cef.Initialize(settings);
+      Cef.Initialize( settings );
 
-        }
+    }
 
 
-        public void InitializeChromium()
-        {
+    public void InitializeChromium( )
+    {
 
 #if DEBUG
 
@@ -141,16 +149,16 @@ namespace SpeckleRhino
             //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
 #endif
 
-            // Allow the use of local resources in the browser
-            Browser.BrowserSettings = new BrowserSettings
-            {
-                FileAccessFromFileUrls = CefState.Enabled,
-                UniversalAccessFromFileUrls = CefState.Enabled
-            };
+      // Allow the use of local resources in the browser
+      Browser.BrowserSettings = new BrowserSettings
+      {
+        FileAccessFromFileUrls = CefState.Enabled,
+        UniversalAccessFromFileUrls = CefState.Enabled
+      };
 
 
-            Browser.Dock = DockStyle.Fill;
-        }
-
+      Browser.Dock = DockStyle.Fill;
     }
+
+  }
 }
