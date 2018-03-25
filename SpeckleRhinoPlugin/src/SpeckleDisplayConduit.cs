@@ -152,6 +152,8 @@ namespace SpeckleRhino
 
       var LocalCopy = Geometry.ToArray();
 
+      var selectColor = Rhino.ApplicationSettings.AppearanceSettings.SelectedObjectColor;
+
       for ( int i = ( int ) HoverRange.Value.T0; i < HoverRange.Value.T1; i++ )
       {
         if ( LocalCopy[ i ] != null )
@@ -162,28 +164,32 @@ namespace SpeckleRhino
           switch ( obj.ObjectType )
           {
             case Rhino.DocObjects.ObjectType.Point:
-              e.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, PointStyle.X, 4, Color.Orange );
+              e.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, PointStyle.X, 4, selectColor);
               break;
 
             case Rhino.DocObjects.ObjectType.Curve:
-              e.Display.DrawCurve( ( Curve ) obj, Color.Orange );
+              e.Display.DrawCurve( ( Curve ) obj, selectColor);
               break;
 
             case Rhino.DocObjects.ObjectType.Brep:
-              DisplayMaterial bMaterial = new DisplayMaterial( Color.Orange, 0.5 );
-              e.Display.DrawBrepShaded( ( Brep ) obj, bMaterial );
-              //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
+              //DisplayMaterial bMaterial = new DisplayMaterial(selectColor);
+              //e.Display.DrawBrepShaded( ( Brep ) obj, bMaterial );
+              e.Display.DrawBrepWires((Brep)obj, selectColor, 1);
+              break;
+
+            case Rhino.DocObjects.ObjectType.Extrusion:
+              e.Display.DrawBrepWires((obj as Extrusion).ToBrep(), selectColor);
               break;
 
             case Rhino.DocObjects.ObjectType.Mesh:
-              DisplayMaterial mMaterial = new DisplayMaterial( Color.Orange, 0.5 );
-              e.Display.DrawMeshShaded( ( Mesh ) obj, mMaterial );
-              //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
+              //DisplayMaterial mMaterial = new DisplayMaterial(selectColor, 0);
+              //e.Display.DrawMeshShaded( ( Mesh ) obj, mMaterial );
+              e.Display.DrawMeshWires((Mesh)obj, selectColor);
               break;
 
             case Rhino.DocObjects.ObjectType.TextDot:
               var textDot = ( TextDot ) obj;
-              e.Display.DrawDot( textDot.Point, textDot.Text, Color.Orange, Color.Black );
+              e.Display.DrawDot( textDot.Point, textDot.Text, selectColor, Color.Black );
               break;
 
             case Rhino.DocObjects.ObjectType.Annotation:
@@ -191,11 +197,11 @@ namespace SpeckleRhino
               {
                 var textObj = ( Rhino.Geometry.TextEntity ) obj;
 #if WINR6
-                e.Display.Draw3dText( textObj.PlainText, Color.Orange, textObj.Plane, textObj.TextHeight, textObj.Font.FaceName );
+                e.Display.Draw3dText( textObj.PlainText, selectColor, textObj.Plane, textObj.TextHeight, textObj.Font.FaceName );
 #else
-              e.Display.Draw3dText(textObj.Text, Color.Black, textObj.Plane,textObj.TextHeight ,Rhino.RhinoDoc.ActiveDoc.Fonts[textObj.FontIndex].FaceName);
+                e.Display.Draw3dText(textObj.Text, selectColor, textObj.Plane,textObj.TextHeight ,Rhino.RhinoDoc.ActiveDoc.Fonts[textObj.FontIndex].FaceName);
 #endif
-              }
+               }
               break;
           }
 
