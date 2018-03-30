@@ -33,15 +33,15 @@ namespace SpeckleCoreApiTester
 
       await TestAccounts( myClient );
 
-      await TestProjects( myClient );
+      //await TestProjects( myClient );
 
-      await TestClients( myClient );
+      //await TestClients( myClient );
 
-      await TestComments( myClient );
+      //await TestComments( myClient );
 
       await TestStreams( myClient );
 
-      await TestObjects( myClient );
+      //await TestObjects( myClient );
 
       Console.WriteLine();
       Console.WriteLine( "Press any key to close" );

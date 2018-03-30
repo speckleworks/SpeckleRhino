@@ -616,7 +616,7 @@ namespace SpeckleRhinoConverter
     }
 
     // Breps
-    public static SpeckleBrep ToSpeckle( this Brep brep, bool setDisplayMesh = true )
+    public static SpeckleBrep ToSpeckle( this Brep brep )
     {
       var joinedMesh = new Mesh();
       if ( SpeckleRhinoConverter.SetBrepDisplayMesh )

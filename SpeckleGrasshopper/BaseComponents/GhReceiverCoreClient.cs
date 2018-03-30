@@ -268,7 +268,7 @@ namespace SpeckleGrasshopper
 
            // populate real objects
            SpeckleObjects.Clear();
-           foreach ( var obj in getStream.Result.Resources )
+           foreach ( var obj in getStream.Result.Resource.Objects )
              SpeckleObjects.Add( ObjectCache[ obj._id ] );
 
            this.Message = "Converting objects";
