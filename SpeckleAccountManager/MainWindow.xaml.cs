@@ -179,7 +179,6 @@ namespace SpecklePopup
         {
           string rawPingReply = client.DownloadString( server );
           dynamic pingReply = JsonConvert.DeserializeObject( rawPingReply );
-          //jss.Deserialize<Dictionary<string, string>>(rawPingReply);
 
           this.serverName = pingReply.serverName;
           this.restApi = server.ToString();

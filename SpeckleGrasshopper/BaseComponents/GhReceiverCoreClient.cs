@@ -257,23 +257,24 @@ namespace SpeckleGrasshopper
       // TODO: Implement cache
       // we can safely omit the displayValue, since this is rhino!
       this.Message = "Getting objects";
-      PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
-      payload.Objects = getStream.Result.Stream.Objects.Where( o => !ObjectCache.ContainsKey( o ) );
-      myReceiver.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
+
+      var payload = getStream.Result.Resource.Objects.Where( o => !ObjectCache.ContainsKey( o._id ) ).Select( obj => obj._id ).ToArray();
+
+      myReceiver.ObjectGetBulkAsync( payload, "omit=displayValue" ).ContinueWith( tres =>
          {
            // add to cache
-           foreach ( var x in tres.Result.Objects )
-             ObjectCache[ x.DatabaseId ] = x;
+           foreach ( var x in tres.Result.Resources )
+             ObjectCache[ x._id ] = x;
 
            // populate real objects
            SpeckleObjects.Clear();
-           foreach ( var objId in getStream.Result.Stream.Objects )
-             SpeckleObjects.Add( ObjectCache[ objId ] );
+           foreach ( var obj in getStream.Result.Resources )
+             SpeckleObjects.Add( ObjectCache[ obj._id ] );
 
            this.Message = "Converting objects";
            ConvertedObjects = SpeckleCore.Converter.Deserialise( SpeckleObjects );
 
-           if(ConvertedObjects.Count != SpeckleObjects.Count)
+           if ( ConvertedObjects.Count != SpeckleObjects.Count )
            {
              this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Some objects failed to convert." );
            }
@@ -290,7 +291,7 @@ namespace SpeckleGrasshopper
     public virtual void UpdateMeta( )
     {
       var result = myReceiver.StreamGetAsync( StreamId, "fields=name,layers" ).Result;
-      
+
       NickName = result.Resource.Name;
       Layers = result.Resource.Layers.ToList();
       UpdateOutputStructure();
@@ -298,9 +299,8 @@ namespace SpeckleGrasshopper
 
     public virtual void UpdateChildren( )
     {
-      // need a call to just get the kids
       var result = myReceiver.StreamGetAsync( myReceiver.StreamId, "fields=children" ).Result;
-      myReceiver.Stream = result.Resource;
+      myReceiver.Stream.Children = result.Resource.Children;
     }
 
     public virtual void CustomMessageHandler( string eventType, SpeckleEventArgs e )
@@ -461,7 +461,7 @@ namespace SpeckleGrasshopper
     public override void DrawViewportWires( IGH_PreviewArgs args )
     {
       base.DrawViewportWires( args );
-      
+
       if ( this.Hidden || this.Locked ) return;
       System.Drawing.Color solidClr = !this.Attributes.Selected ? args.ShadeMaterial.Diffuse : args.ShadeMaterial_Selected.Diffuse;
 

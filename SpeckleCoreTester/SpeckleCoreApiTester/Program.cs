@@ -56,6 +56,7 @@ namespace SpeckleCoreApiTester
       var myPlane = new SpecklePlane() { Origin = new SpecklePoint() { Value = new List<double>() { 12, 12, 12 } }, Normal = myCircle.Normal };
       var myArc = new SpeckleArc() { Radius = 2, AngleRadians = 2.1, EndAngle = 1, StartAngle = 0 };
 
+      myCircle.Properties = new Dictionary<string, object>();
       myCircle.Properties.Add( "a  property", "Hello!" );
       myCircle.Properties.Add( "point", myPoint );
 
@@ -147,8 +148,12 @@ namespace SpeckleCoreApiTester
       var mySecondPoint = new SpecklePoint() { Value = new List<double>() { 23, 33, 12 } };
       var myCircle = new SpeckleCircle() { Radius = 21, Normal = new SpeckleVector() { Value = new List<double>() { 1, 2, 2 } } };
 
-      myCircle.Properties.Add( "a property", "Hello!" );
+
+      myPoint.Properties = new Dictionary<string, object>();
       myPoint.Properties.Add( "Really", mySecondPoint );
+
+      myCircle.Properties = new Dictionary<string, object>();
+      myCircle.Properties.Add( "a property", "Hello!" );
       myCircle.Properties.Add( "point", myPoint );
 
       SpeckleStream myStream = new SpeckleStream()
