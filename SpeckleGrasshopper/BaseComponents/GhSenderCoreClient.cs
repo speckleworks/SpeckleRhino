@@ -46,7 +46,7 @@ namespace SpeckleGrasshopper
     System.Timers.Timer MetadataSender, DataSender;
 
     private string BucketName;
-    private List<SpeckleLayer> BucketLayers = new List<SpeckleLayer>();
+    private List<Layer> BucketLayers = new List<Layer>();
     private List<object> BucketObjects = new List<object>();
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
@@ -238,7 +238,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
       GH_DocumentObject.Menu_AppendItem( menu, "Save current stream as a version.", ( sender, e ) =>
        {
-         var cloneResult = mySender.StreamClone( StreamId );
+         var cloneResult = mySender.StreamCloneAsync( StreamId ).Result;
          mySender.Stream.Children.Add( cloneResult.Clone.StreamId );
 
          mySender.BroadcastMessage( new { eventType = "update-children" } );
@@ -321,19 +321,19 @@ namespace SpeckleGrasshopper
       var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
          {
            if ( ObjectCache.ContainsKey( obj.Hash ) )
-             return new SpeckleObjectPlaceholder() { Hash = obj.Hash, DatabaseId = ObjectCache[ obj.Hash ].DatabaseId };
+             return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[ obj.Hash ]._id };
            return obj;
          } ).ToList();
 
-      this.Message = String.Format( "Creating payloads");
+      this.Message = String.Format( "Creating payloads" );
 
       long totalBucketSize = 0;
       long currentBucketSize = 0;
-      List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
+      List<List<SpeckleObject>> objectUpdatePayloads = new List<List<SpeckleObject>>();
       List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
       List<SpeckleObject> allObjects = new List<SpeckleObject>();
 
-      foreach(SpeckleObject convertedObject in convertedObjects)
+      foreach ( SpeckleObject convertedObject in convertedObjects )
       {
         long size = Converter.getBytes( convertedObject ).Length;
         currentBucketSize += size;
@@ -343,67 +343,69 @@ namespace SpeckleGrasshopper
         if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
-          objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+          objectUpdatePayloads.Add( currentBucketObjects );
           currentBucketObjects = new List<SpeckleObject>();
           currentBucketSize = 0;
         }
       }
 
+      // add  the last bucket 
       if ( currentBucketObjects.Count > 0 )
-        objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+        objectUpdatePayloads.Add( currentBucketObjects );
 
       Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
 
       if ( objectUpdatePayloads.Count > 100 )
       {
-        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
+        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
         return;
       }
 
       int k = 0;
-      List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
+      List<ResponseObject> responses = new List<ResponseObject>();
       foreach ( var payload in objectUpdatePayloads )
       {
         this.Message = String.Format( "Sending payload\n{0} / {1}", k++, objectUpdatePayloads.Count );
-        responses.Add( mySender.ObjectCreateBulkAsync( payload ).GetAwaiter().GetResult() );
+
+        responses.Add( mySender.ObjectCreateAsync( payload ).GetAwaiter().GetResult() );
       }
 
       this.Message = "Updating stream...";
 
       // create placeholders for stream update payload
-      List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
+      List<SpeckleObject> placeholders = new List<SpeckleObject>();
       foreach ( var myResponse in responses )
-        foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId } );
+        foreach ( var obj in myResponse.Resources ) placeholders.Add( new SpecklePlaceholder() { _id = obj._id } );
 
-      PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
-      streamUpdatePayload.Layers = BucketLayers;
-      streamUpdatePayload.Name = BucketName;
-      streamUpdatePayload.Objects = placeholders;
+      SpeckleStream updateStream = new SpeckleStream()
+      {
+        Layers = BucketLayers,
+        Name = BucketName,
+        Objects = placeholders
+      };
 
       // set some base properties (will be overwritten)
       var baseProps = new Dictionary<string, object>();
       baseProps[ "units" ] = Rhino.RhinoDoc.ActiveDoc.ModelUnitSystem.ToString();
       baseProps[ "tolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance;
       baseProps[ "angleTolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
-      streamUpdatePayload.BaseProperties = baseProps;
+      updateStream.BaseProperties = baseProps;
 
-      var response = mySender.StreamUpdate( streamUpdatePayload, mySender.StreamId );
+      var response = mySender.StreamUpdateAsync( mySender.StreamId, updateStream );
 
       mySender.BroadcastMessage( new { eventType = "update-global" } );
 
       // put the objects in the cache 
       int l = 0;
-
-      foreach ( var obj in streamUpdatePayload.Objects )
+      foreach ( var obj in placeholders )
       {
-        obj.DatabaseId = response.Objects[ l ];
         ObjectCache[ convertedObjects[ l ].Hash ] = placeholders[ l ];
         l++;
       }
 
+      Log += response.Result.Message;
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
       Message = "Data sent\n@" + DateTime.Now.ToString( "hh:mm:ss" );
-
     }
 
     public void UpdateMetadata( )
@@ -418,20 +420,16 @@ namespace SpeckleGrasshopper
     {
       // we do not need to enque another metadata sending event as the data update superseeds the metadata one.
       if ( DataSender.Enabled ) { return; };
-      var payload = new PayloadStreamMetaUpdate();
-      payload.Layers = BucketLayers;
-      payload.Name = BucketName;
+      SpeckleStream updateStream = new SpeckleStream()
+      {
+        Name = BucketName,
+        Layers = BucketLayers
+      };
 
-      Task[ ] tasks = new Task[ 2 ] {
-                mySender.StreamUpdateNameAsync( new PayloadStreamNameUpdate(){ Name=BucketName }, mySender.StreamId),
-                mySender.ReplaceLayersAsync( new PayloadMultipleLayers() {Layers = BucketLayers}, mySender.StreamId)
-            };
+      var updateResult = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).GetAwaiter().GetResult();
 
-      Task.WhenAll( tasks ).ContinueWith( task =>
-         {
-           Log += "Metadata updated.";
-           mySender.BroadcastMessage( new { eventType = "update-meta" } );
-         } );
+      Log += updateResult.Message;
+      mySender.BroadcastMessage( new { eventType = "update-meta" } );
     }
 
 
@@ -449,14 +447,14 @@ namespace SpeckleGrasshopper
       return data;
     }
 
-    public List<SpeckleLayer> GetLayers( )
+    public List<Layer> GetLayers( )
     {
-      List<SpeckleLayer> layers = new List<SpeckleLayer>();
+      List<Layer> layers = new List<Layer>();
       int startIndex = 0;
       int count = 0;
       foreach ( IGH_Param myParam in Params.Input )
       {
-        SpeckleLayer myLayer = new SpeckleLayer(
+        Layer myLayer = new Layer(
             myParam.NickName,
             myParam.InstanceGuid.ToString(),
             GetParamTopology( myParam ),
