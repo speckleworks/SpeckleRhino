@@ -1,4 +1,6 @@
 # SpeckleRhino
+
+[![Join the chat at https://gitter.im/speckleworks/SpeckleRhino](https://badges.gitter.im/speckleworks/SpeckleRhino.svg)](https://gitter.im/speckleworks/SpeckleRhino?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 This repository contains various projects for building Speckle Clients for Rhino and Grasshopper.
 [SpeckleCore](https://github.com/speckleworks/SpeckleCore) is included as a submodule.
 
