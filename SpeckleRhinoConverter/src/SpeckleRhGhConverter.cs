@@ -359,7 +359,9 @@ namespace SpeckleRhinoConverter
     // Gh Capture
     public static SpecklePolyline ToSpeckle( this Polyline poly )
     {
-      return new SpecklePolyline( poly.ToFlatArray() );
+      var myPoly = new SpecklePolyline( poly.ToFlatArray() );
+      myPoly.closed = poly.IsClosed;
+      return myPoly;
     }
 
     // Rh Capture
@@ -369,6 +371,7 @@ namespace SpeckleRhinoConverter
       if ( poly.TryGetPolyline( out polyline ) )
       {
         var myPoly = new SpecklePolyline( polyline.ToFlatArray() );
+        myPoly.closed = polyline.IsClosed;
         myPoly.Properties = poly.UserDictionary.ToSpeckle();
         return myPoly;
       }
@@ -538,7 +541,7 @@ namespace SpeckleRhinoConverter
 
       for ( int i = 0; i < curve.Knots.Count; i++ )
         myCurve.Knots[ i ] = curve.Knots[ i ];
-
+     
       return myCurve;
     }
 
@@ -783,7 +786,7 @@ namespace SpeckleRhinoConverter
 
 
     // Blocks and groups
-
+    // TODO
 
   }
 }
