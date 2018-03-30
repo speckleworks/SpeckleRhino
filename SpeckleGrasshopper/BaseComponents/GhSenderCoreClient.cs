@@ -211,6 +211,15 @@ namespace SpeckleGrasshopper
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
+      base.AppendAdditionalMenuItems( menu );
+      GH_DocumentObject.Menu_AppendItem( menu, "Fore refresh.", ( sender, e ) =>
+      {
+        if ( StreamId != null )
+          DataSender.Start();
+      } );
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
+
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
