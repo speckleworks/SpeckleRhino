@@ -489,7 +489,7 @@ namespace SpeckleRhino
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
           return JsonConvert.SerializeObject( layerInfoList );
 
-        foreach ( Layer ll in RhinoDoc.ActiveDoc.Layers )
+        foreach ( Rhino.DocObjects.Layer ll in RhinoDoc.ActiveDoc.Layers )
         {
           layerInfoList.Add( new LayerSelection()
           {

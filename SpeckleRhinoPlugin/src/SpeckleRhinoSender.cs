@@ -264,9 +264,9 @@ namespace SpeckleRhino
 
       Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Converting " + objs.Count() + " objects..." );
 
-      List<SpeckleLayer> pLayers = new List<SpeckleLayer>();
+      List<SpeckleCore.Layer> pLayers = new List<SpeckleCore.Layer>();
       List<SpeckleObject> convertedObjects = new List<SpeckleObject>();
-      List<PayloadMultipleObjects> objectUpdatePayloads = new List<PayloadMultipleObjects>();
+      List<List<SpeckleObject>> objectUpdatePayloads = new List<List<SpeckleObject>>();
 
       long totalBucketSize = 0;
       long currentBucketSize = 0;
@@ -277,17 +277,17 @@ namespace SpeckleRhino
       foreach ( RhinoObject obj in objs )
       {
         // layer list creation
-        Layer layer = RhinoDoc.ActiveDoc.Layers[ obj.Attributes.LayerIndex ];
+        Rhino.DocObjects.Layer layer = RhinoDoc.ActiveDoc.Layers[ obj.Attributes.LayerIndex ];
         if ( lindex != obj.Attributes.LayerIndex )
         {
-          var spkLayer = new SpeckleLayer()
+          var spkLayer = new SpeckleCore.Layer()
           {
             Name = layer.FullPath,
             Guid = layer.Id.ToString(),
             ObjectCount = 1,
             StartIndex = count,
             OrderIndex = orderIndex++,
-            Properties = new SpeckleLayerProperties() { Color = new SpeckleCore.Color() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml( layer.Color ) }, }
+            Properties = new LayerProperties() { Color = new SpeckleCore.SpeckleBaseColor() { A = 1, Hex = System.Drawing.ColorTranslator.ToHtml( layer.Color ) }, }
           };
 
           pLayers.Add( spkLayer );
@@ -314,7 +314,7 @@ namespace SpeckleRhino
         // in the ObjectCreateBulkAsyncRoute
         if ( Context.SpeckleObjectCache.ContainsKey( convertedObject.Hash ) )
         {
-          convertedObject = new SpeckleObjectPlaceholder() { Hash = convertedObject.Hash, DatabaseId = Context.SpeckleObjectCache[ convertedObject.Hash ].DatabaseId, ApplicationId = Context.SpeckleObjectCache[ convertedObject.Hash ].ApplicationId };
+          convertedObject = new SpecklePlaceholder() { Hash = convertedObject.Hash, _id = Context.SpeckleObjectCache[ convertedObject.Hash ]._id, ApplicationId = Context.SpeckleObjectCache[ convertedObject.Hash ].ApplicationId };
         }
 
         // size checking & bulk object creation payloads creation
@@ -335,7 +335,7 @@ namespace SpeckleRhino
         if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
         {
           Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
-          objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+          objectUpdatePayloads.Add( currentBucketObjects );
           currentBucketObjects = new List<SpeckleObject>();
           currentBucketSize = 0;
         }
@@ -352,7 +352,7 @@ namespace SpeckleRhino
 
       // last bucket
       if ( currentBucketObjects.Count > 0 )
-        objectUpdatePayloads.Add( new PayloadMultipleObjects() { Objects = currentBucketObjects.ToArray() } );
+        objectUpdatePayloads.Add( currentBucketObjects );
 
       Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
 
@@ -367,13 +367,13 @@ namespace SpeckleRhino
 
       // create bulk object creation tasks
       int k = 0;
-      List<ResponsePostObjects> responses = new List<ResponsePostObjects>();
+      List<ResponseObject> responses = new List<ResponseObject>();
       foreach ( var payload in objectUpdatePayloads )
       {
         Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count ) );
         try
         {
-          responses.Add( await Client.ObjectCreateBulkAsync( payload ) );
+          responses.Add( await Client.ObjectCreateAsync( payload ) );
         }
         catch(Exception err)
         {
@@ -391,13 +391,13 @@ namespace SpeckleRhino
         layer.Topology = "0-" + layer.ObjectCount + " ";
 
       // create placeholders for stream update payload
-      List<SpeckleObjectPlaceholder> placeholders = new List<SpeckleObjectPlaceholder>();
+      List<SpeckleObject> placeholders = new List<SpeckleObject>();
       int m = 0;
       foreach ( var myResponse in responses )
-        foreach ( string dbId in myResponse.Objects ) placeholders.Add( new SpeckleObjectPlaceholder() { DatabaseId = dbId, ApplicationId = allObjects[ m++ ].ApplicationId } );
+        foreach ( var obj in myResponse.Resources ) placeholders.Add( new SpecklePlaceholder() { _id = obj._id, ApplicationId = allObjects[ m++ ].ApplicationId } );
 
       // create stream update payload
-      PayloadStreamUpdate streamUpdatePayload = new PayloadStreamUpdate();
+      SpeckleStream streamUpdatePayload = new SpeckleStream();
       streamUpdatePayload.Layers = pLayers;
       streamUpdatePayload.Objects = placeholders;
       streamUpdatePayload.Name = Client.Stream.Name;
@@ -410,10 +410,10 @@ namespace SpeckleRhino
       streamUpdatePayload.BaseProperties = baseProps;
 
       // push it to the server yo!
-      ResponseStreamUpdate response = null;
+      ResponseBase response = null;
       try
       {
-        response = await Client.StreamUpdateAsync( streamUpdatePayload, Client.Stream.StreamId );
+        response = await Client.StreamUpdateAsync( Client.Stream.StreamId, streamUpdatePayload );
       }
       catch ( Exception err )
       {
@@ -427,14 +427,14 @@ namespace SpeckleRhino
 
       foreach ( var obj in streamUpdatePayload.Objects )
       {
-        obj.DatabaseId = response.Objects[ l ];
+        obj._id = placeholders[ l ]._id;
         Context.SpeckleObjectCache[ allObjects[ l ].Hash ] = placeholders[ l ];
         l++;
       }
 
       // emit  events, etc.
       Client.Stream.Layers = streamUpdatePayload.Layers.ToList();
-      Client.Stream.Objects = streamUpdatePayload.Objects.Select( o => o.ApplicationId ).ToList();
+      Client.Stream.Objects = placeholders;
 
       Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
       Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
