@@ -159,7 +159,7 @@ namespace SpeckleRhino
         if ( LocalCopy[ i ] != null )
         {
           var obj = LocalCopy[ i ];
-          if ( obj.IsDocumentControlled ) continue;
+          //if ( obj.IsDocumentControlled ) continue;
 
           switch ( obj.ObjectType )
           {
@@ -172,8 +172,6 @@ namespace SpeckleRhino
               break;
 
             case Rhino.DocObjects.ObjectType.Brep:
-              //DisplayMaterial bMaterial = new DisplayMaterial(selectColor);
-              //e.Display.DrawBrepShaded( ( Brep ) obj, bMaterial );
               e.Display.DrawBrepWires((Brep)obj, selectColor, 1);
               break;
 
@@ -182,8 +180,6 @@ namespace SpeckleRhino
               break;
 
             case Rhino.DocObjects.ObjectType.Mesh:
-              //DisplayMaterial mMaterial = new DisplayMaterial(selectColor, 0);
-              //e.Display.DrawMeshShaded( ( Mesh ) obj, mMaterial );
               e.Display.DrawMeshWires((Mesh)obj, selectColor);
               break;
 
@@ -204,9 +200,6 @@ namespace SpeckleRhino
                }
               break;
           }
-
-          //var bbox = ( ( GeometryBase ) Geometry[ i ] ).GetBoundingBox( false ); bbox.Inflate( 5 );
-          //e.Display.DrawBoxCorners( bbox, Color.Orange, 5, 1 );
         }
 
       }

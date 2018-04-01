@@ -11,8 +11,8 @@ namespace SpeckleGrasshopper.Management
 {
     public class ListStreams : GH_Component
     {
-        List<DataStream> OwnedStreams = new List<DataStream>();
-        List<DataStream> SharedStreams = new List<DataStream>();
+        List<SpeckleStream> UserStreams = new List<SpeckleStream>();
+        List<SpeckleStream> SharedStreams = new List<SpeckleStream>();
         SpeckleApiClient Client = new SpeckleApiClient();
 
         SpeckleAccount OldAccount;
@@ -29,8 +29,7 @@ namespace SpeckleGrasshopper.Management
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
-            pManager.Register_GenericParam("owned streams", "OS", "Streams that you own (created).");
-            pManager.Register_GenericParam("shared streams", "SS", "Streams that have been shared with you");
+            pManager.Register_GenericParam("streams", "S", "Streams that you own or are shared with you.");
         }
 
         public override void AddedToDocument(GH_Document document)
@@ -51,8 +50,7 @@ namespace SpeckleGrasshopper.Management
             if (Account == null)
                 return;
 
-            DA.SetDataList(0, OwnedStreams);
-            DA.SetDataList(1, SharedStreams);
+            DA.SetDataList(0, UserStreams);
 
             if (Account == OldAccount)
                 return;
@@ -60,10 +58,9 @@ namespace SpeckleGrasshopper.Management
             OldAccount = Account;
 
             Client.BaseUrl = Account.restApi; Client.AuthToken = Account.apiToken;
-            Client.UserStreamsGetAsync().ContinueWith(tsk =>
+            Client.StreamsGetAllAsync().ContinueWith(tsk =>
             {
-                OwnedStreams = tsk.Result.OwnedStreams.ToList();
-                SharedStreams = tsk.Result.SharedWithStreams.ToList();
+                UserStreams = tsk.Result.Resources.ToList();
                 Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponent);
             });
         }

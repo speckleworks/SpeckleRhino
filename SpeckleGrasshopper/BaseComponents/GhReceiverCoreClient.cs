@@ -41,7 +41,7 @@ namespace SpeckleGrasshopper
     public GH_Document Document;
 
     public SpeckleApiClient myReceiver;
-    List<SpeckleLayer> Layers;
+    List<Layer> Layers;
     List<SpeckleObject> SpeckleObjects;
     List<object> ConvertedObjects;
 
@@ -165,6 +165,15 @@ namespace SpeckleGrasshopper
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
+      base.AppendAdditionalMenuItems( menu );
+      GH_DocumentObject.Menu_AppendItem( menu, "Fore refresh.", ( sender, e ) =>
+      {
+        if ( StreamId != null )
+          UpdateGlobal();
+      } );
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
+
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
@@ -248,32 +257,33 @@ namespace SpeckleGrasshopper
 
     public virtual void UpdateGlobal( )
     {
-      var getStream = myReceiver.StreamGetAsync( myReceiver.StreamId );
+      var getStream = myReceiver.StreamGetAsync( myReceiver.StreamId, null );
       getStream.Wait();
 
-      NickName = getStream.Result.Stream.Name;
-      Layers = getStream.Result.Stream.Layers.ToList();
+      NickName = getStream.Result.Resource.Name;
+      Layers = getStream.Result.Resource.Layers.ToList();
 
       // TODO: Implement cache
       // we can safely omit the displayValue, since this is rhino!
       this.Message = "Getting objects";
-      PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
-      payload.Objects = getStream.Result.Stream.Objects.Where( o => !ObjectCache.ContainsKey( o ) );
-      myReceiver.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
+
+      var payload = getStream.Result.Resource.Objects.Where( o => !ObjectCache.ContainsKey( o._id ) ).Select( obj => obj._id ).ToArray();
+
+      myReceiver.ObjectGetBulkAsync( payload, "omit=displayValue" ).ContinueWith( tres =>
          {
            // add to cache
-           foreach ( var x in tres.Result.Objects )
-             ObjectCache[ x.DatabaseId ] = x;
+           foreach ( var x in tres.Result.Resources )
+             ObjectCache[ x._id ] = x;
 
            // populate real objects
            SpeckleObjects.Clear();
-           foreach ( var objId in getStream.Result.Stream.Objects )
-             SpeckleObjects.Add( ObjectCache[ objId ] );
+           foreach ( var obj in getStream.Result.Resource.Objects )
+             SpeckleObjects.Add( ObjectCache[ obj._id ] );
 
            this.Message = "Converting objects";
            ConvertedObjects = SpeckleCore.Converter.Deserialise( SpeckleObjects );
 
-           if(ConvertedObjects.Count != SpeckleObjects.Count)
+           if ( ConvertedObjects.Count != SpeckleObjects.Count )
            {
              this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Some objects failed to convert." );
            }
@@ -289,21 +299,17 @@ namespace SpeckleGrasshopper
 
     public virtual void UpdateMeta( )
     {
-      var getName = myReceiver.StreamGetNameAsync( StreamId );
-      var getLayers = myReceiver.GetLayersAsync( StreamId );
+      var result = myReceiver.StreamGetAsync( StreamId, "fields=name,layers" ).Result;
 
-      Task.WhenAll( new Task[ ] { getName, getLayers } ).Wait();
-
-      NickName = getName.Result.Name;
-      Layers = getLayers.Result.Layers.ToList();
+      NickName = result.Resource.Name;
+      Layers = result.Resource.Layers.ToList();
       UpdateOutputStructure();
     }
 
     public virtual void UpdateChildren( )
     {
-      // need a call to just get the kids
-      var getStream = myReceiver.StreamGet( myReceiver.StreamId );
-      myReceiver.Stream = getStream.Stream;
+      var result = myReceiver.StreamGetAsync( myReceiver.StreamId, "fields=children" ).Result;
+      myReceiver.Stream.Children = result.Resource.Children;
     }
 
     public virtual void CustomMessageHandler( string eventType, SpeckleEventArgs e )
@@ -382,12 +388,12 @@ namespace SpeckleGrasshopper
 
     public void UpdateOutputStructure( )
     {
-      List<SpeckleLayer> toRemove, toAdd, toUpdate;
-      toRemove = new List<SpeckleLayer>(); toAdd = new List<SpeckleLayer>(); toUpdate = new List<SpeckleLayer>();
+      List<Layer> toRemove, toAdd, toUpdate;
+      toRemove = new List<Layer>(); toAdd = new List<Layer>(); toUpdate = new List<Layer>();
 
-      SpeckleLayer.DiffLayerLists( GetLayers(), Layers, ref toRemove, ref toAdd, ref toUpdate );
+      Layer.DiffLayerLists( GetLayers(), Layers, ref toRemove, ref toAdd, ref toUpdate );
 
-      foreach ( SpeckleLayer layer in toRemove )
+      foreach ( Layer layer in toRemove )
       {
         var myparam = Params.Output.FirstOrDefault( item => { return item.Name == layer.Guid; } );
 
@@ -414,7 +420,7 @@ namespace SpeckleGrasshopper
       if ( Layers == null ) return;
       if ( ConvertedObjects.Count == 0 ) return;
 
-      foreach ( SpeckleLayer layer in Layers )
+      foreach ( Layer layer in Layers )
       {
         var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
 
@@ -464,7 +470,7 @@ namespace SpeckleGrasshopper
     public override void DrawViewportWires( IGH_PreviewArgs args )
     {
       base.DrawViewportWires( args );
-      
+
       if ( this.Hidden || this.Locked ) return;
       System.Drawing.Color solidClr = !this.Attributes.Selected ? args.ShadeMaterial.Diffuse : args.ShadeMaterial_Selected.Diffuse;
 
@@ -524,7 +530,7 @@ namespace SpeckleGrasshopper
 
     #region Variable Parm
 
-    private Param_GenericObject getGhParameter( SpeckleLayer param )
+    private Param_GenericObject getGhParameter( Layer param )
     {
       Param_GenericObject newParam = new Param_GenericObject();
       newParam.Name = ( string ) param.Guid;
@@ -566,15 +572,15 @@ namespace SpeckleGrasshopper
       return topology;
     }
 
-    public List<SpeckleLayer> GetLayers( )
+    public List<Layer> GetLayers( )
     {
-      List<SpeckleLayer> layers = new List<SpeckleLayer>();
+      List<Layer> layers = new List<Layer>();
       int startIndex = 0;
       int count = 0;
       foreach ( IGH_Param myParam in Params.Output )
       {
         // NOTE: For gh receivers, we store the original guid of the sender component layer inside the parametr name.
-        SpeckleLayer myLayer = new SpeckleLayer(
+        Layer myLayer = new Layer(
             myParam.NickName,
             myParam.Name /* aka the orignal guid*/, GetParamTopology( myParam ),
             myParam.VolatileDataCount,

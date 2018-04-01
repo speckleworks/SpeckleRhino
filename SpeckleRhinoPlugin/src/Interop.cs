@@ -332,6 +332,19 @@ namespace SpeckleRhino
 
     public string GetAllClients( )
     {
+      foreach ( var client in UserClients )
+      {
+        if ( client is RhinoSender )
+        {
+          var rhSender = client as RhinoSender;
+          NotifySpeckleFrame( "client-add", rhSender.StreamId, JsonConvert.SerializeObject( new { stream = rhSender.Client.Stream, client = rhSender.Client } ) );
+          continue;
+        }
+
+        var rhReceiver = client as RhinoReceiver;
+        NotifySpeckleFrame( "client-add", rhReceiver.StreamId, JsonConvert.SerializeObject( new { stream = rhReceiver.Client.Stream, client = rhReceiver.Client } ) );
+      }
+
       return JsonConvert.SerializeObject( UserClients );
     }
 
@@ -395,6 +408,7 @@ namespace SpeckleRhino
       if ( myClient != null )
         myClient.ToggleVisibility( status );
     }
+
 
     public void setLayerVisibility( string clientId, string layerId, bool status )
     {
@@ -489,7 +503,7 @@ namespace SpeckleRhino
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
           return JsonConvert.SerializeObject( layerInfoList );
 
-        foreach ( Layer ll in RhinoDoc.ActiveDoc.Layers )
+        foreach ( Rhino.DocObjects.Layer ll in RhinoDoc.ActiveDoc.Layers )
         {
           layerInfoList.Add( new LayerSelection()
           {
@@ -529,7 +543,7 @@ namespace SpeckleRhino
         }
       }
 
-      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject( layerInfoList )));
+      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( layerInfoList ) ) );
     }
     #endregion
   }

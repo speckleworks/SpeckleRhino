@@ -104,6 +104,7 @@ namespace SpecklePopup
 
     private void validateInputs( object sender, RoutedEventArgs e )
     {
+      Debug.WriteLine( "validating..." );
       string validationErrors = "";
 
       Uri uriResult;
@@ -151,13 +152,9 @@ namespace SpecklePopup
 
       if ( uriResult != null )
       {
-        if(!uriResult.ToString().Contains("api"))
-        {
-          uriResult = new Uri( uriResult, "/api" );
-        }
         this.server = uriResult;
       }
-      
+
 
       if ( addr != null )
         this.email = addr.ToString();
@@ -177,9 +174,8 @@ namespace SpecklePopup
       {
         try
         {
-          string rawPingReply = client.DownloadString( server );
+          string rawPingReply = client.DownloadString( server.ToString() );
           dynamic pingReply = JsonConvert.DeserializeObject( rawPingReply );
-          //jss.Deserialize<Dictionary<string, string>>(rawPingReply);
 
           this.serverName = pingReply.serverName;
           this.restApi = server.ToString();
@@ -196,7 +192,7 @@ namespace SpecklePopup
 
           try
           {
-            rawUserReply = client.UploadString( new Uri( this.restApi + "/accounts/register" ), "POST", JsonConvert.SerializeObject( newUser, Formatting.None ) );
+            rawUserReply = client.UploadString( this.restApi + "/accounts/register", "POST", JsonConvert.SerializeObject( newUser, Formatting.None ) );
           }
           catch ( WebException err_user )
           {
