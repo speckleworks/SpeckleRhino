@@ -96,7 +96,8 @@ namespace SpeckleRhino
       {
         LogSeverity = LogSeverity.Verbose,
         LogFile = "ceflog.txt",
-        BrowserSubprocessPath = pathSubprocess
+        BrowserSubprocessPath = pathSubprocess,
+
       };
 
 #if WINR5
@@ -104,8 +105,8 @@ namespace SpeckleRhino
       settings.CefCommandLineArgs.Add( "disable-gpu", "1" );
 #endif
 
-      // Initialize cef with the provided settings
-
+      settings.CefCommandLineArgs.Add( "allow-file-access-from-files", "1" );
+      settings.CefCommandLineArgs.Add( "disable-web-security", "1" );
       Cef.Initialize( settings );
 
     }

@@ -341,7 +341,7 @@ namespace SpeckleRhino
         }
 
         // catch overflows early
-        if( totalBucketSize >= 50e6 )
+        if ( totalBucketSize >= 50e6 )
         {
           Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize / 1000 + "(kb)" ) );
           IsSendingUpdate = false;
@@ -359,7 +359,7 @@ namespace SpeckleRhino
       if ( objectUpdatePayloads.Count > 100 || totalBucketSize >= 50e6 )
       {
         // means we're around fooking bazillion mb of an upload. FAIL FAIL FAIL
-        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize/1000 + "(kb)" ) );
+        Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier. " + totalBucketSize / 1000 + "(kb)" ) );
         IsSendingUpdate = false;
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
@@ -375,7 +375,7 @@ namespace SpeckleRhino
         {
           responses.Add( await Client.ObjectCreateAsync( payload ) );
         }
-        catch(Exception err)
+        catch ( Exception err )
         {
           Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
           Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
@@ -471,6 +471,8 @@ namespace SpeckleRhino
 
     public void ToggleLayerHover( string layerId, bool status )
     {
+      Debug.WriteLine( "OHAI: " + layerId + " " + status );
+      Display.Enabled = true;
       Display.Geometry = new List<GeometryBase>();
       if ( !status )
       {
@@ -481,11 +483,14 @@ namespace SpeckleRhino
 
       int myLIndex = RhinoDoc.ActiveDoc.Layers.Find( new Guid( layerId ), true );
 
-      var objs = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false ).OrderBy( obj => obj.Attributes.LayerIndex );
-
+      var objs1 = RhinoDoc.ActiveDoc.Objects.FindByUserString( "spk_" + this.StreamId, "*", false );
+      var cop = objs1;
+      var objs = objs1.OrderBy( obj => obj.Attributes.LayerIndex ).ToList();
+      var count = objs.Count;
       foreach ( var obj in objs )
       {
-        if ( obj.Attributes.LayerIndex == myLIndex ) Display.Geometry.Add( obj.Geometry );
+        if ( obj.Attributes.LayerIndex == myLIndex )
+          Display.Geometry.Add( obj.Geometry );
       }
 
       Display.HoverRange = new Interval( 0, Display.Geometry.Count );
