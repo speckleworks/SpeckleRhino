@@ -1,14 +1,14 @@
 # SpeckleRhino
 This repository contains various projects for building Speckle Clients for Rhino and Grasshopper.
-[SpeckleCore](https://github.com/speckleworks/SpeckleCore) is included as a submodule.
+[SpeckleCore](https://github.com/speckleworks/SpeckleCore) (the .net speckle sdk) and [SpeckleView](https://github.com/speckleworks/SpeckleView) (the frontend ui) are included as submodules.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mtfs3owdpy72yuh3/branch/master?svg=true)](https://ci.appveyor.com/project/SpeckleWorks/specklerhino/branch/master)
 
 ## Usage
 
-If you want to install Speckle for Rhino, download the [latest build](https://ci.appveyor.com/api/projects/SpeckleWorks/SpeckleRhino/artifacts/specklerhino.rhi?branch=master&job=Configuration%3DRelease) from the `master` branch.
+#### Download the [latest build](https://ci.appveyor.com/api/projects/SpeckleWorks/SpeckleRhino/artifacts/specklerhino.rhi?branch=master&job=Configuration%3DRelease) from the `master` branch.
 
-Alternatively, you can download the [latest offical release](https://github.com/speckleworks/SpeckleRhino/releases/latest).
+⚠️ Please make  sure you read the [notes on migration](https://speckle.works/log/versionone/#migration-testing) and the (older) [release notes](https://speckle.works/log/specklerhinoplugin/). At the moment, to register a new account, use `https://hestia.speckle.works/api/v1` as your server url, unless you've deployed your own speckle server. 
 
 ## Building Speckle for Rhino
 
