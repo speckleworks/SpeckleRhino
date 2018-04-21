@@ -118,10 +118,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\SetUserData.png" />
+    <None Include="Resources\json.png" />
+    <None Include="Resources\GetUserData.png" />
     <None Include="Resources\play25px.png" />
     <None Include="Resources\pause25px.png" />
     <None Include="Resources\Expand Objectxs-.png" />
     <None Include="Resources\Create Objectxs-.png" />
+    <None Include="Resources\CreateUserData.png" />
+    <None Include="Resources\csv.png" />
+    <None Include="Resources\ExpandUserData.png" />
     <Content Include="Resources\GenericIcon.png" />
     <None Include="Resources\GenericIconXS.png" />
   </ItemGroup>
