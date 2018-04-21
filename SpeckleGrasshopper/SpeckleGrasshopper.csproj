@@ -104,6 +104,10 @@
     <None Include="Resources\sender_2.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SpeckleAccountManager\SpecklePopup.csproj">
+      <Project>{d65594c8-ea2e-46ca-a756-b1634edc3ae3}</Project>
+      <Name>SpecklePopup</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
       <Name>SpeckleCore</Name>
@@ -130,9 +134,6 @@
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="build;compile">
       <Version>5.12.50810.13095</Version>
-    </PackageReference>
-    <PackageReference Include="Speckle.AccountManagerPopup">
-      <Version>0.0.1-rc2</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
