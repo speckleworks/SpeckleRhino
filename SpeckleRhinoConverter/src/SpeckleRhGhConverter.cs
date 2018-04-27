@@ -686,7 +686,12 @@ namespace SpeckleRhinoConverter
 
       myExtrusion.PathStart = extrusion.PathStart.ToSpeckle();
       myExtrusion.PathEnd = extrusion.PathEnd.ToSpeckle();
-
+      myExtrusion.PathTangent = extrusion.PathTangent.ToSpeckle();
+      myExtrusion.ProfileTransformation = extrusion.GetProfileTransformation(0.0);
+      var Profiles = new List<SpeckleObject>();
+      for (int i = 0; i < extrusion.ProfileCount; i++)
+        Profiles.Add(extrusion.Profile3d(i, 0).ToSpeckle());
+      myExtrusion.Profiles = Profiles;
       myExtrusion.Properties = extrusion.UserDictionary.ToSpeckle();
       myExtrusion.SetHashes( myExtrusion );
       return myExtrusion;
