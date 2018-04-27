@@ -198,7 +198,7 @@ namespace SpeckleGrasshopper
          System.Diagnostics.Process.Start( RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64" );
        } );
 
-      if ( myReceiver.Stream == null ) return;
+      if ( myReceiver == null || myReceiver.Stream == null ) return;
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
       if ( myReceiver.Stream.Parent == null )

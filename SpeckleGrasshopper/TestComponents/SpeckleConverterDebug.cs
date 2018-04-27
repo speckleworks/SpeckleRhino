@@ -52,6 +52,8 @@ namespace SpeckleGrasshopper
       object myObj = null;
       DA.GetData( 0, ref myObj );
 
+      if ( myObj == null ) return;
+
       var result = myObj.GetType().GetProperty( "Value" ).GetValue(myObj);
 
       //object result = null;

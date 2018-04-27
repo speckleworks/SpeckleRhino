@@ -285,7 +285,7 @@ namespace SpeckleRhinoConverter
     // Rectangles now and forever forward will become polylines
     public static SpecklePolyline ToSpeckle( this Rectangle3d rect )
     {
-      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ), rect.Corner( 0 ) } ).ToFlatArray() );
+      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ) } ).ToFlatArray() ) { closed = true };
     }
 
     // Circle
@@ -357,21 +357,36 @@ namespace SpeckleRhinoConverter
     // Polyline
 
     // Gh Capture
-    public static SpecklePolyline ToSpeckle( this Polyline poly )
+    public static SpeckleObject ToSpeckle( this Polyline poly )
     {
+      if ( poly.Count == 2 )
+        return new SpeckleLine( poly.ToFlatArray() );
+
       var myPoly = new SpecklePolyline( poly.ToFlatArray() );
       myPoly.closed = poly.IsClosed;
+
+      if ( myPoly.closed )
+        myPoly.Value.RemoveRange( myPoly.Value.Count - 3, 3 );
+
       return myPoly;
     }
 
     // Rh Capture
-    public static SpecklePolyline ToSpeckle( this PolylineCurve poly )
+    public static SpeckleObject ToSpeckle( this PolylineCurve poly )
     {
       Polyline polyline;
+
       if ( poly.TryGetPolyline( out polyline ) )
       {
+        if( polyline.Count == 2)
+          return new SpeckleLine( polyline.ToFlatArray(), null, poly.UserDictionary.ToSpeckle() );
+        
         var myPoly = new SpecklePolyline( polyline.ToFlatArray() );
         myPoly.closed = polyline.IsClosed;
+
+        if ( myPoly.closed )
+          myPoly.Value.RemoveRange( myPoly.Value.Count - 3, 3 );
+
         myPoly.Properties = poly.UserDictionary.ToSpeckle();
         return myPoly;
       }
@@ -391,7 +406,7 @@ namespace SpeckleRhinoConverter
     public static SpecklePolycurve ToSpeckle( this PolyCurve p )
     {
       SpecklePolycurve myPoly = new SpecklePolycurve();
-
+      
       p.RemoveNesting();
       var segments = p.Explode();
 
@@ -456,14 +471,14 @@ namespace SpeckleRhinoConverter
       if ( curve.IsLinear() || curve.IsPolyline() ) // defaults to polyline
       {
         Polyline getObj; curve.TryGetPolyline( out getObj );
-        SpecklePolyline myObject = getObj.ToSpeckle(); myObject.Properties = properties;
+        SpeckleObject myObject = getObj.ToSpeckle(); myObject.Properties = properties;
         return myObject;
       }
 
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
+      SpeckleCurve myCurve = new SpeckleCurve( (SpecklePolyline)poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
       NurbsCurve nurbsCurve = curve.ToNurbsCurve();
 
       myCurve.Weights = nurbsCurve.Points.Select( ctp => ctp.Weight ).ToList();
@@ -507,14 +522,14 @@ namespace SpeckleRhinoConverter
       if ( curve.IsLinear() || curve.IsPolyline() ) // defaults to polyline
       {
         Polyline getObj; curve.TryGetPolyline( out getObj );
-        SpecklePolyline myObject = getObj.ToSpeckle(); myObject.Properties = properties;
+        SpeckleObject myObject = getObj.ToSpeckle(); myObject.Properties = properties;
         return myObject;
       }
 
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
+      SpeckleCurve myCurve = new SpeckleCurve( poly: (SpecklePolyline) poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
 
       myCurve.Weights = curve.Points.Select( ctp => ctp.Weight ).ToList();
       myCurve.Points = curve.Points.Select( ctp => ctp.Location ).ToFlatArray().ToList();
