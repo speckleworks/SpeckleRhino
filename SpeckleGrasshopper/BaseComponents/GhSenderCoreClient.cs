@@ -49,11 +49,16 @@ namespace SpeckleGrasshopper
     private List<Layer> BucketLayers = new List<Layer>();
     private List<object> BucketObjects = new List<object>();
 
+    public List<object> JobQueue = new List<object>();
+    public string CurrentJobClient = "none";
+    public bool solutionPrepared = false;
+    public bool isControlled = false;
+
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhSenderClient( )
-      : base( "Data Sender", "Anonymous Stream",
-          "Sends data to Speckle.",
+      : base( "Data Sender with Controller", "Anonymous Stream",
+          "Sends data to Speckle, receives jobs from viewer.",
           "Speckle", "I/O" )
     {
       var hack = new ConverterHack();
@@ -201,8 +206,19 @@ namespace SpeckleGrasshopper
       base.DocumentContextChanged( document, context );
     }
 
+    private void toggleControlled(object sender, EventArgs e)
+    {
+      RecordUndoEvent("isControlled");
+      isControlled = !isControlled;
+      ExpireSolution(true);
+    }
+
     public override void AppendAdditionalMenuItems( ToolStripDropDown menu )
     {
+      base.AppendAdditionalMenuItems( menu );
+      GH_DocumentObject.Menu_AppendItem( menu, "Control defintion remotely", toggleControlled, true, isControlled);
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
       base.AppendAdditionalMenuItems( menu );
       GH_DocumentObject.Menu_AppendItem( menu, "Copy streamId (" + StreamId + ") to clipboard.", ( sender, e ) =>
        {
