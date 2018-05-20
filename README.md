@@ -26,6 +26,7 @@ In order to build Speckle for Rhino:
 4. Run `npm run dev` to build the UI and start a local server.
 In a browser, navigate to `http://localhost:9090`. You should see the SpeckleView UI
 5. Open SpeckleRhino.sln from the repository root.
-6. Build the solution
+6. Restore nuget packages.
+7. Build the solution
 
 The complete build output will be found in the Solution Directory under the `Debug` or `Release` directory, depending on the configuration you are building.
