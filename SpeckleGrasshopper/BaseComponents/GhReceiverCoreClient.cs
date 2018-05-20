@@ -166,7 +166,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
       base.AppendAdditionalMenuItems( menu );
-      GH_DocumentObject.Menu_AppendItem( menu, "Fore refresh.", ( sender, e ) =>
+      GH_DocumentObject.Menu_AppendItem( menu, "Force refresh.", ( sender, e ) =>
       {
         if ( StreamId != null )
           UpdateGlobal();
@@ -177,22 +177,16 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
-         System.Diagnostics.Process.Start( RestApi.Replace( "api", "view" ) + @"/?" + StreamId );
+         System.Diagnostics.Process.Start( RestApi.Replace( "api/v1", "view" ) + @"/?streams=" + StreamId );
        } );
 
-      GH_DocumentObject.Menu_AppendItem( menu, "View stream data.", ( sender, e ) =>
+      GH_DocumentObject.Menu_AppendItem( menu, "(API) View stream data.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
          System.Diagnostics.Process.Start( RestApi + @"/streams/" + StreamId );
        } );
 
-      GH_DocumentObject.Menu_AppendItem( menu, "View layers data online.", ( sender, e ) =>
-       {
-         if ( StreamId == null ) return;
-         System.Diagnostics.Process.Start( RestApi + @"/streams/" + StreamId + @"/layers" );
-       } );
-
-      GH_DocumentObject.Menu_AppendItem( menu, "View objects data online.", ( sender, e ) =>
+      GH_DocumentObject.Menu_AppendItem( menu, "(API) View objects data online.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
          System.Diagnostics.Process.Start( RestApi + @"/streams/" + StreamId + @"/objects?omit=displayValue,base64" );
