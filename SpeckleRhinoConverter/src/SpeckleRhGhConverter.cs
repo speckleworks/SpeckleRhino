@@ -564,6 +564,7 @@ namespace SpeckleRhinoConverter
       for ( int i = 0; i < curve.Knots.Count; i++ )
         myCurve.Knots[ i ] = curve.Knots[ i ];
 
+      myCurve.UserDictionary.ReplaceContentsWith( curve.Properties.ToNative() );
       return myCurve;
     }
 
