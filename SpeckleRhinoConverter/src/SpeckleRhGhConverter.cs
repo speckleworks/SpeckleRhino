@@ -425,17 +425,21 @@ namespace SpeckleRhinoConverter
       PolyCurve myPolyc = new PolyCurve();
       foreach ( var segment in p.Segments )
       {
-        if ( segment.Type == SpeckleObjectType.Curve )
-          myPolyc.Append( ( ( SpeckleCurve ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Line )
-          myPolyc.Append( ( ( SpeckleLine ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Arc )
-          myPolyc.Append( ( ( SpeckleArc ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Polyline )
-          myPolyc.Append( ( ( SpecklePolyline ) segment ).ToNative().ToNurbsCurve() );
+        switch(segment)
+        {
+          case SpeckleCore.SpeckleCurve crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpeckleLine crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpeckleArc crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpecklePolyline crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+        }
       }
       myPolyc.UserDictionary.ReplaceContentsWith( p.Properties.ToNative() );
       return myPolyc;
