@@ -1,8 +1,12 @@
+![alt text](https://user-images.githubusercontent.com/1014562/40281319-9c1fa318-5c60-11e8-9208-92fbc126095d.png "SpeckleRhino")
+
 # SpeckleRhino
 This repository contains various projects for building Speckle Clients for Rhino and Grasshopper.
 [SpeckleCore](https://github.com/speckleworks/SpeckleCore) (the .net speckle sdk) and [SpeckleView](https://github.com/speckleworks/SpeckleView) (the frontend ui) are included as submodules.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mtfs3owdpy72yuh3/branch/master?svg=true)](https://ci.appveyor.com/project/SpeckleWorks/specklerhino/branch/master)
+
+
 
 ## Usage
 
