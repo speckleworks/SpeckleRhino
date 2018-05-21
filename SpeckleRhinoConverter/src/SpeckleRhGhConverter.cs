@@ -230,7 +230,7 @@ namespace SpeckleRhinoConverter
 
     public static Interval ToNative( this SpeckleInterval interval )
     {
-      return new Interval( ( double ) interval.Start, ( double ) interval.End ); ;
+      return new Interval( ( double ) interval.Start, ( double ) interval.End );
     }
 
     // Interval2d
@@ -270,14 +270,16 @@ namespace SpeckleRhinoConverter
     // Rh Line capture
     public static SpeckleLine ToSpeckle( this LineCurve line )
     {
-      return new SpeckleLine( ( new Point3d[ ] { line.PointAtStart, line.PointAtEnd } ).ToFlatArray(), properties: line.UserDictionary.ToSpeckle() );
+      return new SpeckleLine( ( new Point3d[ ] { line.PointAtStart, line.PointAtEnd } ).ToFlatArray(), properties: line.UserDictionary.ToSpeckle() ) { Domain = line.Domain.ToSpeckle() };
     }
 
-    // Back again only to LINECURVES because we hate rhinocommon
+    // Back again only to LINECURVES because we hate grasshopper and its dealings with rhinocommon
     public static LineCurve ToNative( this SpeckleLine line )
     {
       var pts = line.Value.ToPoints();
       var myLine = new LineCurve( pts[ 0 ], pts[ 1 ] );
+      if ( line.Domain != null )
+        myLine.Domain = line.Domain.ToNative();
       myLine.UserDictionary.ReplaceContentsWith( line.Properties.ToNative() );
       return myLine;
     }
@@ -285,7 +287,7 @@ namespace SpeckleRhinoConverter
     // Rectangles now and forever forward will become polylines
     public static SpecklePolyline ToSpeckle( this Rectangle3d rect )
     {
-      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ) } ).ToFlatArray() ) { closed = true };
+      return new SpecklePolyline( ( new Point3d[ ] { rect.Corner( 0 ), rect.Corner( 1 ), rect.Corner( 2 ), rect.Corner( 3 ) } ).ToFlatArray() ) { Closed = true };
     }
 
     // Circle
@@ -299,6 +301,7 @@ namespace SpeckleRhinoConverter
     {
       Circle circle = new Circle( new Plane( circ.Center.ToNative().Location, circ.Normal.ToNative() ), ( double ) circ.Radius );
       var myCircle = new ArcCurve( circle );
+      myCircle.Domain = circ.Domain.ToNative();
       myCircle.UserDictionary.ReplaceContentsWith( circ.Properties.ToNative() );
       return myCircle;
     }
@@ -312,6 +315,7 @@ namespace SpeckleRhinoConverter
         Circle preCircle;
         a.TryGetCircle( out preCircle );
         SpeckleCircle myCircle = preCircle.ToSpeckle();
+        myCircle.Domain = a.Domain.ToSpeckle();
         myCircle.Properties = a.UserDictionary.ToSpeckle();
         return myCircle;
       }
@@ -320,6 +324,7 @@ namespace SpeckleRhinoConverter
         Arc preArc;
         a.TryGetArc( out preArc );
         SpeckleArc myArc = preArc.ToSpeckle();
+        myArc.Domain = a.Domain.ToSpeckle();
         myArc.Properties = a.UserDictionary.ToSpeckle();
         return myArc;
       }
@@ -335,7 +340,11 @@ namespace SpeckleRhinoConverter
     public static ArcCurve ToNative( this SpeckleArc a )
     {
       Arc arc = new Arc( a.Plane.ToNative(), ( double ) a.Radius, ( double ) a.AngleRadians );
+      arc.StartAngle = ( double ) a.StartAngle;
+      arc.EndAngle = ( double ) a.EndAngle;
       var myArc = new ArcCurve( arc );
+      if ( a.Domain != null )
+        myArc.Domain = a.Domain.ToNative();
       myArc.UserDictionary.ReplaceContentsWith( a.Properties.ToNative() );
       return myArc;
     }
@@ -350,6 +359,8 @@ namespace SpeckleRhinoConverter
     {
       Ellipse elp = new Ellipse( e.Plane.ToNative(), ( double ) e.FirstRadius, ( double ) e.SecondRadius );
       var myEllp = elp.ToNurbsCurve();
+      if ( e.Domain != null )
+        myEllp.Domain = e.Domain.ToNative();
       myEllp.UserDictionary.ReplaceContentsWith( e.Properties.ToNative() );
       return myEllp;
     }
@@ -363,9 +374,9 @@ namespace SpeckleRhinoConverter
         return new SpeckleLine( poly.ToFlatArray() );
 
       var myPoly = new SpecklePolyline( poly.ToFlatArray() );
-      myPoly.closed = poly.IsClosed;
+      myPoly.Closed = poly.IsClosed;
 
-      if ( myPoly.closed )
+      if ( myPoly.Closed )
         myPoly.Value.RemoveRange( myPoly.Value.Count - 3, 3 );
 
       return myPoly;
@@ -378,15 +389,16 @@ namespace SpeckleRhinoConverter
 
       if ( poly.TryGetPolyline( out polyline ) )
       {
-        if( polyline.Count == 2)
+        if ( polyline.Count == 2 )
           return new SpeckleLine( polyline.ToFlatArray(), null, poly.UserDictionary.ToSpeckle() );
-        
-        var myPoly = new SpecklePolyline( polyline.ToFlatArray() );
-        myPoly.closed = polyline.IsClosed;
 
-        if ( myPoly.closed )
+        var myPoly = new SpecklePolyline( polyline.ToFlatArray() );
+        myPoly.Closed = polyline.IsClosed;
+
+        if ( myPoly.Closed )
           myPoly.Value.RemoveRange( myPoly.Value.Count - 3, 3 );
 
+        myPoly.Domain = poly.Domain.ToSpeckle();
         myPoly.Properties = poly.UserDictionary.ToSpeckle();
         return myPoly;
       }
@@ -396,7 +408,12 @@ namespace SpeckleRhinoConverter
     // Deserialise
     public static PolylineCurve ToNative( this SpecklePolyline poly )
     {
-      var myPoly = new PolylineCurve( poly.Value.ToPoints() );
+      var points = poly.Value.ToPoints().ToList();
+      if ( poly.Closed ) points.Add( points[ 0 ] );
+
+      var myPoly = new PolylineCurve( points );
+      if ( poly.Domain != null )
+        myPoly.Domain = poly.Domain.ToNative();
       myPoly.UserDictionary.ReplaceContentsWith( poly.Properties.ToNative() );
       return myPoly;
     }
@@ -406,35 +423,43 @@ namespace SpeckleRhinoConverter
     public static SpecklePolycurve ToSpeckle( this PolyCurve p )
     {
       SpecklePolycurve myPoly = new SpecklePolycurve();
-      
+      myPoly.Closed = p.IsClosed;
+      myPoly.Domain = p.Domain.ToSpeckle();
+
       p.RemoveNesting();
       var segments = p.Explode();
 
       myPoly.Segments = segments.Select( s => { return s.ToSpeckle(); } ).ToList();
       myPoly.Properties = p.UserDictionary.ToSpeckle();
       myPoly.SetHashes( myPoly.Segments.Select( obj => obj.Hash ).ToArray() );
+
       return myPoly;
     }
 
     public static PolyCurve ToNative( this SpecklePolycurve p )
     {
-
       PolyCurve myPolyc = new PolyCurve();
       foreach ( var segment in p.Segments )
       {
-        if ( segment.Type == SpeckleObjectType.Curve )
-          myPolyc.Append( ( ( SpeckleCurve ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Line )
-          myPolyc.Append( ( ( SpeckleLine ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Arc )
-          myPolyc.Append( ( ( SpeckleArc ) segment ).ToNative() );
-
-        if ( segment.Type == SpeckleObjectType.Polyline )
-          myPolyc.Append( ( ( SpecklePolyline ) segment ).ToNative().ToNurbsCurve() );
+        switch ( segment )
+        {
+          case SpeckleCore.SpeckleCurve crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpeckleLine crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpeckleArc crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+          case SpeckleCore.SpecklePolyline crv:
+            myPolyc.Append( crv.ToNative() );
+            break;
+        }
       }
       myPolyc.UserDictionary.ReplaceContentsWith( p.Properties.ToNative() );
+      if ( p.Domain != null )
+        myPolyc.Domain = p.Domain.ToNative();
       return myPolyc;
     }
 
@@ -478,7 +503,7 @@ namespace SpeckleRhinoConverter
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( (SpecklePolyline)poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
+      SpeckleCurve myCurve = new SpeckleCurve( ( SpecklePolyline ) poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
       NurbsCurve nurbsCurve = curve.ToNurbsCurve();
 
       myCurve.Weights = nurbsCurve.Points.Select( ctp => ctp.Weight ).ToList();
@@ -488,6 +513,7 @@ namespace SpeckleRhinoConverter
       myCurve.Periodic = nurbsCurve.IsPeriodic;
       myCurve.Rational = nurbsCurve.IsRational;
       myCurve.Domain = nurbsCurve.Domain.ToSpeckle();
+      myCurve.Closed = nurbsCurve.IsClosed;
 
       myCurve.Properties = properties;
       return myCurve;
@@ -529,8 +555,7 @@ namespace SpeckleRhinoConverter
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( poly: (SpecklePolyline) poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
-
+      SpeckleCurve myCurve = new SpeckleCurve( poly: ( SpecklePolyline ) poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
       myCurve.Weights = curve.Points.Select( ctp => ctp.Weight ).ToList();
       myCurve.Points = curve.Points.Select( ctp => ctp.Location ).ToFlatArray().ToList();
       myCurve.Knots = curve.Knots.ToList();
@@ -538,6 +563,7 @@ namespace SpeckleRhinoConverter
       myCurve.Periodic = curve.IsPeriodic;
       myCurve.Rational = curve.IsRational;
       myCurve.Domain = curve.Domain.ToSpeckle();
+      myCurve.Closed = curve.IsClosed;
 
       myCurve.Properties = properties;
       return myCurve;
@@ -547,17 +573,39 @@ namespace SpeckleRhinoConverter
     {
       var ptsList = curve.Points.ToPoints();
 
-      // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
-      var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, new Point3d[ curve.Periodic ? ptsList.Length - 2 : ptsList.Length ] );
-      myCurve.Domain = curve.Domain.ToNative();
+      if ( !curve.Periodic )
+      {
+        // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
+        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, ptsList );
+        myCurve.Domain = curve.Domain.ToNative();
 
-      for ( int i = 0; i < ptsList.Length; i++ )
-        myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
+        // set weights
+        for ( int i = 0; i < ptsList.Length; i++ )
+          myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
 
-      for ( int i = 0; i < curve.Knots.Count; i++ )
-        myCurve.Knots[ i ] = curve.Knots[ i ];
-     
-      return myCurve;
+        // set knots
+        for ( int i = 0; i < curve.Knots.Count; i++ )
+          myCurve.Knots[ i ] = curve.Knots[ i ];
+
+        myCurve.UserDictionary.ReplaceContentsWith( curve.Properties.ToNative() );
+        return myCurve;
+      }
+      else
+      {
+        var thePts = ptsList.Take( ptsList.Length - 3 ).ToArray();
+        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, thePts );
+        
+        // set weights
+        for ( int i = 0; i < ptsList.Length; i++ )
+          myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
+
+        // set knots
+        for ( int i = 0; i < curve.Knots.Count; i++ )
+          myCurve.Knots[ i ] = curve.Knots[ i ];
+
+        myCurve.Domain = curve.Domain.ToNative();
+        return myCurve;
+      }
     }
 
     #endregion
@@ -589,7 +637,7 @@ namespace SpeckleRhinoConverter
        } ).ToArray();
 
       var Colors = mesh.VertexColors.Select( cl => cl.ToArgb() ).ToArray();
-      double[] textureCoords;
+      double[ ] textureCoords;
 
       if ( SpeckleRhinoConverter.AddMeshTextureCoordinates )
       {
@@ -641,7 +689,7 @@ namespace SpeckleRhinoConverter
       {
         MeshingParameters mySettings;
 #if R6
-      mySettings = new MeshingParameters(0);
+        mySettings = new MeshingParameters( 0 );
 #else
         mySettings = MeshingParameters.Coarse;
 
@@ -687,10 +735,10 @@ namespace SpeckleRhinoConverter
       myExtrusion.PathStart = extrusion.PathStart.ToSpeckle();
       myExtrusion.PathEnd = extrusion.PathEnd.ToSpeckle();
       myExtrusion.PathTangent = extrusion.PathTangent.ToSpeckle();
-      myExtrusion.ProfileTransformation = extrusion.GetProfileTransformation(0.0);
+      myExtrusion.ProfileTransformation = extrusion.GetProfileTransformation( 0.0 );
       var Profiles = new List<SpeckleObject>();
-      for (int i = 0; i < extrusion.ProfileCount; i++)
-        Profiles.Add(extrusion.Profile3d(i, 0).ToSpeckle());
+      for ( int i = 0; i < extrusion.ProfileCount; i++ )
+        Profiles.Add( extrusion.Profile3d( i, 0 ).ToSpeckle() );
       myExtrusion.Profiles = Profiles;
       myExtrusion.Properties = extrusion.UserDictionary.ToSpeckle();
       myExtrusion.SetHashes( myExtrusion );
@@ -701,32 +749,32 @@ namespace SpeckleRhinoConverter
     {
       Curve profile = null;
 
-      switch ( extrusion.Profile.Type )
+      switch ( extrusion.Profile )
       {
-        case SpeckleObjectType.Curve:
-          profile = ( ( SpeckleCurve ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpeckleCurve curve:
+          profile = curve.ToNative();
           break;
-        case SpeckleObjectType.Polycurve:
-          profile = ( ( ( SpecklePolycurve ) extrusion.Profile ).ToNative() );
+        case SpeckleCore.SpecklePolycurve polycurve:
+          profile = polycurve.ToNative();
           if ( !profile.IsClosed )
             profile.Reverse();
           break;
-        case SpeckleObjectType.Polyline:
-          profile = ( ( SpecklePolyline ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpecklePolyline polyline:
+          profile = polyline.ToNative();
           if ( !profile.IsClosed )
             profile.Reverse();
           break;
-        case SpeckleObjectType.Arc:
-          profile = ( ( SpeckleArc ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpeckleArc arc:
+          profile = arc.ToNative();
           break;
-        case SpeckleObjectType.Circle:
-          profile = ( ( SpeckleCircle ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpeckleCircle circle:
+          profile = circle.ToNative();
           break;
-        case SpeckleObjectType.Ellipse:
-          profile = ( ( SpeckleEllipse ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpeckleEllipse ellipse:
+          profile = ellipse.ToNative();
           break;
-        case SpeckleObjectType.Line:
-          profile = ( ( SpeckleLine ) extrusion.Profile ).ToNative();
+        case SpeckleCore.SpeckleLine line:
+          profile = line.ToNative();
           break;
         default:
           profile = null;
@@ -781,15 +829,15 @@ namespace SpeckleRhinoConverter
           TextHeight = ( double ) annot.TextHeight
         };
 #if R6
-                var dimStyleIndex = Rhino.RhinoDoc.ActiveDoc.DimStyles.Add("Speckle");
-                var dimStyle = new Rhino.DocObjects.DimensionStyle
-                {
-                    TextHeight = (double)annot.TextHeight,
-                    Font = new Rhino.DocObjects.Font(annot.FontName, Rhino.DocObjects.Font.FontWeight.Bold, Rhino.DocObjects.Font.FontStyle.Italic, false, false)
-                };
-                Rhino.RhinoDoc.ActiveDoc.DimStyles.Modify(dimStyle, dimStyleIndex, true);
+        var dimStyleIndex = Rhino.RhinoDoc.ActiveDoc.DimStyles.Add( "Speckle" );
+        var dimStyle = new Rhino.DocObjects.DimensionStyle
+        {
+          TextHeight = ( double ) annot.TextHeight,
+          Font = new Rhino.DocObjects.Font( annot.FontName, Rhino.DocObjects.Font.FontWeight.Bold, Rhino.DocObjects.Font.FontStyle.Italic, false, false )
+        };
+        Rhino.RhinoDoc.ActiveDoc.DimStyles.Modify( dimStyle, dimStyleIndex, true );
 
-                textEntity.DimensionStyleId = Rhino.RhinoDoc.ActiveDoc.DimStyles[dimStyleIndex].Id;
+        textEntity.DimensionStyleId = Rhino.RhinoDoc.ActiveDoc.DimStyles[ dimStyleIndex ].Id;
 
 #endif
 
@@ -803,7 +851,6 @@ namespace SpeckleRhinoConverter
         return myTextdot;
       }
     }
-
 
     // Blocks and groups
     // TODO
