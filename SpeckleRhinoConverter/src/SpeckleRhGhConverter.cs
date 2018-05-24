@@ -506,7 +506,19 @@ namespace SpeckleRhinoConverter
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( ( SpecklePolyline ) poly.ToSpeckle(), properties: curve.UserDictionary.ToSpeckle() );
+      SpecklePolyline displayValue;
+
+      if(poly.Count == 2)
+      {
+        displayValue = new SpecklePolyline();
+        displayValue.Value = new List<double> { poly[ 0 ].X, poly[ 0 ].Y, poly[ 0 ].Z, poly[ 1 ].X, poly[ 1 ].Y, poly[ 1 ].Z };
+        displayValue.GenerateHash();
+      } else
+      {
+        displayValue = poly.ToSpeckle() as SpecklePolyline;
+      }
+
+      SpeckleCurve myCurve = new SpeckleCurve( displayValue, properties: curve.UserDictionary.ToSpeckle() );
       NurbsCurve nurbsCurve = curve.ToNurbsCurve();
 
       myCurve.Weights = nurbsCurve.Points.Select( ctp => ctp.Weight ).ToList();

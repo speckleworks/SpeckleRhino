@@ -41,10 +41,10 @@ namespace SpeckleRhino
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
+      //JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
+      //{
+      //  ContractResolver = new CamelCasePropertyNamesContractResolver()
+      //};
 
       Browser = _originalBrowser;
 
