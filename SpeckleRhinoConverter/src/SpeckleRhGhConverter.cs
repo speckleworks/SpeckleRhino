@@ -301,7 +301,8 @@ namespace SpeckleRhinoConverter
     {
       Circle circle = new Circle( new Plane( circ.Center.ToNative().Location, circ.Normal.ToNative() ), ( double ) circ.Radius );
       var myCircle = new ArcCurve( circle );
-      myCircle.Domain = circ.Domain.ToNative();
+      if ( circ.Domain != null )
+        myCircle.Domain = circ.Domain.ToNative();
       myCircle.UserDictionary.ReplaceContentsWith( circ.Properties.ToNative() );
       return myCircle;
     }

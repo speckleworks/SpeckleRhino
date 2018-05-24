@@ -453,7 +453,16 @@ namespace SpeckleGrasshopper
           data.Add( o );
       }
 
-      data = data.Select( obj => obj.GetType().GetProperty( "Value" ).GetValue( obj ) ).ToList();
+      data = data.Select( obj =>
+      {
+        try
+        {
+          return obj.GetType().GetProperty( "Value" ).GetValue( obj );
+        } catch
+        {
+          return null;
+        }
+      } ).ToList();
 
       return data;
     }
