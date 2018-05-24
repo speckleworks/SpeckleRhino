@@ -30,15 +30,23 @@ namespace SpeckleRhinoConverter
     public static bool AddBasicLengthAreaVolumeProperties = false;
 
     // Dictionaries & ArchivableDictionaries
-    public static Dictionary<string, object> ToSpeckle( this ArchivableDictionary dict )
+    public static Dictionary<string, object> ToSpeckle( this ArchivableDictionary dict, HashSet<int> traversed = null )
     {
       if ( dict == null ) return null;
+
+      if ( traversed == null )
+        traversed = new HashSet<int>();
+
+      var added = traversed.Add( dict.GetHashCode() );
+      if ( !added )
+        return new Dictionary<string, object>() { {"recursive","true!!!" } };
+
       Dictionary<string, object> myDictionary = new Dictionary<string, object>();
 
       foreach ( var key in dict.Keys )
       {
         if ( dict[ key ] is ArchivableDictionary )
-          myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle() );
+          myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle( traversed ) );
         else if ( dict[ key ] is string || dict[ key ] is double || dict[ key ] is float || dict[ key ] is int || dict[ key ] is SpeckleObject )
           myDictionary.Add( key, dict[ key ] );
         else if ( dict[ key ] is IEnumerable )
@@ -46,7 +54,23 @@ namespace SpeckleRhinoConverter
           //  TODO
         }
         else
-          myDictionary.Add( key, SpeckleCore.Converter.Serialise( dict[ key ] ) );
+        {
+          if ( dict[ key ] is GeometryBase )
+          {
+            GeometryBase obj = dict[ key ] as GeometryBase;
+            ArchivableDictionary dictCopy = obj.UserDictionary.Clone();
+            obj.UserDictionary.Clear();
+            SpeckleObject conv = SpeckleCore.Converter.Serialise( obj );
+            conv.Properties = dictCopy.ToSpeckle( traversed );
+            conv.GenerateHash();
+            myDictionary.Add( key, conv );
+            obj.UserDictionary.ReplaceContentsWith( dictCopy );
+          }
+          else
+          {
+            myDictionary.Add( key, SpeckleCore.Converter.Serialise( dict[ key ] ) );
+          }
+        }
       }
       return myDictionary;
     }
@@ -508,12 +532,13 @@ namespace SpeckleRhinoConverter
 
       SpecklePolyline displayValue;
 
-      if(poly.Count == 2)
+      if ( poly.Count == 2 )
       {
         displayValue = new SpecklePolyline();
         displayValue.Value = new List<double> { poly[ 0 ].X, poly[ 0 ].Y, poly[ 0 ].Z, poly[ 1 ].X, poly[ 1 ].Y, poly[ 1 ].Z };
         displayValue.GenerateHash();
-      } else
+      }
+      else
       {
         displayValue = poly.ToSpeckle() as SpecklePolyline;
       }
@@ -609,7 +634,7 @@ namespace SpeckleRhinoConverter
       {
         var thePts = ptsList.Take( ptsList.Length - 3 ).ToArray();
         var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, thePts );
-        
+
         // set weights
         for ( int i = 0; i < ptsList.Length; i++ )
           myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
