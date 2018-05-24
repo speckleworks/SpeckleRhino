@@ -318,6 +318,7 @@ namespace SpeckleRhinoConverter
         SpeckleCircle myCircle = preCircle.ToSpeckle();
         myCircle.Domain = a.Domain.ToSpeckle();
         myCircle.Properties = a.UserDictionary.ToSpeckle();
+        myCircle.GenerateHash();
         return myCircle;
       }
       else
@@ -327,6 +328,7 @@ namespace SpeckleRhinoConverter
         SpeckleArc myArc = preArc.ToSpeckle();
         myArc.Domain = a.Domain.ToSpeckle();
         myArc.Properties = a.UserDictionary.ToSpeckle();
+        myArc.GenerateHash();
         return myArc;
       }
     }
@@ -432,7 +434,7 @@ namespace SpeckleRhinoConverter
 
       myPoly.Segments = segments.Select( s => { return s.ToSpeckle(); } ).ToList();
       myPoly.Properties = p.UserDictionary.ToSpeckle();
-      myPoly.SetHashes( myPoly.Segments.Select( obj => obj.Hash ).ToArray() );
+      myPoly.GenerateHash();
 
       return myPoly;
     }
@@ -742,7 +744,7 @@ namespace SpeckleRhinoConverter
         Profiles.Add( extrusion.Profile3d( i, 0 ).ToSpeckle() );
       myExtrusion.Profiles = Profiles;
       myExtrusion.Properties = extrusion.UserDictionary.ToSpeckle();
-      myExtrusion.SetHashes( myExtrusion );
+      myExtrusion.GenerateHash();
       return myExtrusion;
     }
 
@@ -802,7 +804,7 @@ namespace SpeckleRhinoConverter
       myAnnotation.TextHeight = textentity.TextHeight;
       myAnnotation.Bold = font.Bold;
       myAnnotation.Italic = font.Italic;
-      myAnnotation.SetHashes( myAnnotation );
+      myAnnotation.GenerateHash();
 
       return myAnnotation;
     }
@@ -812,7 +814,7 @@ namespace SpeckleRhinoConverter
       var myAnnotation = new SpeckleAnnotation();
       myAnnotation.Text = textdot.Text;
       myAnnotation.Location = textdot.Point.ToSpeckle();
-      myAnnotation.SetHashes( myAnnotation );
+      myAnnotation.GenerateHash();
 
       return myAnnotation;
     }
