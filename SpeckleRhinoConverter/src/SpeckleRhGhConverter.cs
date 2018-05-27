@@ -30,28 +30,37 @@ namespace SpeckleRhinoConverter
     public static bool AddBasicLengthAreaVolumeProperties = false;
 
     // Dictionaries & ArchivableDictionaries
-    public static Dictionary<string, object> ToSpeckle( this ArchivableDictionary dict, HashSet<int> traversed = null )
+    public static Dictionary<string, object> ToSpeckle( this ArchivableDictionary dict, Dictionary<int, string> traversed = null, string path = "root", GeometryBase root = null )
     {
+      if ( dict.Values.Length == 0 ) return null;
       if ( dict == null ) return null;
 
       if ( traversed == null )
-        traversed = new HashSet<int>();
-
-      var added = traversed.Add( dict.GetHashCode() );
-      if ( !added )
-        return new Dictionary<string, object>() { {"recursive","true!!!" } };
+      {
+        traversed = new Dictionary<int, string>();
+        traversed.Add( root.GetHashCode(), "root" );
+      }
 
       Dictionary<string, object> myDictionary = new Dictionary<string, object>();
 
       foreach ( var key in dict.Keys )
       {
+        var myObj = dict[ key ];
+        if ( traversed.ContainsKey( myObj.GetHashCode() ) )
+        {
+          myDictionary.Add( key, traversed[myObj.GetHashCode()] );
+          continue;
+        }
+
+        traversed.Add( myObj.GetHashCode(), path + "/" + key );
+
         if ( dict[ key ] is ArchivableDictionary )
-          myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle( traversed ) );
+          myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle( traversed , path + "/" + key, root) );
         else if ( dict[ key ] is string || dict[ key ] is double || dict[ key ] is float || dict[ key ] is int || dict[ key ] is SpeckleObject )
           myDictionary.Add( key, dict[ key ] );
         else if ( dict[ key ] is IEnumerable )
         {
-          //  TODO
+          myDictionary.Add( key, "enums not supported yet." );
         }
         else
         {
@@ -61,7 +70,7 @@ namespace SpeckleRhinoConverter
             ArchivableDictionary dictCopy = obj.UserDictionary.Clone();
             obj.UserDictionary.Clear();
             SpeckleObject conv = SpeckleCore.Converter.Serialise( obj );
-            conv.Properties = dictCopy.ToSpeckle( traversed );
+            conv.Properties = dictCopy.ToSpeckle( traversed, path + "/" + key, root );
             conv.GenerateHash();
             myDictionary.Add( key, conv );
             obj.UserDictionary.ReplaceContentsWith( dictCopy );
@@ -294,7 +303,7 @@ namespace SpeckleRhinoConverter
     // Rh Line capture
     public static SpeckleLine ToSpeckle( this LineCurve line )
     {
-      return new SpeckleLine( ( new Point3d[ ] { line.PointAtStart, line.PointAtEnd } ).ToFlatArray(), properties: line.UserDictionary.ToSpeckle() ) { Domain = line.Domain.ToSpeckle() };
+      return new SpeckleLine( ( new Point3d[ ] { line.PointAtStart, line.PointAtEnd } ).ToFlatArray(), properties: line.UserDictionary.ToSpeckle( root: line ) ) { Domain = line.Domain.ToSpeckle() };
     }
 
     // Back again only to LINECURVES because we hate grasshopper and its dealings with rhinocommon
@@ -685,7 +694,7 @@ namespace SpeckleRhinoConverter
         return new SpeckleMesh( verts, Faces, Colors, textureCoords, properties: mesh.UserDictionary.ToSpeckle() );
       }
 
-      return new SpeckleMesh( verts, Faces, Colors, null, properties: mesh.UserDictionary.ToSpeckle() );
+      return new SpeckleMesh( verts, Faces, Colors, null, properties: mesh.UserDictionary.ToSpeckle(root: mesh) );
     }
 
     public static Mesh ToNative( this SpeckleMesh mesh )
