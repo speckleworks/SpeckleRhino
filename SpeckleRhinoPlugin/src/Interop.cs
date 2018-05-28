@@ -174,6 +174,12 @@ namespace SpeckleRhino
     {
       return Rhino.RhinoDoc.ActiveDoc.DocumentId.ToString();
     }
+
+    public string GetHostApplicationType()
+    {
+      return "Rhino";
+    }
+
     #endregion
 
     #region Serialisation & Init. 
