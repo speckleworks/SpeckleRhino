@@ -41,10 +41,10 @@ namespace SpeckleRhino
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
       // Makes sure we always get some camelCaseLove
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
+      //JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
+      //{
+      //  ContractResolver = new CamelCasePropertyNamesContractResolver()
+      //};
 
       Browser = _originalBrowser;
 
@@ -174,6 +174,12 @@ namespace SpeckleRhino
     {
       return Rhino.RhinoDoc.ActiveDoc.DocumentId.ToString();
     }
+
+    public string GetHostApplicationType()
+    {
+      return "Rhino";
+    }
+
     #endregion
 
     #region Serialisation & Init. 
