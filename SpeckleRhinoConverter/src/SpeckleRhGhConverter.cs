@@ -606,18 +606,34 @@ namespace SpeckleRhinoConverter
       Polyline poly;
       curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
 
-      SpeckleCurve myCurve = new SpeckleCurve( poly: ( SpecklePolyline ) poly.ToSpeckle() );
-      myCurve.Weights = curve.Points.Select( ctp => ctp.Weight ).ToList();
-      myCurve.Points = curve.Points.Select( ctp => ctp.Location ).ToFlatArray().ToList();
-      myCurve.Knots = curve.Knots.ToList();
-      myCurve.Degree = curve.Degree;
-      myCurve.Periodic = curve.IsPeriodic;
-      myCurve.Rational = curve.IsRational;
-      myCurve.Domain = curve.Domain.ToSpeckle();
-      myCurve.Closed = curve.IsClosed;
+      SpecklePolyline displayValue;
+
+      if ( poly.Count == 2 )
+      {
+        displayValue = new SpecklePolyline();
+        displayValue.Value = new List<double> { poly[ 0 ].X, poly[ 0 ].Y, poly[ 0 ].Z, poly[ 1 ].X, poly[ 1 ].Y, poly[ 1 ].Z };
+        displayValue.GenerateHash();
+      }
+      else
+      {
+        displayValue = poly.ToSpeckle() as SpecklePolyline;
+      }
+
+      SpeckleCurve myCurve = new SpeckleCurve( displayValue );
+      NurbsCurve nurbsCurve = curve.ToNurbsCurve();
+
+      myCurve.Weights = nurbsCurve.Points.Select( ctp => ctp.Weight ).ToList();
+      myCurve.Points = nurbsCurve.Points.Select( ctp => ctp.Location ).ToFlatArray().ToList();
+      myCurve.Knots = nurbsCurve.Knots.ToList();
+      myCurve.Degree = nurbsCurve.Degree;
+      myCurve.Periodic = nurbsCurve.IsPeriodic;
+      myCurve.Rational = nurbsCurve.IsRational;
+      myCurve.Domain = nurbsCurve.Domain.ToSpeckle();
+      myCurve.Closed = nurbsCurve.IsClosed;
 
       myCurve.Properties = properties;
       myCurve.GenerateHash();
+
       return myCurve;
     }
 
