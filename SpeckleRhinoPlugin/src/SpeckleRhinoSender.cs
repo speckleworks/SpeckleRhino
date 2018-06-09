@@ -308,7 +308,8 @@ namespace SpeckleRhino
         convertedObject.ApplicationId = obj.Id.ToString();
         allObjects.Add( convertedObject );
 
-        Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Converted " + count + " objects out of " + objs.Count() + "." );
+        if ( count % 10 == 0 )
+          Context.NotifySpeckleFrame( "client-progress-message", StreamId, "Converted " + count + " objects out of " + objs.Count() + "." );
 
         // check cache and see what the response from the server is when sending placeholders
         // in the ObjectCreateBulkAsyncRoute
