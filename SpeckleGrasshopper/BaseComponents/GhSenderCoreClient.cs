@@ -378,7 +378,7 @@ namespace SpeckleGrasshopper
       {
         this.Message = String.Format( "Sending payload\n{0} / {1}", k++, objectUpdatePayloads.Count );
 
-        responses.Add( mySender.ObjectCreateAsync( payload ).GetAwaiter().GetResult() );
+        responses.Add( mySender.ObjectCreateAsync( payload ).Result );
       }
 
       this.Message = "Updating stream...";
@@ -402,7 +402,7 @@ namespace SpeckleGrasshopper
       baseProps[ "angleTolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
       updateStream.BaseProperties = baseProps;
 
-      var response = mySender.StreamUpdateAsync( mySender.StreamId, updateStream );
+      var response = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).Result;
 
       mySender.BroadcastMessage( new { eventType = "update-global" } );
 
@@ -414,7 +414,7 @@ namespace SpeckleGrasshopper
         l++;
       }
 
-      Log += response.Result.Message;
+      Log += response.Message;
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
       Message = "Data sent\n@" + DateTime.Now.ToString( "hh:mm:ss" );
     }
@@ -437,7 +437,7 @@ namespace SpeckleGrasshopper
         Layers = BucketLayers
       };
 
-      var updateResult = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).GetAwaiter().GetResult();
+      var updateResult = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).Result;
 
       Log += updateResult.Message;
       mySender.BroadcastMessage( new { eventType = "update-meta" } );
