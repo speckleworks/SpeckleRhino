@@ -18,6 +18,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
+using System.Collections.Specialized;
 
 using SpeckleGrasshopper.Properties;
 using System.Runtime.Serialization;
@@ -27,12 +28,15 @@ using System.Drawing;
 using Grasshopper.GUI.Canvas;
 using System.Timers;
 using System.Threading.Tasks;
+using Grasshopper.Kernel.Special;
+using System.Collections;
 
 namespace SpeckleGrasshopper
 {
   public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
   {
     public string Log { get; set; }
+    public OrderedDictionary JobQueue;
 
     string RestApi;
     string StreamId;
@@ -49,14 +53,18 @@ namespace SpeckleGrasshopper
     private List<Layer> BucketLayers = new List<Layer>();
     private List<object> BucketObjects = new List<object>();
 
+    public string CurrentJobClient = "none";
+    public bool solutionPrepared = false;
+    
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhSenderClient( )
-      : base( "Data Sender", "Anonymous Stream",
+      : base( "Data Sender and Controller", "Anonymous Stream",
           "Sends data to Speckle.",
           "Speckle", "I/O" )
     {
       var hack = new ConverterHack();
+      JobQueue = new OrderedDictionary();
     }
 
     public override void CreateAttributes( )
@@ -187,10 +195,63 @@ namespace SpeckleGrasshopper
 
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
     {
-      Debug.WriteLine( "[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease." );
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at" + DateTime.Now);
+        switch ((string)e.EventObject.args.eventType)
+        {
+            case "get-definition-io":
+                List<SpeckleInput> speckleInputs = null;
+                List<SpeckleOutput> speckleOutputs = null;
+                GetSpeckleParams(ref speckleInputs, ref speckleOutputs);
+
+                Dictionary<string, object> message = new Dictionary<string, object>();
+                message["eventType"] = "get-def-io-response";
+                message["controllers"] = speckleInputs;
+                message["outputs"] = "A list of outputs";
+                mySender.SendMessage("recipId", message);                
+                //mySender.SendMessage(e.EventObject.senderId, message);
+                break;
+            case "compute-request":
+                var key = (string)e.EventObject.senderId;
+                if (JobQueue.Contains((string)e.EventObject.senderId))
+                    JobQueue[key] = e.EventObject.args.requestParameters;
+                else
+                    JobQueue.Add(key, e.EventObject.args.requestParameters);
+                Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
+                break;
+            default:
+                Log += DateTime.Now.ToString("dd:HH:mm:ss") + " Defaulted, could not parse event. \n";
+                break;
+        }
+        Debug.WriteLine( "[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease." );
     }
 
-    public override void RemovedFromDocument( GH_Document document )
+    private void GetSpeckleParams(ref List<SpeckleInput> speckleInputs, ref List<SpeckleOutput> speckleOutputs)
+    {
+        speckleInputs = new List<SpeckleInput>();
+        speckleOutputs = new List<SpeckleOutput>();
+        foreach (var comp in Document.Objects)
+        {
+            var slider = comp as GH_NumberSlider;
+            if (slider != null)
+            {
+                if (slider.NickName.Contains("SPK_IN"))
+                {
+                    var n = new SpeckleInput();
+                    n.Min = (float)slider.Slider.Minimum;
+                    n.Max = (float)slider.Slider.Maximum;
+                    n.Value = (float)slider.Slider.Value;
+                    //n.Step = getSliderStep(slider.Slider);
+                    //n.OrderIndex = Convert.ToInt32(slider.NickName.Split(':')[1]);
+                    //n.Name = slider.NickName.Split(':')[2];
+                    n.Name = slider.NickName;
+                    n.InputType = "Slider";
+                    n.Guid = slider.InstanceGuid.ToString();
+                    speckleInputs.Add(n);
+                }
+            }
+        }
+    }
+        public override void RemovedFromDocument( GH_Document document )
     {
       if ( mySender != null ) mySender.Dispose();
       base.RemovedFromDocument( document );
@@ -298,6 +359,7 @@ namespace SpeckleGrasshopper
     protected override void SolveInstance( IGH_DataAccess DA )
     {
       if ( mySender == null ) return;
+      this.Message = "JobQueue: " + JobQueue.Count;
 
       StreamId = mySender.StreamId;
 
@@ -305,10 +367,80 @@ namespace SpeckleGrasshopper
       DA.SetData( 1, mySender.StreamId );
 
       if ( !mySender.IsConnected ) return;
+        
+      if (JobQueue.Count == 0)
+        {
+           UpdateData();
+           return;
+        }
 
-      UpdateData();
+        if (!solutionPrepared)
+        {
+            System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt(0);
+            CurrentJobClient = (string)t.Key;
+            PrepareSolution((IEnumerable)t.Value);
+            solutionPrepared = true;
+            return;
+        }
+        
+        else
+        {
+            solutionPrepared = false;
+            var BucketObjects = GetData();
+            var convertedObjects = Converter.Serialise(BucketObjects).Select(obj =>
+            {
+                if (ObjectCache.ContainsKey(obj.Hash))
+                    return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[obj.Hash]._id };
+                return obj;
+            });
+
+            JobQueue.RemoveAt(0);
+            this.Message = "JobQueue: " + JobQueue.Count;
+            if (JobQueue.Count != 0)
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
+        }
+
+        UpdateData();
     }
 
+    private void PrepareSolution(IEnumerable args)
+    {
+        var x = args;
+
+        foreach (dynamic param in args)
+        {
+            IGH_DocumentObject controller = null;
+            try
+            {
+                controller = Document.Objects.First(doc => doc.InstanceGuid.ToString() == param.guid);
+            }
+            catch { }
+            if (controller != null)
+                switch ((string)param.inputType)
+                {
+                    case "TextPanel":
+                        GH_Panel panel = controller as GH_Panel;
+                        panel.UserText = (string)param.value;
+                        panel.ExpireSolution(false);
+                        break;
+                    case "Slider":
+                        GH_NumberSlider slider = controller as GH_NumberSlider;
+                        slider.SetSliderValue(decimal.Parse(param.value.ToString()));
+                        break;
+                    //            case "Point":
+                    //              PointController p = controller as PointController;
+                    //              var xxxx = p;
+                    //              p.setParam( ( double ) param.value.X, ( double ) param.value.Y, ( double ) param.value.Z );
+                    //              break;
+                    case "Toggle":
+                        break;
+                    default:
+                        break;
+                }
+        }
+        Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
+    }
+    
     public void UpdateData( )
     {
       BucketName = this.NickName;
