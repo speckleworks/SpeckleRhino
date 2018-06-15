@@ -42,7 +42,7 @@ namespace SpeckleGrasshopper
     string StreamId;
 
     public Action ExpireComponentAction;
-
+    
     public SpeckleApiClient mySender;
 
     public GH_Document Document;
@@ -59,7 +59,7 @@ namespace SpeckleGrasshopper
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhSenderClient( )
-      : base( "Data Sender and Controller", "Anonymous Stream",
+      : base( "Data Sender", "Anonymous Stream",
           "Sends data to Speckle.",
           "Speckle", "I/O" )
     {
@@ -177,7 +177,7 @@ namespace SpeckleGrasshopper
       };
 
       ExpireComponentAction = ( ) => ExpireSolution( true );
-
+      
       ObjectChanged += ( sender, e ) => UpdateMetadata();
 
       foreach ( var param in Params.Input )
@@ -192,10 +192,10 @@ namespace SpeckleGrasshopper
       ObjectCache = new Dictionary<string, SpeckleObject>();
     }
 
-
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
     {
-        AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at" + DateTime.Now);
+
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at " + DateTime.Now + " from " + e.EventObject.senderId);
         switch ((string)e.EventObject.args.eventType)
         {
             case "get-definition-io":
@@ -207,17 +207,25 @@ namespace SpeckleGrasshopper
                 message["eventType"] = "get-def-io-response";
                 message["controllers"] = speckleInputs;
                 message["outputs"] = "A list of outputs";
-                mySender.SendMessage("recipId", message);                
-                //mySender.SendMessage(e.EventObject.senderId, message);
+                mySender.SendMessage(e.EventObject.senderId, message);
                 break;
+
             case "compute-request":
                 var key = (string)e.EventObject.senderId;
                 if (JobQueue.Contains((string)e.EventObject.senderId))
                     JobQueue[key] = e.EventObject.args.requestParameters;
                 else
                     JobQueue.Add(key, e.EventObject.args.requestParameters);
-                Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
-                break;
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, Document.SolutionState.ToString());
+                    if (!solutionPrepared)
+                    {
+                        System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt(0);
+                        CurrentJobClient = (string)t.Key;
+                        PrepareSolution((IEnumerable)t.Value);
+                        solutionPrepared = true;
+                        return;
+                    }
+                    break;
             default:
                 Log += DateTime.Now.ToString("dd:HH:mm:ss") + " Defaulted, could not parse event. \n";
                 break;
@@ -251,7 +259,8 @@ namespace SpeckleGrasshopper
             }
         }
     }
-        public override void RemovedFromDocument( GH_Document document )
+
+    public override void RemovedFromDocument( GH_Document document )
     {
       if ( mySender != null ) mySender.Dispose();
       base.RemovedFromDocument( document );
@@ -374,15 +383,6 @@ namespace SpeckleGrasshopper
            return;
         }
 
-        if (!solutionPrepared)
-        {
-            System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt(0);
-            CurrentJobClient = (string)t.Key;
-            PrepareSolution((IEnumerable)t.Value);
-            solutionPrepared = true;
-            return;
-        }
-        
         else
         {
             solutionPrepared = false;
@@ -402,7 +402,7 @@ namespace SpeckleGrasshopper
 
         UpdateData();
     }
-
+    
     private void PrepareSolution(IEnumerable args)
     {
         var x = args;
@@ -438,8 +438,8 @@ namespace SpeckleGrasshopper
                         break;
                 }
         }
-        Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
-    }
+            Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
+        }
     
     public void UpdateData( )
     {
