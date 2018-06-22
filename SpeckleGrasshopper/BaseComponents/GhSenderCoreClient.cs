@@ -57,6 +57,7 @@ namespace SpeckleGrasshopper
     public bool solutionPrepared = false;
 
     public bool EnableRemoteControl = false;
+    private bool WasSerialised = false;
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
@@ -109,6 +110,7 @@ namespace SpeckleGrasshopper
           var x = mySender;
           RestApi = mySender.BaseUrl;
           StreamId = mySender.StreamId;
+          WasSerialised = true;
         }
       }
       catch ( Exception err )
@@ -159,9 +161,12 @@ namespace SpeckleGrasshopper
       mySender.OnReady += ( sender, e ) =>
       {
         StreamId = mySender.StreamId;
-        this.Locked = false;
-        this.NickName = "Anonymous Stream";
-        //this.UpdateMetadata();
+        if ( !WasSerialised )
+        {
+          this.Locked = false;
+          this.NickName = "Anonymous Stream";
+        }
+        ////this.UpdateMetadata();
         Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
       };
 
