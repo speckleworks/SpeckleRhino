@@ -411,9 +411,7 @@ namespace SpeckleGrasshopper
       if ( !solutionPrepared && JobQueue.Count != 0 )
       {
         System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
-        CurrentJobClient = ( string ) t.Key;
-        PrepareSolution( ( IEnumerable ) t.Value );
-        solutionPrepared = true;
+        Document.ScheduleSolution( 1, PrepareSolution );
         return;
       }
 
@@ -453,11 +451,12 @@ namespace SpeckleGrasshopper
       }
     }
 
-    private void PrepareSolution( IEnumerable args )
+    private void PrepareSolution( GH_Document gH_Document )
     {
-      var x = args;
+      System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
+      CurrentJobClient = ( string ) t.Key;
 
-      foreach ( dynamic param in args )
+      foreach ( dynamic param in (IEnumerable) t.Value )
       {
         IGH_DocumentObject controller = null;
         try
@@ -477,18 +476,13 @@ namespace SpeckleGrasshopper
               GH_NumberSlider slider = controller as GH_NumberSlider;
               slider.SetSliderValue( decimal.Parse( param.value.ToString() ) );
               break;
-            //            case "Point":
-            //              PointController p = controller as PointController;
-            //              var xxxx = p;
-            //              p.setParam( ( double ) param.value.X, ( double ) param.value.Y, ( double ) param.value.Z );
-            //              break;
             case "Toggle":
               break;
             default:
               break;
           }
       }
-      Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+      solutionPrepared = true;
     }
 
     public void UpdateData( )
