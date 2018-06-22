@@ -18,6 +18,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
+using System.Collections.Specialized;
 
 using SpeckleGrasshopper.Properties;
 using System.Runtime.Serialization;
@@ -27,12 +28,15 @@ using System.Drawing;
 using Grasshopper.GUI.Canvas;
 using System.Timers;
 using System.Threading.Tasks;
+using Grasshopper.Kernel.Special;
+using System.Collections;
 
 namespace SpeckleGrasshopper
 {
   public class GhSenderClient : GH_Component, IGH_VariableParameterComponent
   {
     public string Log { get; set; }
+    public OrderedDictionary JobQueue;
 
     string RestApi;
     string StreamId;
@@ -49,6 +53,12 @@ namespace SpeckleGrasshopper
     private List<Layer> BucketLayers = new List<Layer>();
     private List<object> BucketObjects = new List<object>();
 
+    public string CurrentJobClient = "none";
+    public bool solutionPrepared = false;
+
+    public bool EnableRemoteControl = false;
+    private bool WasSerialised = false;
+
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhSenderClient( )
@@ -57,6 +67,7 @@ namespace SpeckleGrasshopper
           "Speckle", "I/O" )
     {
       var hack = new ConverterHack();
+      JobQueue = new OrderedDictionary();
     }
 
     public override void CreateAttributes( )
@@ -76,6 +87,7 @@ namespace SpeckleGrasshopper
             var arr = ms.ToArray();
             var arrr = arr;
             writer.SetByteArray( "speckleclient", ms.ToArray() );
+            writer.SetBoolean( "remotecontroller", EnableRemoteControl );
           }
       }
       catch ( Exception err )
@@ -99,7 +111,11 @@ namespace SpeckleGrasshopper
           var x = mySender;
           RestApi = mySender.BaseUrl;
           StreamId = mySender.StreamId;
+          WasSerialised = true;
         }
+        
+        reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
+
       }
       catch ( Exception err )
       {
@@ -149,9 +165,12 @@ namespace SpeckleGrasshopper
       mySender.OnReady += ( sender, e ) =>
       {
         StreamId = mySender.StreamId;
-        this.Locked = false;
-        this.NickName = "Anonymous Stream";
-        //this.UpdateMetadata();
+        if ( !WasSerialised )
+        {
+          this.Locked = false;
+          this.NickName = "Anonymous Stream";
+        }
+        ////this.UpdateMetadata();
         Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
       };
 
@@ -184,10 +203,77 @@ namespace SpeckleGrasshopper
       ObjectCache = new Dictionary<string, SpeckleObject>();
     }
 
-
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
     {
+
+      AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at " + DateTime.Now + " from " + e.EventObject.senderId );
+      switch ( ( string ) e.EventObject.args.eventType )
+      {
+        case "get-definition-io":
+          List<SpeckleInput> speckleInputs = null;
+          List<SpeckleOutput> speckleOutputs = null;
+          GetSpeckleParams( ref speckleInputs, ref speckleOutputs );
+
+          Dictionary<string, object> message = new Dictionary<string, object>();
+          message[ "eventType" ] = "get-def-io-response";
+          message[ "controllers" ] = speckleInputs;
+          message[ "outputs" ] = "A list of outputs";
+          mySender.SendMessage( e.EventObject.senderId, message );
+          break;
+
+        case "compute-request":
+          if ( EnableRemoteControl == true )
+          {
+            var requestClientId = ( string ) e.EventObject.senderId;
+            if ( JobQueue.Contains( requestClientId ) )
+              JobQueue[ requestClientId ] = e.EventObject.args.requestParameters;
+            else
+              JobQueue.Add( requestClientId, e.EventObject.args.requestParameters );
+            AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, Document.SolutionState.ToString() );
+
+            if ( JobQueue.Count == 1 ) // means we  just added one, so we need to start the solve loop
+              Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+          }
+          else
+          {
+            Dictionary<string, object> computeMessage = new Dictionary<string, object>();
+            computeMessage[ "eventType" ] = "compute-request-error";
+            computeMessage[ "response" ] = "Remote control is disabled for this sender";
+            mySender.SendMessage( e.EventObject.senderId, computeMessage );
+          }
+          break;
+        default:
+          Log += DateTime.Now.ToString( "dd:HH:mm:ss" ) + " Defaulted, could not parse event. \n";
+          break;
+      }
       Debug.WriteLine( "[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease." );
+    }
+
+    private void GetSpeckleParams( ref List<SpeckleInput> speckleInputs, ref List<SpeckleOutput> speckleOutputs )
+    {
+      speckleInputs = new List<SpeckleInput>();
+      speckleOutputs = new List<SpeckleOutput>();
+      foreach ( var comp in Document.Objects )
+      {
+        var slider = comp as GH_NumberSlider;
+        if ( slider != null )
+        {
+          if ( slider.NickName.Contains( "SPK_IN" ) )
+          {
+            var n = new SpeckleInput();
+            n.Min = ( float ) slider.Slider.Minimum;
+            n.Max = ( float ) slider.Slider.Maximum;
+            n.Value = ( float ) slider.Slider.Value;
+            //n.Step = getSliderStep(slider.Slider);
+            //n.OrderIndex = Convert.ToInt32(slider.NickName.Split(':')[1]);
+            //n.Name = slider.NickName.Split(':')[2];
+            n.Name = slider.NickName;
+            n.InputType = "Slider";
+            n.Guid = slider.InstanceGuid.ToString();
+            speckleInputs.Add( n );
+          }
+        }
+      }
     }
 
     public override void RemovedFromDocument( GH_Document document )
@@ -253,6 +339,13 @@ namespace SpeckleGrasshopper
       if ( mySender.Stream == null ) return;
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
+      GH_DocumentObject.Menu_AppendItem( menu, "Enable remote control of definition", ( sender, e ) =>
+       {
+         EnableRemoteControl = !EnableRemoteControl;
+       }, true, EnableRemoteControl );
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
+
       if ( mySender.Stream.Parent == null )
         GH_DocumentObject.Menu_AppendItem( menu: menu, text: "This is a parent stream.", enabled: false, click: null );
       else
@@ -299,6 +392,9 @@ namespace SpeckleGrasshopper
     {
       if ( mySender == null ) return;
 
+      if ( this.EnableRemoteControl )
+        this.Message = "JobQueue: " + JobQueue.Count;
+
       StreamId = mySender.StreamId;
 
       DA.SetData( 0, Log );
@@ -306,7 +402,91 @@ namespace SpeckleGrasshopper
 
       if ( !mySender.IsConnected ) return;
 
-      UpdateData();
+      if ( !this.EnableRemoteControl )
+      {
+        UpdateData();
+        return;
+      }
+
+      if ( JobQueue.Count == 0 )
+        return;
+
+      // prepare solution and exit
+      if ( !solutionPrepared && JobQueue.Count != 0 )
+      {
+        System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
+        Document.ScheduleSolution( 1, PrepareSolution );
+        return;
+      }
+
+      // send out solution and exit
+      if ( solutionPrepared )
+      {
+        solutionPrepared = false;
+        var BucketObjects = GetData();
+        var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
+           {
+             if ( ObjectCache.ContainsKey( obj.Hash ) )
+               return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[ obj.Hash ]._id };
+             return obj;
+           } );
+
+
+        // theoretically this should go through the same flow as in DataSenderElapsed(), ie creating
+        // buckets for staggered updates, etc. but we're lazy to untangle that logic for now
+
+        var responseClone = mySender.StreamCloneAsync( this.StreamId ).Result;
+        var responseStream = new SpeckleStream();
+        responseStream.IsComputedResult = true;
+        responseStream.Objects = convertedObjects.ToList();
+
+        // go unblocking
+        var responseCloneUpdate = mySender.StreamUpdateAsync( responseClone.Clone.StreamId, responseStream ).ContinueWith( tres =>
+        {
+          mySender.SendMessage( CurrentJobClient, new { eventType = "compute-response", streamId = responseClone.Clone.StreamId } );
+        } );
+
+
+        JobQueue.RemoveAt( 0 );
+        this.Message = "JobQueue: " + JobQueue.Count;
+
+        if ( JobQueue.Count != 0 )
+          Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+      }
+    }
+
+    private void PrepareSolution( GH_Document gH_Document )
+    {
+      System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
+      CurrentJobClient = ( string ) t.Key;
+
+      foreach ( dynamic param in (IEnumerable) t.Value )
+      {
+        IGH_DocumentObject controller = null;
+        try
+        {
+          controller = Document.Objects.First( doc => doc.InstanceGuid.ToString() == param.guid );
+        }
+        catch { }
+        if ( controller != null )
+          switch ( ( string ) param.inputType )
+          {
+            case "TextPanel":
+              GH_Panel panel = controller as GH_Panel;
+              panel.UserText = ( string ) param.value;
+              panel.ExpireSolution( false );
+              break;
+            case "Slider":
+              GH_NumberSlider slider = controller as GH_NumberSlider;
+              slider.SetSliderValue( decimal.Parse( param.value.ToString() ) );
+              break;
+            case "Toggle":
+              break;
+            default:
+              break;
+          }
+      }
+      solutionPrepared = true;
     }
 
     public void UpdateData( )
@@ -443,7 +623,6 @@ namespace SpeckleGrasshopper
       mySender.BroadcastMessage( new { eventType = "update-meta" } );
     }
 
-
     public List<object> GetData( )
     {
       List<object> data = new List<dynamic>();
@@ -458,7 +637,8 @@ namespace SpeckleGrasshopper
         try
         {
           return obj.GetType().GetProperty( "Value" ).GetValue( obj );
-        } catch
+        }
+        catch
         {
           return null;
         }
@@ -601,11 +781,11 @@ namespace SpeckleGrasshopper
       base.Render( canvas, graphics, channel );
       if ( channel == GH_CanvasChannel.Objects )
       {
-        GH_PaletteStyle myStyle = new GH_PaletteStyle( System.Drawing.ColorTranslator.FromHtml( "#B3B3B3" ), System.Drawing.ColorTranslator.FromHtml( "#FFFFFF" ), System.Drawing.ColorTranslator.FromHtml( "#4C4C4C" ) );
+        GH_PaletteStyle myStyle = new GH_PaletteStyle( System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#147DE9" : "#B3B3B3" ), System.Drawing.ColorTranslator.FromHtml( "#FFFFFF" ), System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#ffffff" : "#4C4C4C" ) );
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle( System.Drawing.Color.FromArgb( 0, 0, 0, 0 ) );
 
-        var streamIdCapsule = GH_Capsule.CreateTextCapsule( box: StreamIdBounds, textbox: StreamIdBounds, palette: GH_Palette.Transparent, text: "ID: " + Base.mySender.StreamId, highlight: 0, radius: 5 );
+        var streamIdCapsule = GH_Capsule.CreateTextCapsule( box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + Base.mySender.StreamId, highlight: 0, radius: 5 );
         streamIdCapsule.Render( graphics, myStyle );
         streamIdCapsule.Dispose();
 
