@@ -87,6 +87,7 @@ namespace SpeckleGrasshopper
             var arr = ms.ToArray();
             var arrr = arr;
             writer.SetByteArray( "speckleclient", ms.ToArray() );
+            writer.SetBoolean( "remotecontroller", EnableRemoteControl );
           }
       }
       catch ( Exception err )
@@ -112,6 +113,9 @@ namespace SpeckleGrasshopper
           StreamId = mySender.StreamId;
           WasSerialised = true;
         }
+        
+        reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
+
       }
       catch ( Exception err )
       {
