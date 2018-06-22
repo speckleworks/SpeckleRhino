@@ -221,16 +221,9 @@ namespace SpeckleGrasshopper
             else
               JobQueue.Add( requestClientId, e.EventObject.args.requestParameters );
             AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, Document.SolutionState.ToString() );
-            Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
-            //if ( !solutionPrepared )
-            //{
-            //  System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
-            //  CurrentJobClient = ( string ) t.Key;
-            //  PrepareSolution( ( IEnumerable ) t.Value );
-            //  solutionPrepared = true;
-            //  return;
-            //}
 
+            if ( JobQueue.Count == 1 ) // means we  just added one, so we need to start the solve loop
+              Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
           }
           else
           {
@@ -453,8 +446,6 @@ namespace SpeckleGrasshopper
         if ( JobQueue.Count != 0 )
           Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
       }
-
-      //UpdateData();
     }
 
     private void PrepareSolution( IEnumerable args )
