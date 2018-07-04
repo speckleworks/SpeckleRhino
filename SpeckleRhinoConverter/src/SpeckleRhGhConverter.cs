@@ -333,7 +333,6 @@ namespace SpeckleRhinoConverter
 
     public static ArcCurve ToNative( this SpeckleCircle circ )
     {
-      //Circle circle = new Circle( new Plane( circ.Center.ToNative().Location, circ.Normal.ToNative() ), ( double ) circ.Radius );
       Circle circle = new Circle( circ.Plane.ToNative(), ( double ) circ.Radius );
 
       var myCircle = new ArcCurve( circle );
