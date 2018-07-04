@@ -322,8 +322,9 @@ namespace SpeckleGrasshopper
     {
       if ( context == GH_DocumentContext.Close )
       {
-        myReceiver.Dispose();
+        myReceiver?.Dispose();
       }
+
       base.DocumentContextChanged( document, context );
     }
 
