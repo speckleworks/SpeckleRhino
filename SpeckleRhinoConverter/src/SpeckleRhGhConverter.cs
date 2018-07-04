@@ -327,16 +327,20 @@ namespace SpeckleRhinoConverter
     // Gh Capture
     public static SpeckleCircle ToSpeckle( this Circle circ )
     {
-      return new SpeckleCircle( circ.Center.ToSpeckle(), circ.Normal.ToSpeckle(), circ.Radius );
+      var circle = new SpeckleCircle( circ.Plane.ToSpeckle(), circ.Radius );
+      return circle;
     }
 
     public static ArcCurve ToNative( this SpeckleCircle circ )
     {
-      Circle circle = new Circle( new Plane( circ.Center.ToNative().Location, circ.Normal.ToNative() ), ( double ) circ.Radius );
+      //Circle circle = new Circle( new Plane( circ.Center.ToNative().Location, circ.Normal.ToNative() ), ( double ) circ.Radius );
+      Circle circle = new Circle( circ.Plane.ToNative(), ( double ) circ.Radius );
+
       var myCircle = new ArcCurve( circle );
       if ( circ.Domain != null )
         myCircle.Domain = circ.Domain.ToNative();
       myCircle.UserDictionary.ReplaceContentsWith( circ.Properties.ToNative() );
+
       return myCircle;
     }
 
@@ -465,7 +469,7 @@ namespace SpeckleRhinoConverter
       p.RemoveNesting();
       var segments = p.Explode();
 
-      myPoly.Segments = segments.Select( s => { return s.ToSpeckle(); } ).ToList();
+      myPoly.Segments = segments.Select( s => { return ( ( NurbsCurve ) s ).ToSpeckle(); } ).ToList();
       myPoly.Properties = p.UserDictionary.ToSpeckle( root: p );
       myPoly.GenerateHash();
 
@@ -497,77 +501,6 @@ namespace SpeckleRhinoConverter
       if ( p.Domain != null )
         myPolyc.Domain = p.Domain.ToNative();
       return myPolyc;
-    }
-
-    public static SpeckleObject ToSpeckle( this Curve curve )
-    {
-      var properties = curve.UserDictionary.ToSpeckle( root: curve );
-
-      if ( curve is PolyCurve )
-      {
-        return ( ( PolyCurve ) curve ).ToSpeckle();
-      }
-
-      if ( curve.IsArc() )
-      {
-        Arc getObj; curve.TryGetArc( out getObj );
-        SpeckleArc myObject = getObj.ToSpeckle(); myObject.Properties = properties; myObject.GenerateHash();
-        return myObject;
-      }
-
-      if ( curve.IsCircle() )
-      {
-        Circle getObj; curve.TryGetCircle( out getObj );
-        SpeckleCircle myObject = getObj.ToSpeckle(); myObject.Properties = properties; myObject.GenerateHash();
-        return myObject;
-      }
-
-      if ( curve.IsEllipse() )
-      {
-        Ellipse getObj; curve.TryGetEllipse( out getObj );
-        SpeckleEllipse myObject = getObj.ToSpeckle(); myObject.Properties = properties; myObject.GenerateHash();
-        return myObject;
-      }
-
-      if ( curve.IsLinear() || curve.IsPolyline() ) // defaults to polyline
-      {
-        Polyline getObj; curve.TryGetPolyline( out getObj );
-        SpeckleObject myObject = getObj.ToSpeckle(); myObject.Properties = properties; myObject.GenerateHash();
-        return myObject;
-      }
-
-      Polyline poly;
-      curve.ToPolyline( 0, 1, 0, 0, 0, 0.1, 0, 0, true ).TryGetPolyline( out poly );
-
-      SpecklePolyline displayValue;
-
-      if ( poly.Count == 2 )
-      {
-        displayValue = new SpecklePolyline();
-        displayValue.Value = new List<double> { poly[ 0 ].X, poly[ 0 ].Y, poly[ 0 ].Z, poly[ 1 ].X, poly[ 1 ].Y, poly[ 1 ].Z };
-        displayValue.GenerateHash();
-      }
-      else
-      {
-        displayValue = poly.ToSpeckle() as SpecklePolyline;
-      }
-
-      SpeckleCurve myCurve = new SpeckleCurve( displayValue );
-      NurbsCurve nurbsCurve = curve.ToNurbsCurve();
-
-      myCurve.Weights = nurbsCurve.Points.Select( ctp => ctp.Weight ).ToList();
-      myCurve.Points = nurbsCurve.Points.Select( ctp => ctp.Location ).ToFlatArray().ToList();
-      myCurve.Knots = nurbsCurve.Knots.ToList();
-      myCurve.Degree = nurbsCurve.Degree;
-      myCurve.Periodic = nurbsCurve.IsPeriodic;
-      myCurve.Rational = nurbsCurve.IsRational;
-      myCurve.Domain = nurbsCurve.Domain.ToSpeckle();
-      myCurve.Closed = nurbsCurve.IsClosed;
-
-      myCurve.Properties = properties;
-      myCurve.GenerateHash();
-
-      return myCurve;
     }
 
     // Curve
@@ -678,7 +611,6 @@ namespace SpeckleRhinoConverter
 
     #endregion
 
-    // do not worry (too much!) from down here onwards
 
     // Box
     public static SpeckleBox ToSpeckle( this Box box )
@@ -772,7 +704,7 @@ namespace SpeckleRhinoConverter
         Mesh.CreateFromBrep( brep, mySettings ).All( meshPart => { joinedMesh.Append( meshPart ); return true; } );
       }
 
-      return new SpeckleBrep( displayValue: SpeckleRhinoConverter.SetBrepDisplayMesh ? joinedMesh.ToSpeckle() : null, rawData: JsonConvert.SerializeObject( brep ), provenance: "Rhino", properties: brep.UserDictionary.ToSpeckle(  root: brep ) );
+      return new SpeckleBrep( displayValue: SpeckleRhinoConverter.SetBrepDisplayMesh ? joinedMesh.ToSpeckle() : null, rawData: JsonConvert.SerializeObject( brep ), provenance: "Rhino", properties: brep.UserDictionary.ToSpeckle( root: brep ) );
     }
 
     public static Brep ToNative( this SpeckleBrep brep )
@@ -798,15 +730,17 @@ namespace SpeckleRhinoConverter
     public static SpeckleExtrusion ToSpeckle( this Rhino.Geometry.Extrusion extrusion )
     {
       //extrusion.PathTangent
-      var myExtrusion = new SpeckleExtrusion( extrusion.Profile3d( 0, 0 ).ToSpeckle(), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
+      var myExtrusion = new SpeckleExtrusion( ( ( NurbsCurve ) extrusion.Profile3d( 0, 0 ) ).ToSpeckle(), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
 
       myExtrusion.PathStart = extrusion.PathStart.ToSpeckle();
       myExtrusion.PathEnd = extrusion.PathEnd.ToSpeckle();
       myExtrusion.PathTangent = extrusion.PathTangent.ToSpeckle();
       myExtrusion.ProfileTransformation = extrusion.GetProfileTransformation( 0.0 );
+
       var Profiles = new List<SpeckleObject>();
       for ( int i = 0; i < extrusion.ProfileCount; i++ )
-        Profiles.Add( extrusion.Profile3d( i, 0 ).ToSpeckle() );
+        Profiles.Add( ( ( NurbsCurve ) extrusion.Profile3d( i, 0 ) ).ToSpeckle() );
+
       myExtrusion.Profiles = Profiles;
       myExtrusion.Properties = extrusion.UserDictionary.ToSpeckle( root: extrusion );
       myExtrusion.GenerateHash();
