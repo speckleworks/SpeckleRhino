@@ -54,10 +54,13 @@ namespace SpeckleGrasshopper
     private List<object> BucketObjects = new List<object>();
 
     public string CurrentJobClient = "none";
-    public bool solutionPrepared = false;
+    public bool SolutionPrepared = false;
 
     public bool EnableRemoteControl = false;
     private bool WasSerialised = false;
+
+    List<SpeckleInput> DefaultSpeckleInputs = null;
+    List<SpeckleOutput> DefaultSpeckleOutputs = null;
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
@@ -113,7 +116,7 @@ namespace SpeckleGrasshopper
           StreamId = mySender.StreamId;
           WasSerialised = true;
         }
-        
+
         reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
 
       }
@@ -210,14 +213,11 @@ namespace SpeckleGrasshopper
       switch ( ( string ) e.EventObject.args.eventType )
       {
         case "get-definition-io":
-          List<SpeckleInput> speckleInputs = null;
-          List<SpeckleOutput> speckleOutputs = null;
-          GetSpeckleParams( ref speckleInputs, ref speckleOutputs );
-
           Dictionary<string, object> message = new Dictionary<string, object>();
           message[ "eventType" ] = "get-def-io-response";
-          message[ "controllers" ] = speckleInputs;
-          message[ "outputs" ] = "A list of outputs";
+          message[ "controllers" ] = DefaultSpeckleInputs;
+          message[ "outputs" ] = DefaultSpeckleOutputs;
+
           mySender.SendMessage( e.EventObject.senderId, message );
           break;
 
@@ -342,7 +342,23 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendItem( menu, "Enable remote control of definition", ( sender, e ) =>
        {
          EnableRemoteControl = !EnableRemoteControl;
+         if ( EnableRemoteControl )
+         {
+           List<SpeckleInput> speckleInputs = null;
+           List<SpeckleOutput> speckleOutputs = null;
+           GetSpeckleParams( ref speckleInputs, ref speckleOutputs );
+
+           DefaultSpeckleInputs = speckleInputs;
+           DefaultSpeckleOutputs = speckleOutputs;
+         }
        }, true, EnableRemoteControl );
+
+      if ( EnableRemoteControl )
+        GH_DocumentObject.Menu_AppendItem( menu, "Update/Set the default state for the controller stream.", ( sender, e ) =>
+        {
+          SetDefaultState(true);
+          System.Windows.MessageBox.Show( "Updated default state." );
+        }, true );
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
@@ -409,10 +425,15 @@ namespace SpeckleGrasshopper
       }
 
       if ( JobQueue.Count == 0 )
+      {
+        SetDefaultState();
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Updated default state for remote control." );
         return;
+      }
+
 
       // prepare solution and exit
-      if ( !solutionPrepared && JobQueue.Count != 0 )
+      if ( !SolutionPrepared && JobQueue.Count != 0 )
       {
         System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
         Document.ScheduleSolution( 1, PrepareSolution );
@@ -420,9 +441,9 @@ namespace SpeckleGrasshopper
       }
 
       // send out solution and exit
-      if ( solutionPrepared )
+      if ( SolutionPrepared )
       {
-        solutionPrepared = false;
+        SolutionPrepared = false;
         var BucketObjects = GetData();
         var BucketLayers = GetLayers();
         var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
@@ -470,7 +491,7 @@ namespace SpeckleGrasshopper
       System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
       CurrentJobClient = ( string ) t.Key;
 
-      foreach ( dynamic param in (IEnumerable) t.Value )
+      foreach ( dynamic param in ( IEnumerable ) t.Value )
       {
         IGH_DocumentObject controller = null;
         try
@@ -496,9 +517,31 @@ namespace SpeckleGrasshopper
               break;
           }
       }
-      solutionPrepared = true;
+      SolutionPrepared = true;
     }
 
+    /// <summary>
+    /// Sets the default state for the remote controller. Will update parent stream too.
+    /// </summary>
+    private void SetDefaultState( bool force = false )
+    {
+      List<SpeckleInput> speckleInputs = null;
+      List<SpeckleOutput> speckleOutputs = null;
+      GetSpeckleParams( ref speckleInputs, ref speckleOutputs );
+
+      DefaultSpeckleInputs = speckleInputs;
+      DefaultSpeckleOutputs = speckleOutputs;
+
+      if ( force )
+        ForceUpdateData();
+      else
+        UpdateData();
+    }
+
+
+    /// <summary>
+    /// Will start timer (500ms).
+    /// </summary>
     public void UpdateData( )
     {
       BucketName = this.NickName;
@@ -508,7 +551,27 @@ namespace SpeckleGrasshopper
       DataSender.Start();
     }
 
+    /// <summary>
+    /// Bypasses debounce timer.
+    /// </summary>
+    public void ForceUpdateData( )
+    {
+      BucketName = this.NickName;
+      BucketLayers = this.GetLayers();
+      BucketObjects = this.GetData();
+
+      SendUpdate();
+    }
+
     private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
+    {
+      SendUpdate();
+    }
+
+    /// <summary>
+    /// Sends the update to the server.
+    /// </summary>
+    private void SendUpdate( )
     {
       if ( MetadataSender.Enabled )
       {
@@ -520,11 +583,11 @@ namespace SpeckleGrasshopper
       this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
       var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
-         {
-           if ( ObjectCache.ContainsKey( obj.Hash ) )
-             return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[ obj.Hash ]._id };
-           return obj;
-         } ).ToList();
+      {
+        if ( ObjectCache.ContainsKey( obj.Hash ) )
+          return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[ obj.Hash ]._id };
+        return obj;
+      } ).ToList();
 
       this.Message = String.Format( "Creating payloads" );
 
