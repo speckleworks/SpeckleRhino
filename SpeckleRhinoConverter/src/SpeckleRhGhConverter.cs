@@ -590,9 +590,11 @@ namespace SpeckleRhinoConverter
         for ( int i = 0; i < ptsList.Length; i++ )
           myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
 
+#if R6
         // set knots
         for ( int i = 0; i < curve.Knots.Count; i++ )
           myCurve.Knots[ i ] = curve.Knots[ i ];
+#endif
 
         myCurve.UserDictionary.ReplaceContentsWith( curve.Properties.ToNative() );
         return myCurve;
@@ -606,9 +608,11 @@ namespace SpeckleRhinoConverter
         for ( int i = 0; i < ptsList.Length; i++ )
           myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
 
+#if R6
         // set knots
         for ( int i = 0; i < curve.Knots.Count; i++ )
           myCurve.Knots[ i ] = curve.Knots[ i ];
+#endif
 
         myCurve.Domain = curve.Domain.ToNative();
         return myCurve;
