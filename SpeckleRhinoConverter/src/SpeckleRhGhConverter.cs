@@ -398,7 +398,7 @@ namespace SpeckleRhinoConverter
 
 
       var myEllp = NurbsCurve.CreateFromEllipse( elp );
-      var shit = myEllp.IsEllipse( Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance ) ;
+      var shit = myEllp.IsEllipse( Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance );
 
       if ( e.Domain != null )
         myEllp.Domain = e.Domain.ToNative();
@@ -468,8 +468,8 @@ namespace SpeckleRhinoConverter
       myPoly.Closed = p.IsClosed;
       myPoly.Domain = p.Domain.ToSpeckle();
 
-      //p.RemoveNesting();
-      var segments = p.Explode();
+      var segments = new List<Curve>();
+      CurveSegments( segments, p, true );
 
       //myPoly.Segments = segments.Select( s => { return ( ( NurbsCurve ) s ).ToSpeckle(); } ).ToList();
       myPoly.Segments = segments.Select( s => { return SpeckleCore.Converter.Serialise( s ); } ).ToList();
@@ -479,6 +479,8 @@ namespace SpeckleRhinoConverter
 
       return myPoly;
     }
+
+
 
     public static PolyCurve ToNative( this SpecklePolycurve p )
     {
@@ -512,7 +514,7 @@ namespace SpeckleRhinoConverter
     {
       var properties = curve.UserDictionary.ToSpeckle( root: curve );
 
-      if ( curve.IsArc(Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance) )
+      if ( curve.IsArc( Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance ) )
       {
         Arc getObj; curve.TryGetArc( out getObj );
         SpeckleArc myObject = getObj.ToSpeckle(); myObject.Properties = properties; myObject.GenerateHash();
@@ -861,5 +863,72 @@ namespace SpeckleRhinoConverter
     // Blocks and groups
     // TODO
 
+
+    // Proper explosion of polycurves:
+    // (C) The Rutten David https://www.grasshopper3d.com/forum/topics/explode-closed-planar-curve-using-rhinocommon 
+    public static bool CurveSegments( List<Curve> L, Curve crv, bool recursive )
+    {
+      if ( crv == null ) { return false; }
+
+      PolyCurve polycurve = crv as PolyCurve;
+      if ( polycurve != null )
+      {
+        if ( recursive ) { polycurve.RemoveNesting(); }
+
+        Curve[ ] segments = polycurve.Explode();
+
+        if ( segments == null ) { return false; }
+        if ( segments.Length == 0 ) { return false; }
+
+        if ( recursive )
+        {
+          foreach ( Curve S in segments )
+          {
+            CurveSegments( L, S, recursive );
+          }
+        }
+        else
+        {
+          foreach ( Curve S in segments )
+          {
+            L.Add( S.DuplicateShallow() as Curve );
+          }
+        }
+
+        return true;
+      }
+
+      //Nothing else worked, lets assume it's a nurbs curve and go from there...
+      NurbsCurve nurbs = crv.ToNurbsCurve();
+      if ( nurbs == null ) { return false; }
+
+      double t0 = nurbs.Domain.Min;
+      double t1 = nurbs.Domain.Max;
+      double t;
+
+      int LN = L.Count;
+
+      do
+      {
+        if ( !nurbs.GetNextDiscontinuity( Continuity.C1_locus_continuous, t0, t1, out t ) ) { break; }
+
+        Interval trim = new Interval( t0, t );
+        if ( trim.Length < 1e-10 )
+        {
+          t0 = t;
+          continue;
+        }
+
+        Curve M = nurbs.DuplicateCurve();
+        M = M.Trim( trim );
+        if ( M.IsValid ) { L.Add( M ); }
+
+        t0 = t;
+      } while ( true );
+
+      if ( L.Count == LN ) { L.Add( nurbs ); }
+
+      return true;
+    }
   }
 }
