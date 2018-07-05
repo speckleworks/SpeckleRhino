@@ -588,7 +588,7 @@ namespace SpeckleRhinoConverter
 
         // set weights
         for ( int i = 0; i < ptsList.Length; i++ )
-          myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
+          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
 
         // set knots
         for ( int i = 0; i < curve.Knots.Count; i++ )
@@ -604,7 +604,7 @@ namespace SpeckleRhinoConverter
 
         // set weights
         for ( int i = 0; i < ptsList.Length; i++ )
-          myCurve.Points.SetPoint( i, ptsList[ i ].X, ptsList[ i ].Y, ptsList[ i ].Z, curve.Weights[ i ] );
+          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
 
         // set knots
         for ( int i = 0; i < curve.Knots.Count; i++ )
