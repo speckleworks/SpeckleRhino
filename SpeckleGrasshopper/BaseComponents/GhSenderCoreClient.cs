@@ -536,6 +536,14 @@ namespace SpeckleGrasshopper
         ForceUpdateData();
       else
         UpdateData();
+
+      Dictionary<string, object> message = new Dictionary<string, object>();
+      message[ "eventType" ] = "default-state-update";
+      message[ "controllers" ] = DefaultSpeckleInputs;
+      message[ "outputs" ] = DefaultSpeckleOutputs;
+      message[ "originalStreamId" ] = mySender.StreamId;
+
+      mySender.BroadcastMessage( message );
     }
 
 
