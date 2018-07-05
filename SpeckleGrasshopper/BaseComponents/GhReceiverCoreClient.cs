@@ -47,6 +47,8 @@ namespace SpeckleGrasshopper
 
     Action expireComponentAction;
 
+    public BoundingBox BBox;
+
     private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
     public GhReceiverClient( )
@@ -378,6 +380,8 @@ namespace SpeckleGrasshopper
 
       if ( Expired ) { Expired = false; UpdateGlobal(); return; }
 
+      CalculateBoundingBox();
+      ExpirePreview( true );
       SetObjects( DA );
     }
 
@@ -447,6 +451,18 @@ namespace SpeckleGrasshopper
         }
       }
     }
+
+    public void CalculateBoundingBox( )
+    {
+      BBox = new BoundingBox( -1, -1, -1, 1, 1, 1 );
+      foreach ( var obj in ConvertedObjects )
+      {
+        if ( obj is GeometryBase )
+          BBox.Union( ( ( GeometryBase ) obj ).GetBoundingBox( false ) );
+      }
+    }
+
+    public override BoundingBox ClippingBox => BBox;
 
     public override void DrawViewportMeshes( IGH_PreviewArgs args )
     {
