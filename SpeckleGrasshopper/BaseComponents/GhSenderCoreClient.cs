@@ -424,6 +424,7 @@ namespace SpeckleGrasshopper
       {
         solutionPrepared = false;
         var BucketObjects = GetData();
+        var BucketLayers = GetLayers();
         var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
            {
              if ( ObjectCache.ContainsKey( obj.Hash ) )
@@ -437,8 +438,17 @@ namespace SpeckleGrasshopper
 
         var responseClone = mySender.StreamCloneAsync( this.StreamId ).Result;
         var responseStream = new SpeckleStream();
+
         responseStream.IsComputedResult = true;
+
         responseStream.Objects = convertedObjects.ToList();
+        responseStream.Layers = BucketLayers;
+
+        List<SpeckleInput> speckleInputs = null;
+        List<SpeckleOutput> speckleOutputs = null;
+        GetSpeckleParams( ref speckleInputs, ref speckleOutputs );
+
+        responseStream.GlobalMeasures = new { input = speckleInputs, output = speckleOutputs };
 
         // go unblocking
         var responseCloneUpdate = mySender.StreamUpdateAsync( responseClone.Clone.StreamId, responseStream ).ContinueWith( tres =>
