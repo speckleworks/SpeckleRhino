@@ -52,8 +52,8 @@ namespace SpeckleCoreApiTester
     {
       var myPoint = new SpecklePoint() { Value = new List<double>() { 1, 2, 3 } };
       var mySecondPoint = new SpecklePoint() { Value = new List<double>() { 23, 33, 12 } };
-      var myCircle = new SpeckleCircle() { Radius = 21, Normal = new SpeckleVector() { Value = new List<double>() { 1, 2, 2 } } };
-      var myPlane = new SpecklePlane() { Origin = new SpecklePoint() { Value = new List<double>() { 12, 12, 12 } }, Normal = myCircle.Normal };
+      var myCircle = new SpeckleCircle() { Radius = 21 };
+      var myPlane = new SpecklePlane() { Origin = new SpecklePoint() { Value = new List<double>() { 12, 12, 12 } } };
       var myArc = new SpeckleArc() { Radius = 2, AngleRadians = 2.1, EndAngle = 1, StartAngle = 0 };
 
       myCircle.Properties = new Dictionary<string, object>();
@@ -146,7 +146,7 @@ namespace SpeckleCoreApiTester
 
       var myPoint = new SpecklePoint() { Value = new List<double>() { 1, 2, 3 } };
       var mySecondPoint = new SpecklePoint() { Value = new List<double>() { 23, 33, 12 } };
-      var myCircle = new SpeckleCircle() { Radius = 21, Normal = new SpeckleVector() { Value = new List<double>() { 1, 2, 2 } } };
+      var myCircle = new SpeckleCircle() { Radius = 21 };
 
 
       myPoint.Properties = new Dictionary<string, object>();

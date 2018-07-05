@@ -457,7 +457,7 @@ namespace SpeckleGrasshopper
       BBox = new BoundingBox( -1, -1, -1, 1, 1, 1 );
       foreach ( var obj in ConvertedObjects )
       {
-        if ( obj is GeometryBase )
+        if ( obj is GeometryBase ) 
           BBox.Union( ( ( GeometryBase ) obj ).GetBoundingBox( false ) );
       }
     }
