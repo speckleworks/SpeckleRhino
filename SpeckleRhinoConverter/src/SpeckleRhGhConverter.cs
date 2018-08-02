@@ -46,7 +46,8 @@ namespace SpeckleRhinoConverter
       foreach ( var key in dict.Keys )
       {
         var myObj = dict[ key ];
-        if ( traversed.ContainsKey( myObj.GetHashCode() ) )
+        Type t = myObj.GetType();
+        if (!(t.IsPrimitive || t == typeof(Decimal) || t == typeof(String)) && traversed.ContainsKey( myObj.GetHashCode() ) )
         {
           myDictionary.Add( key, new SpeckleAbstract() { _type = "ref", _ref = traversed[ myObj.GetHashCode() ] } );
           continue;
