@@ -47,13 +47,14 @@ namespace SpeckleRhinoConverter
       {
         var myObj = dict[ key ];
         Type t = myObj.GetType();
-        if (!(t.IsPrimitive || t == typeof(Decimal) || t == typeof(String)) && traversed.ContainsKey( myObj.GetHashCode() ) )
+        if (!(t.IsPrimitive || t == typeof(decimal) || t == typeof(string)) && traversed.ContainsKey( myObj.GetHashCode() ) )
         {
           myDictionary.Add( key, new SpeckleAbstract() { _type = "ref", _ref = traversed[ myObj.GetHashCode() ] } );
           continue;
         }
 
-        traversed.Add( myObj.GetHashCode(), path + "/" + key );
+        if (!(t.IsPrimitive || t == typeof(decimal) || t == typeof(string)))
+          traversed.Add( myObj.GetHashCode(), path + "/" + key );
 
         if ( dict[ key ] is ArchivableDictionary )
           myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle( traversed, path + "/" + key, root ) );
