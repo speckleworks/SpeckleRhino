@@ -80,6 +80,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="UserDataUtils\CreateLotsOfUserData.cs" />
     <Compile Include="UserDataUtils\CreateUserData.cs" />
     <Compile Include="UserDataUtils\CsvUserData.cs" />
     <Compile Include="UserDataUtils\ExpandUserDataComponent.cs" />
