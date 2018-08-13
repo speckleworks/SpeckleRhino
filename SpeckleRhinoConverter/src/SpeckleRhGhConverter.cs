@@ -739,8 +739,7 @@ namespace SpeckleRhinoConverter
     // Extrusions
     public static SpeckleExtrusion ToSpeckle( this Rhino.Geometry.Extrusion extrusion )
     {
-      //extrusion.PathTangent
-      var myExtrusion = new SpeckleExtrusion( ( ( NurbsCurve ) extrusion.Profile3d( 0, 0 ) ).ToSpeckle(), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
+      var myExtrusion = new SpeckleExtrusion( SpeckleCore.Converter.Serialise( extrusion.Profile3d( 0, 0 )), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
 
       myExtrusion.PathStart = extrusion.PathStart.ToSpeckle();
       myExtrusion.PathEnd = extrusion.PathEnd.ToSpeckle();
@@ -749,7 +748,7 @@ namespace SpeckleRhinoConverter
 
       var Profiles = new List<SpeckleObject>();
       for ( int i = 0; i < extrusion.ProfileCount; i++ )
-        Profiles.Add( ( ( NurbsCurve ) extrusion.Profile3d( i, 0 ) ).ToSpeckle() );
+        Profiles.Add( SpeckleCore.Converter.Serialise( extrusion.Profile3d( i, 0 ) ) );
 
       myExtrusion.Profiles = Profiles;
       myExtrusion.Properties = extrusion.UserDictionary.ToSpeckle( root: extrusion );
