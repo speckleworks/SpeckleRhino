@@ -584,7 +584,9 @@ namespace SpeckleRhinoConverter
       {
         // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
         var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, ptsList );
-        myCurve.Domain = curve.Domain.ToNative();
+
+        if ( curve.Domain != null )
+          myCurve.Domain = curve.Domain.ToNative();
 
         // set weights
         for ( int i = 0; i < ptsList.Length; i++ )
@@ -739,7 +741,7 @@ namespace SpeckleRhinoConverter
     // Extrusions
     public static SpeckleExtrusion ToSpeckle( this Rhino.Geometry.Extrusion extrusion )
     {
-      var myExtrusion = new SpeckleExtrusion( SpeckleCore.Converter.Serialise( extrusion.Profile3d( 0, 0 )), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
+      var myExtrusion = new SpeckleExtrusion( SpeckleCore.Converter.Serialise( extrusion.Profile3d( 0, 0 ) ), extrusion.PathStart.DistanceTo( extrusion.PathEnd ), extrusion.IsCappedAtBottom );
 
       myExtrusion.PathStart = extrusion.PathStart.ToSpeckle();
       myExtrusion.PathEnd = extrusion.PathEnd.ToSpeckle();
