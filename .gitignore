@@ -11,3 +11,4 @@ dist/
 # files
 *.user
 *.rhi
+cloc_output.txt
