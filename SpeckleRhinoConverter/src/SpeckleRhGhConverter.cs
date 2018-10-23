@@ -442,6 +442,7 @@ namespace SpeckleRhinoConverter
 
         myPoly.Domain = poly.Domain.ToSpeckle();
         myPoly.Properties = poly.UserDictionary.ToSpeckle( root: poly );
+        myPoly.GenerateHash();
         return myPoly;
       }
       return null;
