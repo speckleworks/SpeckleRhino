@@ -30,6 +30,7 @@ using System.Timers;
 using System.Threading.Tasks;
 using Grasshopper.Kernel.Special;
 using System.Collections;
+using Grasshopper.GUI;
 
 namespace SpeckleGrasshopper
 {
@@ -66,6 +67,10 @@ namespace SpeckleGrasshopper
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
+    public bool ManualMode = false;
+
+    public string State;
+
     public GhSenderClient( )
       : base( "Data Sender", "Anonymous Stream",
           "Sends data to Speckle.",
@@ -93,6 +98,7 @@ namespace SpeckleGrasshopper
             var arrr = arr;
             writer.SetByteArray( "speckleclient", ms.ToArray() );
             writer.SetBoolean( "remotecontroller", EnableRemoteControl );
+            writer.SetBoolean( "manualmode", ManualMode );
           }
       }
       catch ( Exception err )
@@ -120,7 +126,7 @@ namespace SpeckleGrasshopper
         }
 
         reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
-
+        reader.TryGetBoolean( "manualmode", ref ManualMode );
       }
       catch ( Exception err )
       {
@@ -318,6 +324,15 @@ namespace SpeckleGrasshopper
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
+      base.AppendAdditionalMenuItems( menu );
+      GH_DocumentObject.Menu_AppendItem( menu, "Toggle Manual Mode (Status: " + ManualMode + ")", ( sender, e ) =>
+      {
+        ManualMode = !ManualMode;
+        m_attributes.ExpireLayout();
+      } );
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
+
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
@@ -367,7 +382,7 @@ namespace SpeckleGrasshopper
       if ( EnableRemoteControl )
         GH_DocumentObject.Menu_AppendItem( menu, "Update/Set the default state for the controller stream.", ( sender, e ) =>
         {
-          SetDefaultState(true);
+          SetDefaultState( true );
           System.Windows.MessageBox.Show( "Updated default state." );
         }, true );
 
@@ -435,7 +450,9 @@ namespace SpeckleGrasshopper
         return;
       }
 
-      if ( !this.EnableRemoteControl )
+      this.State = "Expired";
+
+      if ( !this.EnableRemoteControl && !this.ManualMode )
       {
         UpdateData();
         return;
@@ -600,7 +617,8 @@ namespace SpeckleGrasshopper
 
     private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
-      SendUpdate();
+      if ( !ManualMode )
+        SendUpdate();
     }
 
     /// <summary>
@@ -705,6 +723,8 @@ namespace SpeckleGrasshopper
       Log += response.Message;
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
       Message = "Data sent\n@" + DateTime.Now.ToString( "hh:mm:ss" );
+
+      this.State = "Ok";
     }
 
     public void UpdateMetadata( )
@@ -719,6 +739,8 @@ namespace SpeckleGrasshopper
 
     private void MetadataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
+      if ( ManualMode )
+        return;
       // we do not need to enque another metadata sending event as the data update superseeds the metadata one.
       if ( DataSender.Enabled ) { return; };
       SpeckleStream updateStream = new SpeckleStream()
@@ -731,6 +753,11 @@ namespace SpeckleGrasshopper
 
       Log += updateResult.Message;
       mySender.BroadcastMessage( new { eventType = "update-meta" } );
+    }
+
+    public void ManualUpdate( )
+    {
+        
     }
 
     public List<object> GetData( )
@@ -872,6 +899,7 @@ namespace SpeckleGrasshopper
     Rectangle BaseRectangle;
     Rectangle StreamIdBounds;
     Rectangle StreamNameBounds;
+    Rectangle PushStreamButtonRectangle;
 
     public GhSenderClientAttributes( GhSenderClient component ) : base( component )
     {
@@ -884,11 +912,40 @@ namespace SpeckleGrasshopper
       BaseRectangle = GH_Convert.ToRectangle( Bounds );
       StreamIdBounds = new Rectangle( ( int ) ( BaseRectangle.X + ( BaseRectangle.Width - 120 ) * 0.5 ), BaseRectangle.Y - 25, 120, 20 );
       StreamNameBounds = new Rectangle( StreamIdBounds.X, BaseRectangle.Y - 50, 120, 20 );
+
+      PushStreamButtonRectangle = new Rectangle( ( int ) ( BaseRectangle.X + ( BaseRectangle.Width - 30 ) * 0.5 ), BaseRectangle.Y + BaseRectangle.Height, 30, 30 );
+
+      if ( Base.ManualMode )
+      {
+        Rectangle newBaseRectangle = new Rectangle( BaseRectangle.X, BaseRectangle.Y, BaseRectangle.Width, BaseRectangle.Height + 33 );
+        Bounds = newBaseRectangle;
+      }
     }
 
     protected override void Render( GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel )
     {
-      base.Render( canvas, graphics, channel );
+
+      if ( Base.State == "Expired" && Base.ManualMode )
+      {
+        // Cache the existing style.
+        GH_PaletteStyle style = GH_Skin.palette_normal_standard;
+
+        // Swap out palette for normal, unselected components.
+        GH_Skin.palette_normal_standard = new GH_PaletteStyle( Color.DarkGray, Color.DarkGray, Color.White );
+
+        base.Render( canvas, graphics, channel );
+
+        // Put the original style back.
+        GH_Skin.palette_normal_standard = style;
+
+      }
+      else
+      {
+        base.Render( canvas, graphics, channel );
+      }
+
+
+
       if ( channel == GH_CanvasChannel.Objects )
       {
         GH_PaletteStyle myStyle = new GH_PaletteStyle( System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#147DE9" : "#B3B3B3" ), System.Drawing.ColorTranslator.FromHtml( "#FFFFFF" ), System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#ffffff" : "#4C4C4C" ) );
@@ -902,7 +959,27 @@ namespace SpeckleGrasshopper
         var streamNameCapsule = GH_Capsule.CreateTextCapsule( box: StreamNameBounds, textbox: StreamNameBounds, palette: GH_Palette.Black, text: "(S) " + Base.NickName, highlight: 0, radius: 5 );
         streamNameCapsule.Render( graphics, myStyle );
         streamNameCapsule.Dispose();
+
+        if ( Base.ManualMode )
+        {
+          var pushStreamButton = GH_Capsule.CreateCapsule( PushStreamButtonRectangle, GH_Palette.Pink, 10, 0 );
+          pushStreamButton.Render( graphics, true ? Properties.Resources.play25px : Properties.Resources.pause25px, myTransparentStyle );
+        }
       }
+    }
+
+    public override GH_ObjectResponse RespondToMouseDown( GH_Canvas sender, GH_CanvasMouseEvent e )
+    {
+      if ( e.Button == System.Windows.Forms.MouseButtons.Left )
+      {
+        if ( ( ( RectangleF ) PushStreamButtonRectangle ).Contains( e.CanvasLocation ) )
+        {
+          Base.ManualUpdate();
+          //Base.ExpireSolution( true );
+          return GH_ObjectResponse.Handled;
+        }
+      }
+      return base.RespondToMouseDown( sender, e );
     }
 
   }
