@@ -36,8 +36,7 @@ namespace SpeckleGrasshopper
       };
 
       foreach ( var param in Params.Input )
-      {
-        
+      { 
         param.ObjectChanged += ( sender, e ) =>
         {
           Debouncer.Start();         
@@ -74,6 +73,13 @@ namespace SpeckleGrasshopper
     protected override void SolveInstance( IGH_DataAccess DA )
     {
       var props = new ArchivableDictionary();
+      var check = ValidateKeys();
+      
+      if(check.Item1)
+      {
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Error, check.Item2 );
+        return;
+      }
 
       for ( int i = 0; i < Params.Input.Count; i++ )
       {
@@ -139,6 +145,39 @@ namespace SpeckleGrasshopper
 
       DA.SetData( 0, props );
     }
+
+    public Tuple<bool, string> ValidateKeys( )
+    {
+      List<string> keyNames = new List<string>();
+      bool hasErrors = false;
+      string validationErrors = "";
+      for ( int i = 0; i < Params.Input.Count; i++ )
+      {
+        var param = Params.Input[ i ];
+        if ( keyNames.Contains( param.NickName ) )
+        {
+          this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Duplicate  key names found (" + param.NickName + "). Please use different values." );
+
+          validationErrors += "Duplicate  key names found (" + param.NickName + "). Please use different values.\n";
+
+          hasErrors = true;
+        }
+
+        if ( param.NickName == "type" || param.NickName == "Type" )
+        {
+          this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Using 'Type' or 'type' as a key name is not possible. Please use different name, for example 'familiyType'. Thanks!" );
+
+          validationErrors += "Using 'Type' or 'type' as a key name is not possible. Please use different name, for example 'familiyType'. Thanks!";
+
+          hasErrors = true;
+        }
+
+        keyNames.Add( param.NickName );
+      }
+
+      return new Tuple<bool, string>(hasErrors, validationErrors);
+    }
+
 
     public GeometryBase getGeometryBase( object myObject )
     {
