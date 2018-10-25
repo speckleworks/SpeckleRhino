@@ -41,7 +41,7 @@ namespace SpeckleGrasshopper
                     }
                 }
 
-                Params.OnParametersChanged();
+                //Params.OnParametersChanged();
                 foreach (var key in global.Keys)
                 {
                     var myparam = Params.Output.FirstOrDefault(q => q.Name == key);

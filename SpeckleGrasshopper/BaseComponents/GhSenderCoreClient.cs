@@ -58,6 +58,8 @@ namespace SpeckleGrasshopper
 
     public bool EnableRemoteControl = false;
     private bool WasSerialised = false;
+    private bool DocumentIsClosing = false;
+    private bool FirstSendUpdate = true;
 
     List<SpeckleInput> DefaultSpeckleInputs = null;
     List<SpeckleOutput> DefaultSpeckleOutputs = null;
@@ -204,6 +206,15 @@ namespace SpeckleGrasshopper
       DataSender.Elapsed += DataSender_Elapsed;
 
       ObjectCache = new Dictionary<string, SpeckleObject>();
+
+      Grasshopper.Instances.DocumentServer.DocumentRemoved += DocumentServer_DocumentRemoved;
+    }
+
+    private void DocumentServer_DocumentRemoved( GH_DocumentServer sender, GH_Document doc )
+    {
+      if ( doc.DocumentID == Document.DocumentID )
+        DocumentIsClosing = true;
+
     }
 
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
@@ -418,19 +429,28 @@ namespace SpeckleGrasshopper
 
       if ( !mySender.IsConnected ) return;
 
+      if ( WasSerialised && FirstSendUpdate )
+      {
+        FirstSendUpdate = false;
+        return;
+      }
+
       if ( !this.EnableRemoteControl )
       {
         UpdateData();
         return;
       }
 
+      #region RemoteControl
+
+      // Code below deals with the remote control functionality.
+      // Proceed at your own risk.
       if ( JobQueue.Count == 0 )
       {
         SetDefaultState();
         AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Updated default state for remote control." );
         return;
       }
-
 
       // prepare solution and exit
       if ( !SolutionPrepared && JobQueue.Count != 0 )
@@ -484,8 +504,12 @@ namespace SpeckleGrasshopper
         if ( JobQueue.Count != 0 )
           Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
       }
+
+      #endregion
     }
 
+    #region Remote Control Helpers
+    // Remote controller setting up the solution
     private void PrepareSolution( GH_Document gH_Document )
     {
       System.Collections.DictionaryEntry t = JobQueue.Cast<DictionaryEntry>().ElementAt( 0 );
@@ -545,13 +569,16 @@ namespace SpeckleGrasshopper
 
       mySender.BroadcastMessage( message );
     }
-
+    #endregion
 
     /// <summary>
     /// Will start timer (500ms).
     /// </summary>
     public void UpdateData( )
     {
+      if ( DocumentIsClosing )
+        return;
+
       BucketName = this.NickName;
       BucketLayers = this.GetLayers();
       BucketObjects = this.GetData();
@@ -682,6 +709,8 @@ namespace SpeckleGrasshopper
 
     public void UpdateMetadata( )
     {
+      if ( DocumentIsClosing )
+        return;
       BucketName = this.NickName;
       BucketLayers = this.GetLayers();
 
