@@ -59,6 +59,7 @@ namespace SpeckleGrasshopper
     public bool EnableRemoteControl = false;
     private bool WasSerialised = false;
     private bool DocumentIsClosing = false;
+    private bool FirstSendUpdate = true;
 
     List<SpeckleInput> DefaultSpeckleInputs = null;
     List<SpeckleOutput> DefaultSpeckleOutputs = null;
@@ -427,6 +428,12 @@ namespace SpeckleGrasshopper
       DA.SetData( 1, mySender.StreamId );
 
       if ( !mySender.IsConnected ) return;
+
+      if ( WasSerialised && FirstSendUpdate )
+      {
+        FirstSendUpdate = false;
+        return;
+      }
 
       if ( !this.EnableRemoteControl )
       {
