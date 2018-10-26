@@ -329,6 +329,9 @@ namespace SpeckleGrasshopper
       {
         ManualMode = !ManualMode;
         m_attributes.ExpireLayout();
+
+        if ( !ManualMode && State == "Expired" )
+          UpdateData();
       } );
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
@@ -452,9 +455,16 @@ namespace SpeckleGrasshopper
 
       this.State = "Expired";
 
+      // All flags are good to start an update
       if ( !this.EnableRemoteControl && !this.ManualMode )
       {
         UpdateData();
+        return;
+      }
+      // 
+      else if ( !this.EnableRemoteControl && this.ManualMode )
+      {
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "State is expired, update push is required." );
         return;
       }
 
@@ -757,7 +767,16 @@ namespace SpeckleGrasshopper
 
     public void ManualUpdate( )
     {
-        
+      new Task( ( ) =>
+      {
+        var cloneResult = mySender.StreamCloneAsync( StreamId ).Result;
+        mySender.Stream.Children.Add( cloneResult.Clone.StreamId );
+
+        mySender.BroadcastMessage( new { eventType = "update-children" } );
+
+        ForceUpdateData();
+
+      } ).Start();
     }
 
     public List<object> GetData( )
@@ -925,29 +944,27 @@ namespace SpeckleGrasshopper
     protected override void Render( GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel )
     {
 
-      if ( Base.State == "Expired" && Base.ManualMode )
-      {
-        // Cache the existing style.
-        GH_PaletteStyle style = GH_Skin.palette_normal_standard;
 
-        // Swap out palette for normal, unselected components.
-        GH_Skin.palette_normal_standard = new GH_PaletteStyle( Color.DarkGray, Color.DarkGray, Color.White );
-
-        base.Render( canvas, graphics, channel );
-
-        // Put the original style back.
-        GH_Skin.palette_normal_standard = style;
-
-      }
-      else
-      {
-        base.Render( canvas, graphics, channel );
-      }
-
-
+      base.Render( canvas, graphics, channel );
 
       if ( channel == GH_CanvasChannel.Objects )
       {
+
+        //if ( Base.State == "Expired" && Base.ManualMode )
+        //{
+        //  // Cache the existing style.
+        //  GH_PaletteStyle style = GH_Skin.palette_normal_standard;
+
+        //  // Swap out palette for normal, unselected components.
+        //  GH_Skin.palette_normal_standard = new GH_PaletteStyle( Color.DarkGray, Color.DarkGray, Color.White );
+
+        //  base.Render( canvas, graphics, channel );
+
+        //  // Put the original style back.
+        //  GH_Skin.palette_normal_standard = style;
+
+        //}
+
         GH_PaletteStyle myStyle = new GH_PaletteStyle( System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#147DE9" : "#B3B3B3" ), System.Drawing.ColorTranslator.FromHtml( "#FFFFFF" ), System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#ffffff" : "#4C4C4C" ) );
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle( System.Drawing.Color.FromArgb( 0, 0, 0, 0 ) );
@@ -962,7 +979,7 @@ namespace SpeckleGrasshopper
 
         if ( Base.ManualMode )
         {
-          var pushStreamButton = GH_Capsule.CreateCapsule( PushStreamButtonRectangle, GH_Palette.Pink, 10, 0 );
+          var pushStreamButton = GH_Capsule.CreateCapsule( PushStreamButtonRectangle, GH_Palette.Pink, 2, 0 );
           pushStreamButton.Render( graphics, true ? Properties.Resources.play25px : Properties.Resources.pause25px, myTransparentStyle );
         }
       }
