@@ -943,28 +943,10 @@ namespace SpeckleGrasshopper
 
     protected override void Render( GH_Canvas canvas, Graphics graphics, GH_CanvasChannel channel )
     {
-
-
       base.Render( canvas, graphics, channel );
 
       if ( channel == GH_CanvasChannel.Objects )
       {
-
-        //if ( Base.State == "Expired" && Base.ManualMode )
-        //{
-        //  // Cache the existing style.
-        //  GH_PaletteStyle style = GH_Skin.palette_normal_standard;
-
-        //  // Swap out palette for normal, unselected components.
-        //  GH_Skin.palette_normal_standard = new GH_PaletteStyle( Color.DarkGray, Color.DarkGray, Color.White );
-
-        //  base.Render( canvas, graphics, channel );
-
-        //  // Put the original style back.
-        //  GH_Skin.palette_normal_standard = style;
-
-        //}
-
         GH_PaletteStyle myStyle = new GH_PaletteStyle( System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#147DE9" : "#B3B3B3" ), System.Drawing.ColorTranslator.FromHtml( "#FFFFFF" ), System.Drawing.ColorTranslator.FromHtml( Base.EnableRemoteControl ? "#ffffff" : "#4C4C4C" ) );
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle( System.Drawing.Color.FromArgb( 0, 0, 0, 0 ) );
