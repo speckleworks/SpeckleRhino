@@ -10,7 +10,7 @@ namespace LocalDbTester
       Console.WriteLine( "Hello World!" );
       SpeckleLocalContext.Init();
 
-      var x = SpeckleLocalContext.GetAccountByRestApi( "asdfa" );
+      var x = SpeckleLocalContext.GetAccountsByRestApi( "asdfa" );
 
       Console.WriteLine( x.Count );
 

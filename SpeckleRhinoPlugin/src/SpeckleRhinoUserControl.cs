@@ -16,12 +16,24 @@ namespace SpeckleRhino
   [System.Runtime.InteropServices.Guid( "5736E01B-1459-48FF-8021-AE8E71257795" )]
   public partial class SpeckleRhinoUserControl : UserControl
   {
-
+    /// <summary>
+    /// This gets called every time a new file is opened. 
+    /// Therefore, we must init things here. It's the best way.
+    /// </summary>
     public SpeckleRhinoUserControl( )
     {
-      SpecklePlugIn.Store.RemoveAllClients();
+      if( SpecklePlugIn.Store!=null)
+        SpecklePlugIn.Store.Dispose();
 
       InitializeComponent();
+
+      SpecklePlugIn.InitializeCef();
+      SpecklePlugIn.InitializeChromium();
+
+      SpecklePlugIn.Store = new Interop( SpecklePlugIn.Browser );
+
+      SpecklePlugIn.Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
+
       this.Controls.Add( SpecklePlugIn.Browser );
       
       // Set the user control property on our plug-in

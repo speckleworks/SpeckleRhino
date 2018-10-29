@@ -29,7 +29,7 @@ namespace SpeckleRhino
   {
     public ChromiumWebBrowser Browser;
 
-    private List<SpeckleAccount> UserAccounts;
+    private List<Account> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
 
     public Dictionary<string, SpeckleObject> SpeckleObjectCache;
@@ -40,15 +40,12 @@ namespace SpeckleRhino
 
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
-      // Makes sure we always get some camelCaseLove
-      //JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      //{
-      //  ContractResolver = new CamelCasePropertyNamesContractResolver()
-      //};
+
+      SpeckleCore.SpeckleLocalContext.Init();
 
       Browser = _originalBrowser;
 
-      UserAccounts = new List<SpeckleAccount>();
+      UserAccounts = new List<Account>();
 
       UserClients = new List<ISpeckleRhinoClient>();
 
@@ -175,7 +172,7 @@ namespace SpeckleRhino
       return Rhino.RhinoDoc.ActiveDoc.DocumentId.ToString();
     }
 
-    public string GetHostApplicationType()
+    public string GetHostApplicationType( )
     {
       return "Rhino";
     }
@@ -253,9 +250,9 @@ namespace SpeckleRhino
 
     #region Account Management
 
+    // called by the web ui
     public string GetUserAccounts( )
     {
-      ReadUserAccounts();
       return JsonConvert.SerializeObject( UserAccounts, new JsonSerializerSettings
       {
         ContractResolver = new CamelCasePropertyNamesContractResolver()
@@ -264,41 +261,25 @@ namespace SpeckleRhino
 
     private void ReadUserAccounts( )
     {
-      UserAccounts = new List<SpeckleAccount>();
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData );
-      strPath = strPath + @"\SpeckleSettings";
-
-      if ( Directory.Exists( strPath ) && Directory.EnumerateFiles( strPath, "*.txt" ).Count() > 0 )
-        foreach ( string file in Directory.EnumerateFiles( strPath, "*.txt" ) )
-        {
-          string content = File.ReadAllText( file );
-          string[ ] pieces = content.TrimEnd( '\r', '\n' ).Split( ',' );
-          UserAccounts.Add( new SpeckleAccount() { email = pieces[ 0 ], apiToken = pieces[ 1 ], serverName = pieces[ 2 ], restApi = pieces[ 3 ], rootUrl = pieces[ 4 ], fileName = file } );
-        }
+      UserAccounts = SpeckleCore.SpeckleLocalContext.GetAllAccounts();
     }
 
     public void AddAccount( string payload )
     {
       var pieces = payload.Split( ',' );
+      var newAccount = new Account() { RestApi = pieces[ 3 ], Email = pieces[ 0 ], ServerName = pieces[ 2 ], Token = pieces[ 1 ], IsDefault = false };
 
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData );
-      System.IO.Directory.CreateDirectory( strPath + @"\SpeckleSettings" );
-
-      strPath = strPath + @"\SpeckleSettings\";
-
-      string fileName = pieces[ 0 ] + "." + pieces[ 2 ] + ".txt";
-
-      System.IO.StreamWriter file = new System.IO.StreamWriter( strPath + fileName );
-      file.WriteLine( payload );
-      file.Close();
+      SpeckleLocalContext.AddAccount( newAccount );
+      UserAccounts.Add( newAccount );
     }
 
-    public void RemoveAccount( string payload )
+    public void RemoveAccount( int payload )
     {
-      var x = UserAccounts.RemoveAll( account => { return account.fileName == payload; } );
-      if ( File.Exists( payload ) )
-        File.Delete( payload );
+      var toDelete = UserAccounts.FindLast( acc => acc.AccountId == payload );
+      SpeckleLocalContext.RemoveAccount( toDelete );
+      UserAccounts.RemoveAll( account => account.AccountId == toDelete.AccountId );
     }
+
     #endregion
 
     #region Client Management
@@ -554,6 +535,9 @@ namespace SpeckleRhino
     #endregion
   }
 
+  /// <summary>
+  /// Used internally.
+  /// </summary>
   [Serializable]
   public class LayerSelection
   {

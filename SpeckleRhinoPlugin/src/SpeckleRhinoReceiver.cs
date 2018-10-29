@@ -51,7 +51,7 @@ namespace SpeckleRhino
       Client.OnWsMessage += Client_OnWsMessage;
       Client.OnError += Client_OnError;
 
-      Client.IntializeReceiver( ( string ) payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), ( string ) payload.account.apiToken );
+      Client.IntializeReceiver( ( string ) payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), ( string ) payload.account.token );
 
       Display = new SpeckleDisplayConduit();
       Display.Enabled = true;

@@ -41,6 +41,7 @@ namespace SpecklePopup
     {
       InitializeComponent();
       this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
       this.DragRectangle.MouseDown += ( sender, e ) =>
       {
         this.DragMove();

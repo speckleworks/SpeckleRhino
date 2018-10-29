@@ -64,7 +64,7 @@ namespace SpeckleRhino
 
       Context.NotifySpeckleFrame( "set-gl-load", "", "true" );
 
-      Client.IntializeSender( ( string ) InitPayload.account.apiToken, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid() )
+      Client.IntializeSender( ( string ) InitPayload.account.token, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid() )
         .ContinueWith( res =>
             {
               StreamId = Client.Stream.StreamId;
