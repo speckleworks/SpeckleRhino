@@ -174,21 +174,38 @@ namespace SpeckleRhino
         Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
 
         // prepare payload
-        var payload = Client.Stream.Objects.Where( o => !Context.SpeckleObjectCache.ContainsKey( o._id ) ).Select( obj => obj._id ).ToArray();
+        SpeckleLocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
 
+        var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
+
+        //var test = SpeckleLocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
         var getObjectsResult = Client.ObjectGetBulkAsync( payload, "omit=displayValue" ).Result;
 
         if ( getObjectsResult.Success == false )
           Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
 
-        // add to cache
-        foreach ( var obj in getObjectsResult.Resources )
-          Context.SpeckleObjectCache[ obj._id ] = obj;
+        //// add to cache
+        //foreach ( var obj in getObjectsResult.Resources )
+        //  Context.SpeckleObjectCache[ obj._id ] = obj;
 
         // populate real objects
-        Objects.Clear();
-        foreach ( var obj in Client.Stream.Objects )
-          Objects.Add( Context.SpeckleObjectCache[ obj._id ] );
+        //Objects.Clear();
+
+        foreach ( var obj in getObjectsResult.Resources )
+        {
+          var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
+          try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
+
+          SpeckleLocalContext.AddObject( obj, Client.BaseUrl );
+        }
+
+        Objects = Client.Stream.Objects;
+        //foreach ( var obj in Client.Stream.Objects )
+        //{
+        //  //Objects.Add( Context.SpeckleObjectCache[ obj._id ] );
+
+        //  SpeckleLocalContext.AddObject( Context.SpeckleObjectCache[ obj._id ], Client.BaseUrl );
+        //}
 
         DisplayContents();
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );

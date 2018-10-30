@@ -69,9 +69,6 @@
     <Compile Include="..\src\ISpeckleRhinoWorker.cs">
       <Link>ISpeckleRhinoWorker.cs</Link>
     </Compile>
-    <Compile Include="..\src\SpeckleAccount.cs">
-      <Link>SpeckleAccount.cs</Link>
-    </Compile>
     <Compile Include="..\src\SpeckleDisplayConduit.cs">
       <Link>SpeckleDisplayConduit.cs</Link>
     </Compile>
