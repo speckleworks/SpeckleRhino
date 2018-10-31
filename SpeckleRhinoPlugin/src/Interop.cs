@@ -41,7 +41,7 @@ namespace SpeckleRhino
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
 
-      SpeckleCore.SpeckleLocalContext.Init();
+      SpeckleCore.LocalContext.Init();
 
       Browser = _originalBrowser;
 
@@ -261,7 +261,7 @@ namespace SpeckleRhino
 
     private void ReadUserAccounts( )
     {
-      UserAccounts = SpeckleCore.SpeckleLocalContext.GetAllAccounts();
+      UserAccounts = SpeckleCore.LocalContext.GetAllAccounts();
     }
 
     public void AddAccount( string payload )
@@ -269,14 +269,14 @@ namespace SpeckleRhino
       var pieces = payload.Split( ',' );
       var newAccount = new Account() { RestApi = pieces[ 3 ], Email = pieces[ 0 ], ServerName = pieces[ 2 ], Token = pieces[ 1 ], IsDefault = false };
 
-      SpeckleLocalContext.AddAccount( newAccount );
+      LocalContext.AddAccount( newAccount );
       UserAccounts.Add( newAccount );
     }
 
     public void RemoveAccount( int payload )
     {
       var toDelete = UserAccounts.FindLast( acc => acc.AccountId == payload );
-      SpeckleLocalContext.RemoveAccount( toDelete );
+      LocalContext.RemoveAccount( toDelete );
       UserAccounts.RemoveAll( account => account.AccountId == toDelete.AccountId );
     }
 

@@ -158,57 +158,65 @@ namespace SpeckleRhino
     public void UpdateGlobal( )
     {
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Global update received." ) );
-
       try
       {
         var streamGetResponse = Client.StreamGetAsync( StreamId, null ).Result;
         if ( streamGetResponse.Success == false )
         {
           Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+          // TODO
+          // Try and get from cache
+          // First stream
+          // Then objects
         }
-
-
-        Client.Stream = streamGetResponse.Resource;
-        Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
-        Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
-
-        // prepare payload
-        SpeckleLocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
-
-        var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
-
-        //var test = SpeckleLocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
-        var getObjectsResult = Client.ObjectGetBulkAsync( payload, "omit=displayValue" ).Result;
-
-        if ( getObjectsResult.Success == false )
-          Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-
-        //// add to cache
-        //foreach ( var obj in getObjectsResult.Resources )
-        //  Context.SpeckleObjectCache[ obj._id ] = obj;
-
-        // populate real objects
-        //Objects.Clear();
-
-        foreach ( var obj in getObjectsResult.Resources )
+        else
         {
-          var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
-          try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
+          Client.Stream = streamGetResponse.Resource;
+          Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
+          Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
 
-          SpeckleLocalContext.AddObject( obj, Client.BaseUrl );
+          // add or update the newly received stream in the cache.
+          LocalContext.AddOrUpdateStream( Client.Stream, Client.BaseUrl );
+
+          // pass the object list through a cache check 
+          LocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
+
+          // filter out the objects that were not in the cache and still need to be retrieved
+          var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
+
+          // how many objects to request from the api at a time
+          int maxObjRequestCount = 20;
+
+          // list to hold them into
+          var newObjects = new List<SpeckleObject>();
+          
+          // jump in `maxObjRequestCount` increments through the payload array
+          for ( int i = 0; i < payload.Length; i += maxObjRequestCount )
+          {
+            // create a subset
+            var subPayload = payload.Skip( i ).Take( maxObjRequestCount ).ToArray();
+
+            // get it sync as this is always execed out of the main thread
+            var res = Client.ObjectGetBulkAsync( subPayload, "omit=displayValue" ).Result;
+            
+            // put them in our bucket
+            newObjects.AddRange( res.Resources );
+            Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( String.Format( "Got {0} out of {1} objects.", i, payload.Length ) ) );
+          }
+
+          // populate the retrieved objects in the original stream's object list
+          foreach ( var obj in newObjects )
+          {
+            var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
+            try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
+
+            // add objects to cache
+            LocalContext.AddObject( obj, Client.BaseUrl );
+          }
+
+          DisplayContents();
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         }
-
-        Objects = Client.Stream.Objects;
-        //foreach ( var obj in Client.Stream.Objects )
-        //{
-        //  //Objects.Add( Context.SpeckleObjectCache[ obj._id ] );
-
-        //  SpeckleLocalContext.AddObject( Context.SpeckleObjectCache[ obj._id ], Client.BaseUrl );
-        //}
-
-        DisplayContents();
-        Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
       }
       catch ( Exception err )
       {
@@ -216,7 +224,6 @@ namespace SpeckleRhino
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
-
     }
 
     public void UpdateChildren( )
@@ -244,7 +251,7 @@ namespace SpeckleRhino
       Display.Colors = new List<System.Drawing.Color>();
       Display.VisibleList = new List<bool>();
 
-      var localCopy = Objects.ToList();
+      var localCopy = Client.Stream.Objects.ToList();
 
       int count = 0;
       foreach ( SpeckleObject myObject in localCopy )

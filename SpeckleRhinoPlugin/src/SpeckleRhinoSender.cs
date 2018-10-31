@@ -240,7 +240,6 @@ namespace SpeckleRhino
       SendStaggeredUpdate( true );
     }
 
-    // TODO: This method, or an abstracted version of it, should move to Speckle Core.
     public async void SendStaggeredUpdate( bool force = false )
     {
 
@@ -274,6 +273,7 @@ namespace SpeckleRhino
       List<SpeckleObject> allObjects = new List<SpeckleObject>();
 
       int lindex = -1, count = 0, orderIndex = 0;
+
       foreach ( RhinoObject obj in objs )
       {
         // layer list creation
