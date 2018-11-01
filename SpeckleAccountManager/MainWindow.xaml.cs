@@ -25,15 +25,12 @@ namespace SpecklePopup
   {
     List<string> existingServers = new List<string>();
     List<string> existingServers_fullDetails = new List<string>();
-    List<SpeckleAccount> accounts = new List<SpeckleAccount>();
+    List<Account> accounts = new List<Account>();
 
     bool validationCheckPass = false;
 
     Uri ServerAddress;
-    string email;
-    string password;
-
-    string serverName;
+   
     public string restApi;
     public string apitoken;
 
@@ -47,18 +44,20 @@ namespace SpecklePopup
         this.DragMove();
       };
 
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData ) + @"\SpeckleSettings";
+      accounts = LocalContext.GetAllAccounts();
 
-      if ( Directory.Exists( strPath ) && Directory.EnumerateFiles( strPath, "*.txt" ).Count() > 0 )
-        foreach ( string file in Directory.EnumerateFiles( strPath, "*.txt" ) )
-        {
-          string content = File.ReadAllText( file );
-          string[ ] pieces = content.TrimEnd( '\r', '\n' ).Split( ',' );
+      //string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData ) + @"\SpeckleSettings";
 
-          accounts.Add( new SpeckleAccount() { email = pieces[ 0 ], apiToken = pieces[ 1 ], serverName = pieces[ 2 ], restApi = pieces[ 3 ], rootUrl = pieces[ 4 ] } );
-        }
+      //if ( Directory.Exists( strPath ) && Directory.EnumerateFiles( strPath, "*.txt" ).Count() > 0 )
+      //  foreach ( string file in Directory.EnumerateFiles( strPath, "*.txt" ) )
+      //  {
+      //    string content = File.ReadAllText( file );
+      //    string[ ] pieces = content.TrimEnd( '\r', '\n' ).Split( ',' );
 
-      var gridView = new GridView();
+      //    accounts.Add( new SpeckleAccount() { email = pieces[ 0 ], apiToken = pieces[ 1 ], serverName = pieces[ 2 ], restApi = pieces[ 3 ], rootUrl = pieces[ 4 ] } );
+      //  }
+
+      //var gridView = new GridView();
 
       AccountListBox.ItemsSource = accounts;
     }
@@ -157,8 +156,8 @@ namespace SpecklePopup
 
     private void AccountListBox_MouseDoubleClick( object sender, MouseButtonEventArgs e )
     {
-      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].restApi;
-      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].apiToken;
+      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].RestApi;
+      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].Token;
       this.Close();
     }
 
@@ -169,8 +168,8 @@ namespace SpecklePopup
         MessageBox.Show( "Please select an account first." );
         return;
       }
-      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].restApi;
-      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].apiToken;
+      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].RestApi;
+      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].Token;
       this.Close();
     }
 
@@ -264,7 +263,7 @@ namespace SpecklePopup
         catch { MessageBox.Show( "Failed to contact " + ServerAddress.ToString() ); RegisterButton.IsEnabled = true; RegisterButton.Content = "Register"; return; }
       }
 
-      var existing = accounts.FirstOrDefault( account => account.email == myUser.Email && account.restApi == ServerAddress.ToString() );
+      var existing = accounts.FirstOrDefault( account => account.Email == myUser.Email && account.RestApi == ServerAddress.ToString() );
       if(existing != null)
       {
         MessageBox.Show( "You already have an account on " + ServerAddress.ToString() + " with " + myUser.Email + "." );
