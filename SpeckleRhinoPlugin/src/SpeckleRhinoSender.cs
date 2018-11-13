@@ -368,7 +368,7 @@ namespace SpeckleRhino
               oL._id = objResponse.Resources[ m++ ]._id;
 
               if ( oL.Type != SpeckleObjectType.Placeholder )
-                LocalContext.AddObject( oL, Client.BaseUrl );
+                LocalContext.AddSentObject( oL, Client.BaseUrl );
             }
           }
           catch ( Exception err )

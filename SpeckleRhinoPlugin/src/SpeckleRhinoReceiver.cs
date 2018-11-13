@@ -179,7 +179,7 @@ namespace SpeckleRhino
           LocalContext.AddOrUpdateStream( Client.Stream, Client.BaseUrl );
 
           // pass the object list through a cache check 
-          LocalContext.GetObjects( Client.Stream.Objects, Client.BaseUrl );
+          LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
           // filter out the objects that were not in the cache and still need to be retrieved
           var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
@@ -211,7 +211,7 @@ namespace SpeckleRhino
             try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
 
             // add objects to cache
-            LocalContext.AddObject( obj, Client.BaseUrl );
+            LocalContext.AddCachedObject( obj, Client.BaseUrl );
           }
 
           DisplayContents();
