@@ -44,7 +44,7 @@ namespace SpeckleGrasshopper
 
     public Action ExpireComponentAction;
 
-    public SpeckleApiClient mySender;
+    public SpeckleApiClient Client;
 
     public GH_Document Document;
 
@@ -90,11 +90,11 @@ namespace SpeckleGrasshopper
     {
       try
       {
-        if ( mySender != null )
+        if ( Client != null )
           using ( var ms = new MemoryStream() )
           {
             var formatter = new BinaryFormatter();
-            formatter.Serialize( ms, mySender );
+            formatter.Serialize( ms, Client );
             var arr = ms.ToArray();
             var arrr = arr;
             writer.SetByteArray( "speckleclient", ms.ToArray() );
@@ -119,10 +119,10 @@ namespace SpeckleGrasshopper
         {
           ms.Write( serialisedClient, 0, serialisedClient.Length );
           ms.Seek( 0, SeekOrigin.Begin );
-          mySender = ( SpeckleApiClient ) new BinaryFormatter().Deserialize( ms );
-          var x = mySender;
-          RestApi = mySender.BaseUrl;
-          StreamId = mySender.StreamId;
+          Client = ( SpeckleApiClient ) new BinaryFormatter().Deserialize( ms );
+          var x = Client;
+          RestApi = Client.BaseUrl;
+          StreamId = Client.StreamId;
           WasSerialised = true;
         }
 
@@ -141,7 +141,7 @@ namespace SpeckleGrasshopper
       base.AddedToDocument( document );
       Document = this.OnPingDocument();
 
-      if ( mySender == null )
+      if ( Client == null )
       {
         this.NickName = "Initialising...";
         this.Locked = true;
@@ -157,9 +157,9 @@ namespace SpeckleGrasshopper
 
         if ( myForm.restApi != null && myForm.apitoken != null )
         {
-          mySender = new SpeckleApiClient( myForm.restApi );
+          Client = new SpeckleApiClient( myForm.restApi );
           RestApi = myForm.restApi;
-          mySender.IntializeSender( myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString() ).ContinueWith( task =>
+          Client.IntializeSender( myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString() ).ContinueWith( task =>
                 {
                   Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
                 } );
@@ -174,9 +174,9 @@ namespace SpeckleGrasshopper
       {
       }
 
-      mySender.OnReady += ( sender, e ) =>
+      Client.OnReady += ( sender, e ) =>
       {
-        StreamId = mySender.StreamId;
+        StreamId = Client.StreamId;
         if ( !WasSerialised )
         {
           this.Locked = false;
@@ -186,14 +186,14 @@ namespace SpeckleGrasshopper
         Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
       };
 
-      mySender.OnWsMessage += OnWsMessage;
+      Client.OnWsMessage += OnWsMessage;
 
-      mySender.OnLogData += ( sender, e ) =>
+      Client.OnLogData += ( sender, e ) =>
       {
         this.Log += DateTime.Now.ToString( "dd:HH:mm:ss " ) + e.EventData + "\n";
       };
 
-      mySender.OnError += ( sender, e ) =>
+      Client.OnError += ( sender, e ) =>
       {
         this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, e.EventName + ": " + e.EventData );
         this.Log += DateTime.Now.ToString( "dd:HH:mm:ss " ) + e.EventData + "\n";
@@ -236,7 +236,7 @@ namespace SpeckleGrasshopper
           message[ "controllers" ] = DefaultSpeckleInputs;
           message[ "outputs" ] = DefaultSpeckleOutputs;
 
-          mySender.SendMessage( e.EventObject.senderId, message );
+          Client.SendMessage( e.EventObject.senderId, message );
           break;
 
         case "compute-request":
@@ -257,7 +257,7 @@ namespace SpeckleGrasshopper
             Dictionary<string, object> computeMessage = new Dictionary<string, object>();
             computeMessage[ "eventType" ] = "compute-request-error";
             computeMessage[ "response" ] = "Remote control is disabled for this sender";
-            mySender.SendMessage( e.EventObject.senderId, computeMessage );
+            Client.SendMessage( e.EventObject.senderId, computeMessage );
           }
           break;
         default:
@@ -296,7 +296,7 @@ namespace SpeckleGrasshopper
 
     public override void RemovedFromDocument( GH_Document document )
     {
-      if ( mySender != null ) mySender.Dispose();
+      if ( Client != null ) Client.Dispose();
       base.RemovedFromDocument( document );
     }
 
@@ -358,15 +358,15 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
       GH_DocumentObject.Menu_AppendItem( menu, "Save current stream as a version.", ( sender, e ) =>
        {
-         var cloneResult = mySender.StreamCloneAsync( StreamId ).Result;
-         mySender.Stream.Children.Add( cloneResult.Clone.StreamId );
+         var cloneResult = Client.StreamCloneAsync( StreamId ).Result;
+         Client.Stream.Children.Add( cloneResult.Clone.StreamId );
 
-         mySender.BroadcastMessage( new { eventType = "update-children" } );
+         Client.BroadcastMessage( new { eventType = "update-children" } );
 
          System.Windows.MessageBox.Show( "Stream version saved. CloneId: " + cloneResult.Clone.StreamId );
        } );
 
-      if ( mySender.Stream == null ) return;
+      if ( Client.Stream == null ) return;
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
       GH_DocumentObject.Menu_AppendItem( menu, "Enable remote control of definition", ( sender, e ) =>
@@ -392,12 +392,12 @@ namespace SpeckleGrasshopper
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
-      if ( mySender.Stream.Parent == null )
+      if ( Client.Stream.Parent == null )
         GH_DocumentObject.Menu_AppendItem( menu: menu, text: "This is a parent stream.", enabled: false, click: null );
       else
-        GH_DocumentObject.Menu_AppendItem( menu: menu, text: "Parent: " + mySender.Stream.Parent, click: ( sender, e ) =>
+        GH_DocumentObject.Menu_AppendItem( menu: menu, text: "Parent: " + Client.Stream.Parent, click: ( sender, e ) =>
          {
-           System.Windows.Clipboard.SetText( mySender.Stream.Parent );
+           System.Windows.Clipboard.SetText( Client.Stream.Parent );
            System.Windows.MessageBox.Show( "Parent id copied to clipboard. Share away!" );
          } );
       GH_DocumentObject.Menu_AppendSeparator( menu );
@@ -407,7 +407,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendItem( menu, "Children:" );
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
-      foreach ( string childId in mySender.Stream.Children )
+      foreach ( string childId in Client.Stream.Children )
       {
         GH_DocumentObject.Menu_AppendItem( menu, "Child " + childId, ( sender, e ) =>
          {
@@ -436,17 +436,17 @@ namespace SpeckleGrasshopper
 
     protected override void SolveInstance( IGH_DataAccess DA )
     {
-      if ( mySender == null ) return;
+      if ( Client == null ) return;
 
       if ( this.EnableRemoteControl )
         this.Message = "JobQueue: " + JobQueue.Count;
 
-      StreamId = mySender.StreamId;
+      StreamId = Client.StreamId;
 
       DA.SetData( 0, Log );
-      DA.SetData( 1, mySender.StreamId );
+      DA.SetData( 1, Client.StreamId );
 
-      if ( !mySender.IsConnected ) return;
+      if ( !Client.IsConnected ) return;
 
       if ( WasSerialised && FirstSendUpdate )
       {
@@ -505,7 +505,7 @@ namespace SpeckleGrasshopper
         // theoretically this should go through the same flow as in DataSenderElapsed(), ie creating
         // buckets for staggered updates, etc. but we're lazy to untangle that logic for now
 
-        var responseClone = mySender.StreamCloneAsync( this.StreamId ).Result;
+        var responseClone = Client.StreamCloneAsync( this.StreamId ).Result;
         var responseStream = new SpeckleStream();
 
         responseStream.IsComputedResult = true;
@@ -520,9 +520,9 @@ namespace SpeckleGrasshopper
         responseStream.GlobalMeasures = new { input = speckleInputs, output = speckleOutputs };
 
         // go unblocking
-        var responseCloneUpdate = mySender.StreamUpdateAsync( responseClone.Clone.StreamId, responseStream ).ContinueWith( tres =>
+        var responseCloneUpdate = Client.StreamUpdateAsync( responseClone.Clone.StreamId, responseStream ).ContinueWith( tres =>
         {
-          mySender.SendMessage( CurrentJobClient, new { eventType = "compute-response", streamId = responseClone.Clone.StreamId } );
+          Client.SendMessage( CurrentJobClient, new { eventType = "compute-response", streamId = responseClone.Clone.StreamId } );
         } );
 
 
@@ -593,9 +593,9 @@ namespace SpeckleGrasshopper
       message[ "eventType" ] = "default-state-update";
       message[ "controllers" ] = DefaultSpeckleInputs;
       message[ "outputs" ] = DefaultSpeckleOutputs;
-      message[ "originalStreamId" ] = mySender.StreamId;
+      message[ "originalStreamId" ] = Client.StreamId;
 
-      mySender.BroadcastMessage( message );
+      Client.BroadcastMessage( message );
     }
     #endregion
 
@@ -639,71 +639,107 @@ namespace SpeckleGrasshopper
     {
       if ( MetadataSender.Enabled )
       {
-        //  start the timer again, as we need to make sure we're updating
+        // start the timer again, as we need to make sure we're updating
         DataSender.Start();
         return;
       }
 
       this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
-      var convertedObjects = Converter.Serialise( BucketObjects ).Select( obj =>
-      {
-        if ( ObjectCache.ContainsKey( obj.Hash ) )
-          return new SpecklePlaceholder() { Hash = obj.Hash, _id = ObjectCache[ obj.Hash ]._id };
-        return obj;
-      } ).ToList();
+      var convertedObjects = Converter.Serialise( BucketObjects ).ToList();
 
       this.Message = String.Format( "Creating payloads" );
 
-      long totalBucketSize = 0;
-      long currentBucketSize = 0;
-      List<List<SpeckleObject>> objectUpdatePayloads = new List<List<SpeckleObject>>();
-      List<SpeckleObject> currentBucketObjects = new List<SpeckleObject>();
-      List<SpeckleObject> allObjects = new List<SpeckleObject>();
+      LocalContext.PruneExistingObjects( convertedObjects, Client.BaseUrl );
 
-      foreach ( SpeckleObject convertedObject in convertedObjects )
+      List<SpeckleObject> persistedObjects = new List<SpeckleObject>();
+
+      if ( convertedObjects.Count( obj => obj.Type == SpeckleObjectType.Placeholder ) != convertedObjects.Count )
       {
-        long size = Converter.getBytes( convertedObject ).Length;
-        currentBucketSize += size;
-        totalBucketSize += size;
-        currentBucketObjects.Add( convertedObject );
-
-        if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
+        // create the update payloads
+        int count = 0;
+        var objectUpdatePayloads = new List<List<SpeckleObject>>();
+        long totalBucketSize = 0;
+        long currentBucketSize = 0;
+        var currentBucketObjects = new List<SpeckleObject>();
+        var allObjects = new List<SpeckleObject>();
+        foreach ( SpeckleObject convertedObject in convertedObjects )
         {
-          Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
+
+          if ( count++ % 100 == 0 )
+            this.Message = "Converted " + count + " objects out of " + convertedObjects.Count() + ".";
+
+          // size checking & bulk object creation payloads creation
+          long size = Converter.getBytes( convertedObject ).Length;
+          currentBucketSize += size;
+          totalBucketSize += size;
+          currentBucketObjects.Add( convertedObject );
+
+          // Object is too big?
+          if ( size > 2e6 )
+          {
+            
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "This stream contains a super big object. These will fail. Sorry for the bad error message - we're working on improving this.");
+
+            currentBucketObjects.Remove( convertedObject );
+          }
+
+          if ( currentBucketSize > 5e5 ) // restrict max to ~500kb; should it be user config? anyway these functions should go into core. at one point. 
+          {
+            Debug.WriteLine( "Reached payload limit. Making a new one, current  #: " + objectUpdatePayloads.Count );
+            objectUpdatePayloads.Add( currentBucketObjects );
+            currentBucketObjects = new List<SpeckleObject>();
+            currentBucketSize = 0;
+          }
+        }
+
+        // add in the last bucket
+        if ( currentBucketObjects.Count > 0 )
           objectUpdatePayloads.Add( currentBucketObjects );
-          currentBucketObjects = new List<SpeckleObject>();
-          currentBucketSize = 0;
+
+        Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
+
+        // create bulk object creation tasks
+        int k = 0;
+        List<ResponseObject> responses = new List<ResponseObject>();
+        foreach ( var payload in objectUpdatePayloads )
+        {
+          this.Message = String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count );
+
+          try
+          {
+            var objResponse = Client.ObjectCreateAsync( payload ).Result;
+            responses.Add( objResponse );
+            persistedObjects.AddRange( objResponse.Resources );
+
+            // push sent objects in the cache
+            int m = 0;
+            foreach ( var oL in payload )
+            {
+              oL._id = objResponse.Resources[ m++ ]._id;
+
+              if ( oL.Type != SpeckleObjectType.Placeholder )
+                LocalContext.AddSentObject( oL, Client.BaseUrl );
+            }
+          }
+          catch ( Exception err )
+          {
+            this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, err.Message );
+            return;
+          }
         }
       }
-
-      // add  the last bucket 
-      if ( currentBucketObjects.Count > 0 )
-        objectUpdatePayloads.Add( currentBucketObjects );
-
-      Debug.WriteLine( "Finished, payload object update count is: " + objectUpdatePayloads.Count + " total bucket size is (kb) " + totalBucketSize / 1000 );
-
-      if ( objectUpdatePayloads.Count > 100 )
+      else
       {
-        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "This is a humongous update, in the range of ~50mb. For now, create more streams instead of just one massive one! Updates will be faster and snappier, and you can combine them back together at the other end easier." );
-        return;
+        persistedObjects = convertedObjects;
       }
-
-      int k = 0;
-      List<ResponseObject> responses = new List<ResponseObject>();
-      foreach ( var payload in objectUpdatePayloads )
-      {
-        this.Message = String.Format( "Sending payload\n{0} / {1}", k++, objectUpdatePayloads.Count );
-
-        responses.Add( mySender.ObjectCreateAsync( payload ).Result );
-      }
-
-      this.Message = "Updating stream...";
 
       // create placeholders for stream update payload
       List<SpeckleObject> placeholders = new List<SpeckleObject>();
-      foreach ( var myResponse in responses )
-        foreach ( var obj in myResponse.Resources ) placeholders.Add( new SpecklePlaceholder() { _id = obj._id } );
+
+      //foreach ( var myResponse in responses )
+      foreach ( var obj in persistedObjects )
+        placeholders.Add( new SpecklePlaceholder() { _id = obj._id } );
 
       SpeckleStream updateStream = new SpeckleStream()
       {
@@ -719,17 +755,9 @@ namespace SpeckleGrasshopper
       baseProps[ "angleTolerance" ] = Rhino.RhinoDoc.ActiveDoc.ModelAngleToleranceRadians;
       updateStream.BaseProperties = baseProps;
 
-      var response = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).Result;
+      var response = Client.StreamUpdateAsync( Client.StreamId, updateStream ).Result;
 
-      mySender.BroadcastMessage( new { eventType = "update-global" } );
-
-      // put the objects in the cache 
-      int l = 0;
-      foreach ( var obj in placeholders )
-      {
-        ObjectCache[ convertedObjects[ l ].Hash ] = placeholders[ l ];
-        l++;
-      }
+      Client.BroadcastMessage( new { eventType = "update-global" } );
 
       Log += response.Message;
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
@@ -760,20 +788,20 @@ namespace SpeckleGrasshopper
         Layers = BucketLayers
       };
 
-      var updateResult = mySender.StreamUpdateAsync( mySender.StreamId, updateStream ).Result;
+      var updateResult = Client.StreamUpdateAsync( Client.StreamId, updateStream ).Result;
 
       Log += updateResult.Message;
-      mySender.BroadcastMessage( new { eventType = "update-meta" } );
+      Client.BroadcastMessage( new { eventType = "update-meta" } );
     }
 
     public void ManualUpdate( )
     {
       new Task( ( ) =>
       {
-        var cloneResult = mySender.StreamCloneAsync( StreamId ).Result;
-        mySender.Stream.Children.Add( cloneResult.Clone.StreamId );
+        var cloneResult = Client.StreamCloneAsync( StreamId ).Result;
+        Client.Stream.Children.Add( cloneResult.Clone.StreamId );
 
-        mySender.BroadcastMessage( new { eventType = "update-children" } );
+        Client.BroadcastMessage( new { eventType = "update-children" } );
 
         ForceUpdateData();
 
@@ -952,7 +980,7 @@ namespace SpeckleGrasshopper
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle( System.Drawing.Color.FromArgb( 0, 0, 0, 0 ) );
 
-        var streamIdCapsule = GH_Capsule.CreateTextCapsule( box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + Base.mySender.StreamId, highlight: 0, radius: 5 );
+        var streamIdCapsule = GH_Capsule.CreateTextCapsule( box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + Base.Client.StreamId, highlight: 0, radius: 5 );
         streamIdCapsule.Render( graphics, myStyle );
         streamIdCapsule.Dispose();
 
