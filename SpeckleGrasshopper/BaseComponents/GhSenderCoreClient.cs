@@ -78,6 +78,7 @@ namespace SpeckleGrasshopper
     {
       var hack = new ConverterHack();
       JobQueue = new OrderedDictionary();
+      LocalContext.Init();
     }
 
     public override void CreateAttributes( )
