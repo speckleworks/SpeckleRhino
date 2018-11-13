@@ -56,7 +56,7 @@ namespace SpeckleRhino
 
     protected override void OnShutdown( )
     {
-      Browser.Dispose();
+      Browser?.Dispose();
       Cef.Shutdown();
 
       Store?.Dispose();
