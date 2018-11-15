@@ -936,5 +936,22 @@ namespace SpeckleRhinoConverter
 
       return true;
     }
+
+    // Colors
+    public static SpeckleBaseColor ToSpeckle( this Color color )
+    {
+      var myColor = new SpeckleBaseColor();
+      myColor.Hex = @"#" + color.R.ToString( "X2" ) + color.G.ToString( "X2" ) + color.B.ToString( "X2" );
+      myColor.A = ( ( int ) color.A ) / 255.0; // we do 0..1 only
+      return myColor;
+    }
+
+    public static Color ToNative( this SpeckleBaseColor color )
+    {
+      var myColor = ColorTranslator.FromHtml( color.Hex );
+      var alpha = ( int ) Math.Floor( color.A != null ? ( double ) color.A * 255 : 255 );
+      return Color.FromArgb( alpha, myColor );
+    }
+
   }
 }
