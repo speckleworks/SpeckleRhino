@@ -31,6 +31,7 @@ using System.Threading.Tasks;
 using Grasshopper.Kernel.Special;
 using System.Collections;
 using Grasshopper.GUI;
+using Grasshopper.GUI.Base;
 
 namespace SpeckleGrasshopper
 {
@@ -279,10 +280,10 @@ namespace SpeckleGrasshopper
           if ( slider.NickName.Contains( "SPK_IN" ) )
           {
             var n = new SpeckleInput();
-            n.Min = ( float ) slider.Slider.Minimum;
-            n.Max = ( float ) slider.Slider.Maximum;
-            n.Value = ( float ) slider.Slider.Value;
-            //n.Step = getSliderStep(slider.Slider);
+            n.Min = ( double ) slider.Slider.Minimum;
+            n.Max = ( double ) slider.Slider.Maximum;
+            n.Value = ( double ) slider.Slider.Value;
+            n.Step = getSliderStep(slider.Slider);
             //n.OrderIndex = Convert.ToInt32(slider.NickName.Split(':')[1]);
             //n.Name = slider.NickName.Split(':')[2];
             n.Name = slider.NickName;
@@ -293,6 +294,24 @@ namespace SpeckleGrasshopper
         }
       }
     }
+
+    private double getSliderStep( GH_SliderBase gH_NumberSlider )
+    {
+      switch ( gH_NumberSlider.Type )
+      {
+        case GH_SliderAccuracy.Float:
+          double i = 1 / Math.Pow( 10, gH_NumberSlider.DecimalPlaces );
+          return i;
+        case GH_SliderAccuracy.Integer:
+          return 1;
+        case GH_SliderAccuracy.Even:
+          return 2;
+        case GH_SliderAccuracy.Odd:
+          return 2;
+      }
+      throw new NotImplementedException();
+    }
+
 
     public override void RemovedFromDocument( GH_Document document )
     {

@@ -256,7 +256,9 @@ namespace SpeckleRhinoConverter
     // Interval
     public static SpeckleInterval ToSpeckle( this Interval interval )
     {
-      return new SpeckleInterval( interval.T0, interval.T1 );
+      var speckleInterval = new SpeckleInterval( interval.T0, interval.T1 );
+      speckleInterval.GenerateHash();
+      return speckleInterval;
     }
 
     public static Interval ToNative( this SpeckleInterval interval )
@@ -628,7 +630,9 @@ namespace SpeckleRhinoConverter
     // Box
     public static SpeckleBox ToSpeckle( this Box box )
     {
-      return new SpeckleBox( box.Plane.ToSpeckle(), box.X.ToSpeckle(), box.Y.ToSpeckle(), box.Z.ToSpeckle() );
+      var speckleBox = new SpeckleBox( box.Plane.ToSpeckle(), box.X.ToSpeckle(), box.Y.ToSpeckle(), box.Z.ToSpeckle() );
+      speckleBox.GenerateHash();
+      return speckleBox;
     }
 
     public static Box ToNative( this SpeckleBox box )
