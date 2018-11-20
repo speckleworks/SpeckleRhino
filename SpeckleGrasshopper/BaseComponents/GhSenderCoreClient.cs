@@ -222,7 +222,6 @@ namespace SpeckleGrasshopper
     {
       if ( doc.DocumentID == Document.DocumentID )
         DocumentIsClosing = true;
-
     }
 
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
@@ -313,10 +312,13 @@ namespace SpeckleGrasshopper
       throw new NotImplementedException();
     }
 
-
     public override void RemovedFromDocument( GH_Document document )
     {
-      if ( Client != null ) Client.Dispose();
+      if ( Client != null )
+      {
+        Client.StreamUpdateAsync( Client.StreamId, new SpeckleStream() { Deleted = true } );
+        Client.Dispose( true );
+      }
       base.RemovedFromDocument( document );
     }
 

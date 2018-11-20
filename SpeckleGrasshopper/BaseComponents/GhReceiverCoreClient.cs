@@ -351,7 +351,7 @@ namespace SpeckleGrasshopper
     public override void RemovedFromDocument( GH_Document document )
     {
       if ( Client != null )
-        Client.Dispose();
+        Client.Dispose(true);
       base.RemovedFromDocument( document );
     }
 
