@@ -49,7 +49,7 @@ namespace SpeckleGrasshopper
 
     public BoundingBox BBox;
 
-    private Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
+    System.Timers.Timer StreamIdChanger;
 
     public GhReceiverClient( )
       : base( "Data Receiver", "Data Receiver",
@@ -132,12 +132,25 @@ namespace SpeckleGrasshopper
           return;
         }
       }
+
+      StreamIdChanger = new System.Timers.Timer( 1000 ); StreamIdChanger.Enabled = false;
+      StreamIdChanger.AutoReset = false;
+      StreamIdChanger.Elapsed += ChangeStreamId;
+    }
+
+    private void ChangeStreamId( object sender, System.Timers.ElapsedEventArgs e )
+    {
+      Debug.WriteLine( "Changing streams to {0}.", StreamId );
+      Client = new SpeckleApiClient( RestApi, true );
+
+      InitReceiverEventsAndGlobals();
+
+      Client.IntializeReceiver( StreamId, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString(), AuthToken );
+
     }
 
     public void InitReceiverEventsAndGlobals( )
     {
-      ObjectCache = new Dictionary<string, SpeckleObject>();
-
       SpeckleObjects = new List<SpeckleObject>();
 
       ConvertedObjects = new List<object>();
@@ -313,35 +326,6 @@ namespace SpeckleGrasshopper
       this.Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
 
       Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
-
-      //var payload = getStream.Resource.Objects.Where( o => !ObjectCache.ContainsKey( o._id ) ).Select( obj => obj._id ).ToArray();
-
-      //Client.ObjectGetBulkAsync( payload, "omit=displayValue" ).ContinueWith( tres =>
-      //   {
-      //     // add to cache
-      //     foreach ( var x in tres.Result.Resources )
-      //       ObjectCache[ x._id ] = x;
-
-      //     // populate real objects
-      //     SpeckleObjects.Clear();
-      //     foreach ( var obj in getStream.Resource.Objects )
-      //       SpeckleObjects.Add( ObjectCache[ obj._id ] );
-
-      //     this.Message = "Converting objects";
-      //     ConvertedObjects = SpeckleCore.Converter.Deserialise( SpeckleObjects );
-
-      //     if ( ConvertedObjects.Count != SpeckleObjects.Count )
-      //     {
-      //       this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Some objects failed to convert." );
-      //     }
-
-      //     this.Message = "Updating...";
-      //     UpdateOutputStructure();
-
-      //     Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
-
-      //     Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
-      //   } );
     }
 
     public virtual void UpdateMeta( )
@@ -405,19 +389,12 @@ namespace SpeckleGrasshopper
 
       if ( inputId != StreamId )
       {
-        Debug.WriteLine( "Changing streams: {0} ::> {1}", inputId, StreamId );
+        Client?.Dispose( true );
+        Client = null;
 
         StreamId = inputId;
 
-        if ( Client != null )
-          Client.Dispose( true );
-
-        Client = new SpeckleApiClient( RestApi, true );
-
-        InitReceiverEventsAndGlobals();
-
-        Client.IntializeReceiver( StreamId, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString(), AuthToken );
-
+        StreamIdChanger.Start();
         return;
       }
 
@@ -508,7 +485,7 @@ namespace SpeckleGrasshopper
       BBox = new BoundingBox( -1, -1, -1, 1, 1, 1 );
       foreach ( var obj in ConvertedObjects )
       {
-        if ( obj is GeometryBase ) 
+        if ( obj is GeometryBase )
           BBox.Union( ( ( GeometryBase ) obj ).GetBoundingBox( false ) );
       }
     }

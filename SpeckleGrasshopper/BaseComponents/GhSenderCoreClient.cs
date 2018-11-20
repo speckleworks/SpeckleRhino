@@ -232,6 +232,7 @@ namespace SpeckleGrasshopper
       switch ( ( string ) e.EventObject.args.eventType )
       {
         case "get-definition-io":
+          if ( EnableRemoteControl == false ) return;
           Dictionary<string, object> message = new Dictionary<string, object>();
           message[ "eventType" ] = "get-def-io-response";
           message[ "controllers" ] = DefaultSpeckleInputs;
@@ -283,7 +284,7 @@ namespace SpeckleGrasshopper
             n.Min = ( double ) slider.Slider.Minimum;
             n.Max = ( double ) slider.Slider.Maximum;
             n.Value = ( double ) slider.Slider.Value;
-            n.Step = getSliderStep(slider.Slider);
+            n.Step = getSliderStep( slider.Slider );
             //n.OrderIndex = Convert.ToInt32(slider.NickName.Split(':')[1]);
             //n.Name = slider.NickName.Split(':')[2];
             n.Name = slider.NickName;
@@ -697,8 +698,8 @@ namespace SpeckleGrasshopper
           // Object is too big?
           if ( size > 2e6 )
           {
-            
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "This stream contains a super big object. These will fail. Sorry for the bad error message - we're working on improving this.");
+
+            this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "This stream contains a super big object. These will fail. Sorry for the bad error message - we're working on improving this." );
 
             currentBucketObjects.Remove( convertedObject );
           }
