@@ -226,44 +226,49 @@ namespace SpeckleGrasshopper
 
     public virtual void OnWsMessage( object source, SpeckleEventArgs e )
     {
-
-      AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at " + DateTime.Now + " from " + e.EventObject.senderId );
-      switch ( ( string ) e.EventObject.args.eventType )
+      try
       {
-        case "get-definition-io":
-          if ( EnableRemoteControl == false ) return;
-          Dictionary<string, object> message = new Dictionary<string, object>();
-          message[ "eventType" ] = "get-def-io-response";
-          message[ "controllers" ] = DefaultSpeckleInputs;
-          message[ "outputs" ] = DefaultSpeckleOutputs;
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, e.EventObject.args.eventType + "received at " + DateTime.Now + " from " + e.EventObject.senderId );
+        switch ( ( string ) e.EventObject.args.eventType )
+        {
+          case "get-definition-io":
+            if ( EnableRemoteControl == false ) return;
+            Dictionary<string, object> message = new Dictionary<string, object>();
+            message[ "eventType" ] = "get-def-io-response";
+            message[ "controllers" ] = DefaultSpeckleInputs;
+            message[ "outputs" ] = DefaultSpeckleOutputs;
 
-          Client.SendMessage( e.EventObject.senderId, message );
-          break;
+            Client.SendMessage( e.EventObject.senderId, message );
+            break;
 
-        case "compute-request":
-          if ( EnableRemoteControl == true )
-          {
-            var requestClientId = ( string ) e.EventObject.senderId;
-            if ( JobQueue.Contains( requestClientId ) )
-              JobQueue[ requestClientId ] = e.EventObject.args.requestParameters;
+          case "compute-request":
+            if ( EnableRemoteControl == true )
+            {
+              var requestClientId = ( string ) e.EventObject.senderId;
+              if ( JobQueue.Contains( requestClientId ) )
+                JobQueue[ requestClientId ] = e.EventObject.args.requestParameters;
+              else
+                JobQueue.Add( requestClientId, e.EventObject.args.requestParameters );
+              AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, Document.SolutionState.ToString() );
+
+              if ( JobQueue.Count == 1 ) // means we  just added one, so we need to start the solve loop
+                Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+            }
             else
-              JobQueue.Add( requestClientId, e.EventObject.args.requestParameters );
-            AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, Document.SolutionState.ToString() );
+            {
+              Dictionary<string, object> computeMessage = new Dictionary<string, object>();
+              computeMessage[ "eventType" ] = "compute-request-error";
+              computeMessage[ "response" ] = "Remote control is disabled for this sender";
+              Client.SendMessage( e.EventObject.senderId, computeMessage );
+            }
+            break;
+          default:
+            Log += DateTime.Now.ToString( "dd:HH:mm:ss" ) + " Defaulted, could not parse event. \n";
+            break;
+        }
+      }catch
+      {
 
-            if ( JobQueue.Count == 1 ) // means we  just added one, so we need to start the solve loop
-              Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
-          }
-          else
-          {
-            Dictionary<string, object> computeMessage = new Dictionary<string, object>();
-            computeMessage[ "eventType" ] = "compute-request-error";
-            computeMessage[ "response" ] = "Remote control is disabled for this sender";
-            Client.SendMessage( e.EventObject.senderId, computeMessage );
-          }
-          break;
-        default:
-          Log += DateTime.Now.ToString( "dd:HH:mm:ss" ) + " Defaulted, could not parse event. \n";
-          break;
       }
       Debug.WriteLine( "[Gh Sender] Got a volatile message. Extend this class and implement custom protocols at ease." );
     }
@@ -317,7 +322,7 @@ namespace SpeckleGrasshopper
       if ( Client != null )
       {
         Client.StreamUpdateAsync( Client.StreamId, new SpeckleStream() { Deleted = true } );
-        Client.Dispose( true );
+        Client.Dispose( false );
       }
       base.RemovedFromDocument( document );
     }

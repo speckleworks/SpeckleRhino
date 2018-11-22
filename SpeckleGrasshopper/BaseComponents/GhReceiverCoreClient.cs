@@ -51,6 +51,8 @@ namespace SpeckleGrasshopper
 
     System.Timers.Timer StreamIdChanger;
 
+    public bool IsUpdating = false;
+
     public GhReceiverClient( )
       : base( "Data Receiver", "Data Receiver",
           "Receives data from Speckle.",
@@ -267,6 +269,13 @@ namespace SpeckleGrasshopper
 
     public virtual void UpdateGlobal( )
     {
+      if ( IsUpdating ) {
+        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "New update received while update was in progress. Please refresh." );
+        return;
+      }
+
+      IsUpdating = true;
+
       var getStream = Client.StreamGetAsync( Client.StreamId, null ).Result;
 
       NickName = getStream.Resource.Name;
@@ -286,7 +295,7 @@ namespace SpeckleGrasshopper
       var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
 
       // how many objects to request from the api at a time
-      int maxObjRequestCount = 20;
+      int maxObjRequestCount = 42;
 
       // list to hold them into
       var newObjects = new List<SpeckleObject>();
@@ -302,8 +311,10 @@ namespace SpeckleGrasshopper
 
         // put them in our bucket
         newObjects.AddRange( res.Resources );
-        this.Message = JsonConvert.SerializeObject( String.Format( "Got {0} out of {1} objects.", i, payload.Length ) );
+        this.Message = JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
       }
+
+      this.Message = "Caching...";
 
       foreach ( var obj in newObjects )
       {
@@ -317,7 +328,7 @@ namespace SpeckleGrasshopper
       // set ports
       UpdateOutputStructure();
 
-      this.Message = "Converting objects.";
+      this.Message = "Converting...";
 
       SpeckleObjects.Clear();
 
@@ -325,6 +336,7 @@ namespace SpeckleGrasshopper
 
       this.Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
 
+      IsUpdating = false;
       Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
     }
 
@@ -351,7 +363,7 @@ namespace SpeckleGrasshopper
     public override void RemovedFromDocument( GH_Document document )
     {
       if ( Client != null )
-        Client.Dispose(true);
+        Client.Dispose();
       base.RemovedFromDocument( document );
     }
 
