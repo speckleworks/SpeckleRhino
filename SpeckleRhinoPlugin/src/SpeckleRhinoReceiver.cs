@@ -62,17 +62,17 @@ namespace SpeckleRhino
     #region events
     private void Client_OnError( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnLogData( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnReady( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client } ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
 
       Context.UserClients.Add( this );
 
@@ -86,7 +86,8 @@ namespace SpeckleRhino
         Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
         return;
       }
-
+      if ( e == null ) return;
+      if ( e.EventObject == null ) return;
       switch ( ( string ) e.EventObject.args.eventType )
       {
         case "update-global":
@@ -209,10 +210,16 @@ namespace SpeckleRhino
           {
             var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
             try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
-
-            // add objects to cache
-            LocalContext.AddCachedObject( obj, Client.BaseUrl );
           }
+
+          // add objects to cache async
+          Task.Run( ( ) =>
+          {
+            foreach ( var obj in newObjects )
+            {
+              LocalContext.AddCachedObject( obj, Client.BaseUrl );
+            }
+          } );
 
           DisplayContents();
           Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
@@ -538,11 +545,6 @@ namespace SpeckleRhino
 
     protected RhinoReceiver( SerializationInfo info, StreamingContext context )
     {
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
-
       Display = new SpeckleDisplayConduit();
       Display.Enabled = true;
 

@@ -38,6 +38,8 @@ namespace SpeckleRhino
 
     public bool SelectionInfoNeedsToBeSentYeMighty = false; // should be false
 
+    public static JsonSerializerSettings camelCaseSettings = new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
 
@@ -253,10 +255,7 @@ namespace SpeckleRhino
     // called by the web ui
     public string GetUserAccounts( )
     {
-      return JsonConvert.SerializeObject( UserAccounts, new JsonSerializerSettings
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      } );
+      return JsonConvert.SerializeObject( UserAccounts, Interop.camelCaseSettings );
     }
 
     private void ReadUserAccounts( )
@@ -324,15 +323,15 @@ namespace SpeckleRhino
         if ( client is RhinoSender )
         {
           var rhSender = client as RhinoSender;
-          NotifySpeckleFrame( "client-add", rhSender.StreamId, JsonConvert.SerializeObject( new { stream = rhSender.Client.Stream, client = rhSender.Client } ) );
+          NotifySpeckleFrame( "client-add", rhSender.StreamId, JsonConvert.SerializeObject( new { stream = rhSender.Client.Stream, client = rhSender.Client }, camelCaseSettings ) );
           continue;
         }
 
         var rhReceiver = client as RhinoReceiver;
-        NotifySpeckleFrame( "client-add", rhReceiver.StreamId, JsonConvert.SerializeObject( new { stream = rhReceiver.Client.Stream, client = rhReceiver.Client } ) );
+        NotifySpeckleFrame( "client-add", rhReceiver.StreamId, JsonConvert.SerializeObject( new { stream = rhReceiver.Client.Stream, client = rhReceiver.Client }, camelCaseSettings ) );
       }
 
-      return JsonConvert.SerializeObject( UserClients );
+      return JsonConvert.SerializeObject( UserClients, camelCaseSettings );
     }
 
     #endregion
@@ -482,13 +481,13 @@ namespace SpeckleRhino
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects( false, false ).ToList();
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
-          return JsonConvert.SerializeObject( layerInfoList );
+          return JsonConvert.SerializeObject( layerInfoList, camelCaseSettings );
       }
       else
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
-          return JsonConvert.SerializeObject( layerInfoList );
+          return JsonConvert.SerializeObject( layerInfoList, camelCaseSettings );
 
         foreach ( Rhino.DocObjects.Layer ll in RhinoDoc.ActiveDoc.Layers )
         {
@@ -530,7 +529,7 @@ namespace SpeckleRhino
         }
       }
 
-      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( layerInfoList ) ) );
+      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( layerInfoList, camelCaseSettings ) ) );
     }
     #endregion
   }

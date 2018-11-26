@@ -13,7 +13,6 @@ using SpeckleCore;
 using SpeckleRhinoConverter;
 using SpecklePopup;
 
-
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 using System.IO;
@@ -269,7 +268,8 @@ namespace SpeckleGrasshopper
 
     public virtual void UpdateGlobal( )
     {
-      if ( IsUpdating ) {
+      if ( IsUpdating )
+      {
         this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "New update received while update was in progress. Please refresh." );
         return;
       }
@@ -314,16 +314,20 @@ namespace SpeckleGrasshopper
         this.Message = JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
       }
 
-      this.Message = "Caching...";
-
       foreach ( var obj in newObjects )
       {
         var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
         try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
-
-        // add objects to cache
-        LocalContext.AddCachedObject( obj, Client.BaseUrl );
       }
+
+      // add objects to cache async
+      Task.Run( ( ) =>
+      {
+        foreach ( var obj in newObjects )
+        {
+          LocalContext.AddCachedObject( obj, Client.BaseUrl );
+        }
+      } );
 
       // set ports
       UpdateOutputStructure();

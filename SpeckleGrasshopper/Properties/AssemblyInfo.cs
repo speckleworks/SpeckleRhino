@@ -4,15 +4,19 @@ using System.Runtime.InteropServices;
 using Rhino.PlugIns;
 
 
+[assembly: PlugInDescription( DescriptionType.Email, "hello@speckle.works" )]
+[assembly: PlugInDescription( DescriptionType.Organization, "Speckle Works, an Open Source Project." )]
+[assembly: PlugInDescription( DescriptionType.WebSite, "https://speckle.works" )]
+
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MyProject7")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Speckle Grasshopper")]
+[assembly: AssemblyDescription("The Speckle Grasshopper plugin.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("MyProject7")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCompany("Speckle.Works")]
+[assembly: AssemblyProduct("Speckle")]
+[assembly: AssemblyCopyright("Copyright Speckle.Works © 2016-2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -34,5 +38,5 @@ using Rhino.PlugIns;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyFileVersion("1.0.0.0")]

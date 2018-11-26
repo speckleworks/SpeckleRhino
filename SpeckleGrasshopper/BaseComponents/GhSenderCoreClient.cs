@@ -63,6 +63,8 @@ namespace SpeckleGrasshopper
     private bool DocumentIsClosing = false;
     private bool FirstSendUpdate = true;
 
+    public bool IsSendingUpdate = false;
+
     List<SpeckleInput> DefaultSpeckleInputs = null;
     List<SpeckleOutput> DefaultSpeckleOutputs = null;
 
@@ -266,7 +268,8 @@ namespace SpeckleGrasshopper
             Log += DateTime.Now.ToString( "dd:HH:mm:ss" ) + " Defaulted, could not parse event. \n";
             break;
         }
-      }catch
+      }
+      catch
       {
 
       }
@@ -671,6 +674,9 @@ namespace SpeckleGrasshopper
         return;
       }
 
+      if ( IsSendingUpdate ) return;
+      IsSendingUpdate = true;
+
       this.Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
       var convertedObjects = Converter.Serialise( BucketObjects ).ToList();
@@ -731,7 +737,7 @@ namespace SpeckleGrasshopper
         List<ResponseObject> responses = new List<ResponseObject>();
         foreach ( var payload in objectUpdatePayloads )
         {
-          this.Message = String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count );
+          this.Message = String.Format( "{0}/{1}", k++, objectUpdatePayloads.Count );
 
           try
           {
@@ -739,15 +745,22 @@ namespace SpeckleGrasshopper
             responses.Add( objResponse );
             persistedObjects.AddRange( objResponse.Resources );
 
-            // push sent objects in the cache
             int m = 0;
             foreach ( var oL in payload )
             {
               oL._id = objResponse.Resources[ m++ ]._id;
-
-              if ( oL.Type != SpeckleObjectType.Placeholder )
-                LocalContext.AddSentObject( oL, Client.BaseUrl );
             }
+
+            // push sent objects in the cache non-blocking
+            Task.Run( ( ) =>
+            {
+              foreach ( var oL in payload )
+              {
+                if ( oL.Type != SpeckleObjectType.Placeholder )
+                  LocalContext.AddSentObject( oL, Client.BaseUrl );
+              }
+            } );
+
           }
           catch ( Exception err )
           {
@@ -790,6 +803,7 @@ namespace SpeckleGrasshopper
       AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now );
       Message = "Data sent\n@" + DateTime.Now.ToString( "hh:mm:ss" );
 
+      IsSendingUpdate = false;
       this.State = "Ok";
     }
 

@@ -71,7 +71,7 @@ namespace SpeckleRhino
               Client.Stream.Name = StreamName;
 
               Context.NotifySpeckleFrame( "set-gl-load", "", "false" );
-              Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client } ) );
+              Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
               Context.UserClients.Add( this );
 
               InitTrackedObjects( InitPayload );
@@ -122,6 +122,8 @@ namespace SpeckleRhino
 
     private void RhinoDoc_LayerTableEvent( object sender, Rhino.DocObjects.Tables.LayerTableEventArgs e )
     {
+      if ( e.EventType == Rhino.DocObjects.Tables.LayerTableEventType.Added ) return;
+      var x = e;
       DataSender.Start();
     }
 
@@ -237,6 +239,7 @@ namespace SpeckleRhino
 
     public void ForceUpdate( )
     {
+
       SendStaggeredUpdate( true );
     }
 
@@ -247,6 +250,13 @@ namespace SpeckleRhino
       {
         Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
         return;
+      } else
+      {
+        // create a clone
+        var cloneResult = Client.StreamCloneAsync( StreamId ).Result;
+        Client.Stream.Children.Add( cloneResult.Clone.StreamId );
+
+        Client.BroadcastMessage( new { eventType = "update-children" } );
       }
 
       if ( IsSendingUpdate )
@@ -361,15 +371,21 @@ namespace SpeckleRhino
             responses.Add( objResponse );
             persistedObjects.AddRange( objResponse.Resources );
 
-            // push sent objects in the cache
             int m = 0;
             foreach ( var oL in payload )
             {
               oL._id = objResponse.Resources[ m++ ]._id;
-
-              if ( oL.Type != SpeckleObjectType.Placeholder )
-                LocalContext.AddSentObject( oL, Client.BaseUrl );
             }
+
+            // push sent objects in the cache non-blocking
+            Task.Run( ( ) =>
+            {
+              foreach ( var oL in payload )
+              {
+                if ( oL.Type != SpeckleObjectType.Placeholder )
+                  LocalContext.AddSentObject( oL, Client.BaseUrl );
+              }
+            } );
           }
           catch ( Exception err )
           {
@@ -379,7 +395,8 @@ namespace SpeckleRhino
             return;
           }
         }
-      } else
+      }
+      else
       {
         persistedObjects = convertedObjects;
       }
@@ -521,17 +538,12 @@ namespace SpeckleRhino
     {
       Context = _Context;
 
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client } ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
       Context.UserClients.Add( this );
     }
 
     protected RhinoSender( SerializationInfo info, StreamingContext context )
     {
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
-
       byte[ ] serialisedClient = Convert.FromBase64String( ( string ) info.GetString( "client" ) );
 
       using ( var ms = new MemoryStream() )
