@@ -115,7 +115,7 @@ namespace SpeckleGrasshopper
 
       if ( Client == null )
       {
-        var myForm = new SpecklePopup.MainWindow();
+        var myForm = new SpecklePopup.MainWindow(false, true);
 
         var some = new System.Windows.Interop.WindowInteropHelper( myForm );
         some.Owner = Rhino.RhinoApp.MainWindowHandle();

@@ -106,7 +106,7 @@
     <None Include="Resources\sender_2.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SpeckleAccountManager\SpecklePopup.csproj">
+    <ProjectReference Include="..\SpeckleCore\SpeckleAccountManager\SpecklePopup.csproj">
       <Project>{d65594c8-ea2e-46ca-a756-b1634edc3ae3}</Project>
       <Name>SpecklePopup</Name>
     </ProjectReference>
@@ -151,7 +151,7 @@
   </Target>  -->
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
-    <Delete Files="$(TargetPath)" />
+    <!--<Delete Files="$(TargetPath)" />-->
     <ItemGroup>
       <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
     </ItemGroup>
