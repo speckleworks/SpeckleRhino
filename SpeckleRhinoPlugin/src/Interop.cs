@@ -29,7 +29,7 @@ namespace SpeckleRhino
   {
     public ChromiumWebBrowser Browser;
 
-    private List<SpeckleAccount> UserAccounts;
+    private List<Account> UserAccounts;
     public List<ISpeckleRhinoClient> UserClients;
 
     public Dictionary<string, SpeckleObject> SpeckleObjectCache;
@@ -38,17 +38,16 @@ namespace SpeckleRhino
 
     public bool SelectionInfoNeedsToBeSentYeMighty = false; // should be false
 
+    public static JsonSerializerSettings camelCaseSettings = new JsonSerializerSettings() { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
-      // Makes sure we always get some camelCaseLove
-      //JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      //{
-      //  ContractResolver = new CamelCasePropertyNamesContractResolver()
-      //};
+
+      SpeckleCore.LocalContext.Init();
 
       Browser = _originalBrowser;
 
-      UserAccounts = new List<SpeckleAccount>();
+      UserAccounts = new List<Account>();
 
       UserClients = new List<ISpeckleRhinoClient>();
 
@@ -175,7 +174,7 @@ namespace SpeckleRhino
       return Rhino.RhinoDoc.ActiveDoc.DocumentId.ToString();
     }
 
-    public string GetHostApplicationType()
+    public string GetHostApplicationType( )
     {
       return "Rhino";
     }
@@ -253,52 +252,33 @@ namespace SpeckleRhino
 
     #region Account Management
 
+    // called by the web ui
     public string GetUserAccounts( )
     {
-      ReadUserAccounts();
-      return JsonConvert.SerializeObject( UserAccounts, new JsonSerializerSettings
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      } );
+      return JsonConvert.SerializeObject( UserAccounts, Interop.camelCaseSettings );
     }
 
     private void ReadUserAccounts( )
     {
-      UserAccounts = new List<SpeckleAccount>();
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData );
-      strPath = strPath + @"\SpeckleSettings";
-
-      if ( Directory.Exists( strPath ) && Directory.EnumerateFiles( strPath, "*.txt" ).Count() > 0 )
-        foreach ( string file in Directory.EnumerateFiles( strPath, "*.txt" ) )
-        {
-          string content = File.ReadAllText( file );
-          string[ ] pieces = content.TrimEnd( '\r', '\n' ).Split( ',' );
-          UserAccounts.Add( new SpeckleAccount() { email = pieces[ 0 ], apiToken = pieces[ 1 ], serverName = pieces[ 2 ], restApi = pieces[ 3 ], rootUrl = pieces[ 4 ], fileName = file } );
-        }
+      UserAccounts = SpeckleCore.LocalContext.GetAllAccounts();
     }
 
     public void AddAccount( string payload )
     {
       var pieces = payload.Split( ',' );
+      var newAccount = new Account() { RestApi = pieces[ 3 ], Email = pieces[ 0 ], ServerName = pieces[ 2 ], Token = pieces[ 1 ], IsDefault = false };
 
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData );
-      System.IO.Directory.CreateDirectory( strPath + @"\SpeckleSettings" );
-
-      strPath = strPath + @"\SpeckleSettings\";
-
-      string fileName = pieces[ 0 ] + "." + pieces[ 2 ] + ".txt";
-
-      System.IO.StreamWriter file = new System.IO.StreamWriter( strPath + fileName );
-      file.WriteLine( payload );
-      file.Close();
+      LocalContext.AddAccount( newAccount );
+      UserAccounts.Add( newAccount );
     }
 
-    public void RemoveAccount( string payload )
+    public void RemoveAccount( int payload )
     {
-      var x = UserAccounts.RemoveAll( account => { return account.fileName == payload; } );
-      if ( File.Exists( payload ) )
-        File.Delete( payload );
+      var toDelete = UserAccounts.FindLast( acc => acc.AccountId == payload );
+      LocalContext.RemoveAccount( toDelete );
+      UserAccounts.RemoveAll( account => account.AccountId == toDelete.AccountId );
     }
+
     #endregion
 
     #region Client Management
@@ -343,15 +323,15 @@ namespace SpeckleRhino
         if ( client is RhinoSender )
         {
           var rhSender = client as RhinoSender;
-          NotifySpeckleFrame( "client-add", rhSender.StreamId, JsonConvert.SerializeObject( new { stream = rhSender.Client.Stream, client = rhSender.Client } ) );
+          NotifySpeckleFrame( "client-add", rhSender.StreamId, JsonConvert.SerializeObject( new { stream = rhSender.Client.Stream, client = rhSender.Client }, camelCaseSettings ) );
           continue;
         }
 
         var rhReceiver = client as RhinoReceiver;
-        NotifySpeckleFrame( "client-add", rhReceiver.StreamId, JsonConvert.SerializeObject( new { stream = rhReceiver.Client.Stream, client = rhReceiver.Client } ) );
+        NotifySpeckleFrame( "client-add", rhReceiver.StreamId, JsonConvert.SerializeObject( new { stream = rhReceiver.Client.Stream, client = rhReceiver.Client }, camelCaseSettings ) );
       }
 
-      return JsonConvert.SerializeObject( UserClients );
+      return JsonConvert.SerializeObject( UserClients, camelCaseSettings );
     }
 
     #endregion
@@ -501,13 +481,13 @@ namespace SpeckleRhino
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects( false, false ).ToList();
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
-          return JsonConvert.SerializeObject( layerInfoList );
+          return JsonConvert.SerializeObject( layerInfoList, camelCaseSettings );
       }
       else
       {
         SelectedObjects = RhinoDoc.ActiveDoc.Objects.ToList();
         if ( SelectedObjects.Count == 0 || SelectedObjects[ 0 ] == null )
-          return JsonConvert.SerializeObject( layerInfoList );
+          return JsonConvert.SerializeObject( layerInfoList, camelCaseSettings );
 
         foreach ( Rhino.DocObjects.Layer ll in RhinoDoc.ActiveDoc.Layers )
         {
@@ -549,11 +529,14 @@ namespace SpeckleRhino
         }
       }
 
-      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( layerInfoList ) ) );
+      return Convert.ToBase64String( System.Text.Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( layerInfoList, camelCaseSettings ) ) );
     }
     #endregion
   }
 
+  /// <summary>
+  /// Used internally.
+  /// </summary>
   [Serializable]
   public class LayerSelection
   {

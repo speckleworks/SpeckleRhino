@@ -25,15 +25,12 @@ namespace SpecklePopup
   {
     List<string> existingServers = new List<string>();
     List<string> existingServers_fullDetails = new List<string>();
-    List<SpeckleAccount> accounts = new List<SpeckleAccount>();
+    List<Account> accounts = new List<Account>();
 
     bool validationCheckPass = false;
 
     Uri ServerAddress;
-    string email;
-    string password;
-
-    string serverName;
+   
     public string restApi;
     public string apitoken;
 
@@ -41,24 +38,13 @@ namespace SpecklePopup
     {
       InitializeComponent();
       this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
       this.DragRectangle.MouseDown += ( sender, e ) =>
       {
         this.DragMove();
       };
 
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData ) + @"\SpeckleSettings";
-
-      if ( Directory.Exists( strPath ) && Directory.EnumerateFiles( strPath, "*.txt" ).Count() > 0 )
-        foreach ( string file in Directory.EnumerateFiles( strPath, "*.txt" ) )
-        {
-          string content = File.ReadAllText( file );
-          string[ ] pieces = content.TrimEnd( '\r', '\n' ).Split( ',' );
-
-          accounts.Add( new SpeckleAccount() { email = pieces[ 0 ], apiToken = pieces[ 1 ], serverName = pieces[ 2 ], restApi = pieces[ 3 ], rootUrl = pieces[ 4 ] } );
-        }
-
-      var gridView = new GridView();
-
+      accounts = LocalContext.GetAllAccounts();
       AccountListBox.ItemsSource = accounts;
     }
 
@@ -129,24 +115,16 @@ namespace SpecklePopup
       return validationErrors;
     }
 
-    private void saveAccountToDisk( string _email, string _apitoken, string _serverName, string _restApi, string _rootUrl )
+    private void StoreAccount( string _email, string _apitoken, string _serverName, string _restApi, string _rootUrl )
     {
 
-      string strPath = System.Environment.GetFolderPath( System.Environment.SpecialFolder.LocalApplicationData );
-
-      System.IO.Directory.CreateDirectory( strPath + @"\SpeckleSettings" );
-
-      strPath = strPath + @"\SpeckleSettings\";
-
-      string fileName = _email + "." + _apitoken.Substring( 0, 4 ) + ".txt";
-
-      string content = _email + "," + _apitoken + "," + _serverName + "," + _restApi + "," + _rootUrl;
-
-      Debug.WriteLine( content );
-
-      System.IO.StreamWriter file = new System.IO.StreamWriter( strPath + fileName );
-      file.WriteLine( content );
-      file.Close();
+      LocalContext.AddAccount( new Account()
+      {
+        RestApi = _restApi,
+        Email = _email,
+        ServerName = _serverName,
+        Token = _apitoken
+      } );
     }
 
     private void CancelButton_Click( object sender, RoutedEventArgs e )
@@ -156,8 +134,8 @@ namespace SpecklePopup
 
     private void AccountListBox_MouseDoubleClick( object sender, MouseButtonEventArgs e )
     {
-      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].restApi;
-      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].apiToken;
+      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].RestApi;
+      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].Token;
       this.Close();
     }
 
@@ -168,8 +146,8 @@ namespace SpecklePopup
         MessageBox.Show( "Please select an account first." );
         return;
       }
-      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].restApi;
-      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].apiToken;
+      this.restApi = this.accounts[ this.AccountListBox.SelectedIndex ].RestApi;
+      this.apitoken = this.accounts[ this.AccountListBox.SelectedIndex ].Token;
       this.Close();
     }
 
@@ -219,7 +197,7 @@ namespace SpecklePopup
 
         var serverName = parsedReply.serverName;
 
-        saveAccountToDisk( this.RegisterEmail.Text, response.Resource.Apitoken, (string) serverName, this.RegisterServerUrl.Text, this.RegisterServerUrl.Text );
+        StoreAccount( this.RegisterEmail.Text, response.Resource.Apitoken, (string) serverName, this.RegisterServerUrl.Text, this.RegisterServerUrl.Text );
 
         MessageBox.Show( "Account creation ok: You're good to go." );
         this.restApi = this.RegisterServerUrl.Text;
@@ -263,7 +241,7 @@ namespace SpecklePopup
         catch { MessageBox.Show( "Failed to contact " + ServerAddress.ToString() ); RegisterButton.IsEnabled = true; RegisterButton.Content = "Register"; return; }
       }
 
-      var existing = accounts.FirstOrDefault( account => account.email == myUser.Email && account.restApi == ServerAddress.ToString() );
+      var existing = accounts.FirstOrDefault( account => account.Email == myUser.Email && account.RestApi == ServerAddress.ToString() );
       if(existing != null)
       {
         MessageBox.Show( "You already have an account on " + ServerAddress.ToString() + " with " + myUser.Email + "." );
@@ -281,7 +259,7 @@ namespace SpecklePopup
 
         var serverName = parsedReply.serverName;
 
-        saveAccountToDisk( myUser.Email, response.Resource.Apitoken, ( string ) serverName, this.ServerAddress.ToString(), this.ServerAddress.ToString() );
+        StoreAccount( myUser.Email, response.Resource.Apitoken, ( string ) serverName, this.ServerAddress.ToString(), this.ServerAddress.ToString() );
 
         MessageBox.Show( "Account login ok: You're good to go." );
         this.restApi = this.RegisterServerUrl.Text;

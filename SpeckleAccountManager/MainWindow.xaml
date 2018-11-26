@@ -27,10 +27,10 @@
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <StackPanel>
-                  <TextBlock Text="{Binding restApi}" FontSize="14"/>
-                  <TextBlock Text="{Binding email}" FontSize="10" Foreground="DimGray"/>
+                  <TextBlock Text="{Binding RestApi}" FontSize="14"/>
+                  <TextBlock Text="{Binding Email}" FontSize="10" Foreground="DimGray"/>
                   <TextBlock Text="----------------" FontSize="10" Foreground="DimGray"/>
-                  <TextBlock Text="{Binding serverName}" FontSize="10" Foreground="DimGray"/>
+                  <TextBlock Text="{Binding ServerName}" FontSize="10" Foreground="DimGray"/>
                 </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>

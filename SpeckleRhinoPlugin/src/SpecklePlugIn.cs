@@ -33,12 +33,6 @@ namespace SpeckleRhino
     {
       Instance = this;
       var hack = new ConverterHack();
-      // Makes sure we always get some camelCaseLove
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
-
     }
 
     ///<summary>Gets the only instance of the TestEtoWebkitPlugIn plug-in.</summary>
@@ -55,36 +49,25 @@ namespace SpeckleRhino
     protected override LoadReturnCode OnLoad( ref string errorMessage )
     {
       var panel_type = typeof( SpeckleRhinoUserControl );
-
       Panels.RegisterPanel( this, panel_type, "Speckle", SpeckleRhino.Properties.Resources.Speckle );
-      // initialise cef
-      if ( !Cef.IsInitialized )
-        InitializeCef();
-
-      // initialise one browser instance
-      InitializeChromium();
-
-      // initialise one store
-      Store = new Interop( Browser );
-
-      // make them talk together
-      Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
 
       return base.OnLoad( ref errorMessage );
     }
 
     protected override void OnShutdown( )
     {
-      Browser.Dispose();
+      if ( Browser != null )
+        Browser.Dispose();
       Cef.Shutdown();
 
-      Store.Dispose();
+      Store?.Dispose();
       SpecklePlugIn.Instance.PanelUserControl?.Dispose();
       base.OnShutdown();
     }
 
-    void InitializeCef( )
+    public static void InitializeCef( )
     {
+      if ( Cef.IsInitialized ) return;
 
       Cef.EnableHighDPISupport();
 
@@ -94,10 +77,7 @@ namespace SpeckleRhino
       CefSharpSettings.LegacyJavascriptBindingEnabled = true;
       var settings = new CefSettings
       {
-        LogSeverity = LogSeverity.Verbose,
-        LogFile = "ceflog.txt",
-        BrowserSubprocessPath = pathSubprocess,
-
+        BrowserSubprocessPath = pathSubprocess
       };
 
 #if WINR5
@@ -108,15 +88,13 @@ namespace SpeckleRhino
       settings.CefCommandLineArgs.Add( "allow-file-access-from-files", "1" );
       settings.CefCommandLineArgs.Add( "disable-web-security", "1" );
       Cef.Initialize( settings );
-
     }
 
-
-    public void InitializeChromium( )
+    public static void InitializeChromium( )
     {
+      if ( Browser != null && !Browser.IsDisposed ) return;
 
 #if DEBUG
-
       HttpWebRequest request = ( HttpWebRequest ) WebRequest.Create( @"http://localhost:9090/" );
       request.Timeout = 100;
       request.Method = "HEAD";
@@ -133,21 +111,18 @@ namespace SpeckleRhino
         // IF DIMITRIE ON PARALLELS
         Browser = new ChromiumWebBrowser( @"http://10.211.55.2:9090/" );
       }
-
 #else
-            var path = Directory.GetParent(Assembly.GetExecutingAssembly().Location);
-            Debug.WriteLine(path, "SPK");
+      var path = Directory.GetParent( Assembly.GetExecutingAssembly().Location );
+      Debug.WriteLine( path, "SPK" );
 
-            var indexPath = string.Format(@"{0}\app\index.html", path);
+      var indexPath = string.Format( @"{0}\app\index.html", path );
 
-            if (!File.Exists(indexPath))
-                Debug.WriteLine("Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK");
+      if ( !File.Exists( indexPath ) )
+        Debug.WriteLine( "Speckle for Rhino: Error. The html file doesn't exists : {0}", "SPK" );
 
-            indexPath = indexPath.Replace("\\", "/");
+      indexPath = indexPath.Replace( "\\", "/" );
 
-            Browser = new ChromiumWebBrowser(indexPath);
-
-            //chromeBrowser.IsBrowserInitializedChanged += ChromeBrowser_IsBrowserInitializedChanged;
+      Browser = new ChromiumWebBrowser( indexPath );
 #endif
 
       // Allow the use of local resources in the browser
@@ -156,7 +131,6 @@ namespace SpeckleRhino
         FileAccessFromFileUrls = CefState.Enabled,
         UniversalAccessFromFileUrls = CefState.Enabled
       };
-
 
       Browser.Dock = DockStyle.Fill;
     }

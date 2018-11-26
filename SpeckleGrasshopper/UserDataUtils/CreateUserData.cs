@@ -8,6 +8,7 @@ using Grasshopper.Kernel.Parameters;
 using System.Diagnostics;
 using Rhino.Collections;
 using System.Timers;
+using System.Drawing;
 
 namespace SpeckleGrasshopper
 {
@@ -117,6 +118,9 @@ namespace SpeckleGrasshopper
 
         if ( valueExtract is bool )
           props.Set( key, ( bool ) valueExtract );
+
+        if ( valueExtract is Color )
+          props.Set( key, ( Color ) valueExtract );
 
         if ( valueExtract is Vector3d )
           props.Set( key, ( Vector3d ) valueExtract );

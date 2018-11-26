@@ -4,27 +4,22 @@ using System.Runtime.InteropServices;
 using Rhino.PlugIns;
 
 // Plug-in Description Attributes - all of these are optional
-// These will show in Rhino's option dialog, in the tab Plug-ins
-[assembly: PlugInDescription(DescriptionType.Address, "-")]
-[assembly: PlugInDescription(DescriptionType.Country, "-")]
-[assembly: PlugInDescription(DescriptionType.Email, "-")]
-[assembly: PlugInDescription(DescriptionType.Phone, "-")]
-[assembly: PlugInDescription(DescriptionType.Fax, "-")]
-[assembly: PlugInDescription(DescriptionType.Organization, "-")]
-[assembly: PlugInDescription(DescriptionType.UpdateUrl, "-")]
-[assembly: PlugInDescription(DescriptionType.WebSite, "-")]
+// These will show in Rhino's option dialog, in the tab Plug-in
+[assembly: PlugInDescription(DescriptionType.Email, "hello@speckle.works")]
+[assembly: PlugInDescription(DescriptionType.Organization, "Speckle Works, an Open Source Project.")]
+[assembly: PlugInDescription(DescriptionType.WebSite, "https://speckle.works")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Speckle Rhino Plugin v6")] // Plug-In title is extracted from this
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Speckle Rhino Plugin v6")]
-[assembly: AssemblyCopyright("Copyright Speckle.Works ©  2017")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyTitle( "Speckle Rhino" )]
+[assembly: AssemblyDescription( "The Speckle Rhino plugin." )]
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Speckle.Works" )]
+[assembly: AssemblyProduct( "Speckle" )]
+[assembly: AssemblyCopyright( "Copyright Speckle.Works © 2016-2019" )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

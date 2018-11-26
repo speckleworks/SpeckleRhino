@@ -4,4 +4,8 @@
     <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
     <StartAction>Program</StartAction>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
+  </PropertyGroup>
 </Project>
