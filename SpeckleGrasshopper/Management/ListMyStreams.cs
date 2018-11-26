@@ -58,7 +58,7 @@ namespace SpeckleGrasshopper.Management
       OldAccount = Account;
 
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
-      Client.StreamsGetAllAsync().ContinueWith( tsk =>
+      Client.StreamsGetAllAsync("fields=streamId,name,description&isComputedResult=false").ContinueWith( tsk =>
        {
          UserStreams = tsk.Result.Resources.ToList();
          Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
