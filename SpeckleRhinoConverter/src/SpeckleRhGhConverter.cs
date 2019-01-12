@@ -52,7 +52,8 @@ namespace SpeckleRhinoConverter
           continue;
         }
 
-        traversed.Add( myObj.GetHashCode(), path + "/" + key );
+        if ( !( dict[ key ] is string || dict[ key ] is double || dict[ key ] is float || dict[ key ] is int ) )
+          traversed.Add( myObj.GetHashCode(), path + "/" + key );
 
         if ( dict[ key ] is ArchivableDictionary )
           myDictionary.Add( key, ( ( ArchivableDictionary ) dict[ key ] ).ToSpeckle( traversed, path + "/" + key, root ) );
