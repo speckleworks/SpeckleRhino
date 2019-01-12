@@ -115,7 +115,7 @@ namespace SpeckleGrasshopper
 
       if ( Client == null )
       {
-        var myForm = new SpecklePopup.MainWindow(false, true);
+        var myForm = new SpecklePopup.MainWindow( false, true );
 
         var some = new System.Windows.Interop.WindowInteropHelper( myForm );
         some.Owner = Rhino.RhinoApp.MainWindowHandle();
@@ -245,25 +245,25 @@ namespace SpeckleGrasshopper
         Expired = true;
         return;
       }
-
-      switch ( ( string ) e.EventObject.args.eventType )
-      {
-        case "update-global":
-          UpdateGlobal();
-          break;
-        case "update-meta":
-          UpdateMeta();
-          break;
-        case "update-name":
-          UpdateMeta();
-          break;
-        case "update-children":
-          UpdateChildren();
-          break;
-        default:
-          CustomMessageHandler( ( string ) e.EventObject.args.eventType, e );
-          break;
-      }
+      if ( e.EventObject != null )
+        switch ( ( string ) e.EventObject.args.eventType )
+        {
+          case "update-global":
+            UpdateGlobal();
+            break;
+          case "update-meta":
+            UpdateMeta();
+            break;
+          case "update-name":
+            UpdateMeta();
+            break;
+          case "update-children":
+            UpdateChildren();
+            break;
+          default:
+            CustomMessageHandler( ( string ) e.EventObject.args.eventType, e );
+            break;
+        }
     }
 
     public virtual void UpdateGlobal( )
