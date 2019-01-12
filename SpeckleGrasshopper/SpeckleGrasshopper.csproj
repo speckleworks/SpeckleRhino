@@ -114,9 +114,9 @@
       <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
       <Name>SpeckleCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleR5Converter\SpeckleR5Converter.csproj">
-      <Project>{e967a1e1-37ff-4394-b793-6987a7958016}</Project>
-      <Name>SpeckleR5Converter</Name>
+    <ProjectReference Include="..\SpeckleRhinoConverter\SpeckleR6Converter\SpeckleR6Converter.csproj">
+      <Project>{2b4ae2b0-8eca-4952-b6cf-67b299e7b57a}</Project>
+      <Name>SpeckleR6Converter</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -140,8 +140,8 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>11.0.1</Version>
     </PackageReference>
-    <PackageReference Include="RhinoCommon" IncludeAssets="build;compile">
-      <Version>5.12.50810.13095</Version>
+    <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
+      <Version>6.11.18348.17061</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

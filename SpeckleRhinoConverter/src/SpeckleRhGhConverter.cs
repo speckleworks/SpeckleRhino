@@ -583,45 +583,62 @@ namespace SpeckleRhinoConverter
     {
       var ptsList = curve.Points.ToPoints();
 
-      if ( !curve.Periodic )
+      var nurbsCurve = NurbsCurve.Create( false, curve.Degree, ptsList );
+
+      for ( int j = 0; j < nurbsCurve.Points.Count; j++ )
       {
-        // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
-        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, ptsList );
-
-        if ( curve.Domain != null )
-          myCurve.Domain = curve.Domain.ToNative();
-
-        // set weights
-        for ( int i = 0; i < ptsList.Length; i++ )
-          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
-
 #if R6
-        // set knots
-        for ( int i = 0; i < curve.Knots.Count; i++ )
-          myCurve.Knots[ i ] = curve.Knots[ i ];
+        nurbsCurve.Points.SetPoint( j, ptsList[ j ], curve.Weights[ j ] );
 #endif
-
-        myCurve.UserDictionary.ReplaceContentsWith( curve.Properties.ToNative() );
-        return myCurve;
       }
-      else
+
+      for ( int j = 0; j < nurbsCurve.Knots.Count; j++ )
       {
-        var thePts = ptsList.Take( ptsList.Length - 3 ).ToArray();
-        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, thePts );
-
-        // set weights
-        for ( int i = 0; i < ptsList.Length; i++ )
-          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
-
-#if R6
-        // set knots
-        for ( int i = 0; i < curve.Knots.Count; i++ )
-          myCurve.Knots[ i ] = curve.Knots[ i ];
-#endif
-
-        myCurve.Domain = curve.Domain.ToNative();
-        return myCurve;
+        nurbsCurve.Knots[ j ] = curve.Knots[ j ];
       }
+
+      nurbsCurve.Domain = curve.Domain.ToNative();
+      return nurbsCurve;
+
+      //      if ( !curve.Periodic )
+      //      {
+      //        // Bug/feature in Rhino sdk: creating a periodic curve adds two extra stupid points? 
+      //        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, ptsList );
+
+      //        if ( curve.Domain != null )
+      //          myCurve.Domain = curve.Domain.ToNative();
+
+      //        // set weights
+      //        for ( int i = 0; i < ptsList.Length; i++ )
+      //          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
+
+      //#if R6
+      //        // set knots
+      //        for ( int i = 0; i < curve.Knots.Count; i++ )
+      //          myCurve.Knots[ i ] = curve.Knots[ i ];
+      //#endif
+
+      //        myCurve.UserDictionary.ReplaceContentsWith( curve.Properties.ToNative() );
+      //        return myCurve;
+      //      }
+      //      else
+      //      {
+      //        var thePts = ptsList.Take( ptsList.Length - 3 ).ToArray();
+      //        var myCurve = NurbsCurve.Create( curve.Periodic, curve.Degree, thePts );
+
+      //        // set weights
+      //        for ( int i = 0; i < ptsList.Length; i++ )
+      //          myCurve.Points.SetPoint( i, ptsList[ i ].X * curve.Weights[ i ], ptsList[ i ].Y * curve.Weights[ i ], ptsList[ i ].Z * curve.Weights[ i ], curve.Weights[ i ] );
+
+      //#if R6
+      //        // set knots
+      //        for ( int i = 0; i < curve.Knots.Count; i++ )
+      //          myCurve.Knots[ i ] = curve.Knots[ i ];
+      //#endif
+
+      //        myCurve.Domain = curve.Domain.ToNative();
+      //        return myCurve;
+      //      }
     }
 
     #endregion
