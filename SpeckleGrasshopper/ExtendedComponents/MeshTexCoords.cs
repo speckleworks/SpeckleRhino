@@ -12,8 +12,8 @@ namespace SpeckleGrasshopper.Contrib
     /// Initializes a new instance of the Cmpt_GetPlane class.
     /// </summary>
     public MeshTexCoords()
-      : base("Get Mesh Texture Coordaintes", "TexC",
-          "Encode Mesh texture coordinates.",
+      : base("Get Mesh Texture Coordinates", "TexCoords",
+          "Encode Mesh texture coordinates to a string.",
           "Speckle", "Contrib")
     {
     }
