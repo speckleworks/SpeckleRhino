@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using SpeckleGrasshopper.Properties;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel.Parameters;
+using System.Diagnostics;
 
 namespace SpeckleGrasshopper.Contrib
 {
