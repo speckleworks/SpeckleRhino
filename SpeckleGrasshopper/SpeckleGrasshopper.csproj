@@ -70,7 +70,6 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
-    <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="Management\ExpandObject.cs" />
     <Compile Include="Management\ListMyAccounts.cs" />
     <Compile Include="Management\ListMyStreams.cs" />
