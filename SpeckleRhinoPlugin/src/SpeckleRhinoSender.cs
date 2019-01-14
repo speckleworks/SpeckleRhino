@@ -71,7 +71,7 @@ namespace SpeckleRhino
               Client.Stream.Name = StreamName;
 
               Context.NotifySpeckleFrame( "set-gl-load", "", "false" );
-              Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
+              Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
               Context.UserClients.Add( this );
 
               InitTrackedObjects( InitPayload );
@@ -538,7 +538,7 @@ namespace SpeckleRhino
     {
       Context = _Context;
 
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
       Context.UserClients.Add( this );
     }
 
