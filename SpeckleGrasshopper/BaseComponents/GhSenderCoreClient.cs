@@ -121,7 +121,8 @@ namespace SpeckleGrasshopper
       }
       catch (Exception err)
       {
-        throw err;
+        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Failed to reinitialise sender." );
+        //throw err;
       }
       return base.Read(reader);
     }
@@ -327,7 +328,7 @@ namespace SpeckleGrasshopper
     {
       if (Client != null)
       {
-        Client.StreamUpdateAsync(Client.StreamId, new SpeckleStream() { Deleted = true });
+        //Client.StreamUpdateAsync(Client.StreamId, new SpeckleStream() { Deleted = true });
         Client.Dispose(false);
       }
       base.RemovedFromDocument(document);
@@ -1094,7 +1095,7 @@ namespace SpeckleGrasshopper
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle(System.Drawing.Color.FromArgb(0, 0, 0, 0));
 
-        var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + Base.Client.StreamId, highlight: 0, radius: 5);
+        var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + (Base.Client != null ? Base.Client.StreamId : "error"), highlight: 0, radius: 5);
         streamIdCapsule.Render(graphics, myStyle);
         streamIdCapsule.Dispose();
 
