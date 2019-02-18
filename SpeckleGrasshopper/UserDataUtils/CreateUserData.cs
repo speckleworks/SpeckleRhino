@@ -176,6 +176,13 @@ namespace SpeckleGrasshopper
           hasErrors = true;
         }
 
+        if ( param.NickName.Contains( "." ) )
+        {
+          this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Dots in key names are not supported. Sorry!" );
+
+          validationErrors += "Dots in key names are not supported. Sorry!";
+        }
+
         keyNames.Add( param.NickName );
       }
 
