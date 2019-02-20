@@ -444,10 +444,12 @@ namespace SpeckleGrasshopper
           Params.UnregisterOutputParameter( myparam );
       }
 
+      int k = 0;
       foreach ( var layer in toAdd )
       {
         Param_GenericObject newParam = getGhParameter( layer );
-        Params.RegisterOutputParam( newParam, ( int ) layer.OrderIndex );
+        Params.RegisterOutputParam( newParam,  layer.OrderIndex != null ? ( int ) layer.OrderIndex : k );
+        k++;
       }
 
       foreach ( var layer in toUpdate )
@@ -462,6 +464,8 @@ namespace SpeckleGrasshopper
     {
       if ( Layers == null ) return;
       if ( ConvertedObjects.Count == 0 ) return;
+
+      int k = 0;
 
       foreach ( Layer layer in Layers )
       {
@@ -491,7 +495,8 @@ namespace SpeckleGrasshopper
               subsetCount += elCount;
             }
           }
-          DA.SetDataTree( ( int ) layer.OrderIndex, tree );
+          DA.SetDataTree( layer.OrderIndex!=null ? ( int ) layer.OrderIndex : k, tree );
+          k++;
         }
       }
     }
