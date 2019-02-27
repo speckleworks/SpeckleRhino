@@ -3,7 +3,6 @@ using Newtonsoft.Json.Serialization;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -183,7 +182,7 @@ namespace SpeckleRhino
           LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
           // filter out the objects that were not in the cache and still need to be retrieved
-          var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
+          var payload = Client.Stream.Objects.Where( o => o.Type == "Placeholder" ).Select( obj => obj._id ).ToArray();
 
           // how many objects to request from the api at a time
           int maxObjRequestCount = 20;
