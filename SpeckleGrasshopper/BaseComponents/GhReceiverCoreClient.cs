@@ -466,7 +466,9 @@ namespace SpeckleGrasshopper
       foreach ( Layer layer in Layers )
       {
 
-        var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount + ( int ) layer.StartIndex == ConvertedObjects.Count ? ( int ) layer.ObjectCount - 1 : ( int ) layer.ObjectCount );
+        var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
+
+        if ( subset.Count == 0 ) continue;
 
         if ( layer.Topology == "" )
           DA.SetDataList( ( int ) layer.OrderIndex, subset );

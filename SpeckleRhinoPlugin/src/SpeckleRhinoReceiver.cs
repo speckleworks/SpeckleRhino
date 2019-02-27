@@ -326,11 +326,9 @@ namespace SpeckleRhino
     public void Bake( )
     {
       string parent = String.Format( "{0} | {1}", Client.Stream.Name, Client.Stream.StreamId );
-#if WINR6
+
       var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, -1 );
-#elif WINR5
-      var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, true );
-#endif
+
 
       if ( parentId == -1 )
       {
@@ -359,11 +357,8 @@ namespace SpeckleRhino
 
       foreach ( var spkLayer in Client.Stream.Layers )
       {
-#if WINR6
         var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, -1 );
-#elif WINR5
-        var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, true );
-#endif
+
 
         //This is always going to be the case. 
 
@@ -393,11 +388,9 @@ namespace SpeckleRhino
               };
 
               var parentLayerName = Rhino.RhinoDoc.ActiveDoc.Layers.First( l => l.Id == parentLayerId ).FullPath;
-#if WINR6
+
               var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, -1 );
-#elif WINR5
-              var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, true );
-#endif
+
 
               if ( layerExist == -1 )
               {
