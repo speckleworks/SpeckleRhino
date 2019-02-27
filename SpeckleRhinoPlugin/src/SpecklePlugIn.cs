@@ -6,6 +6,7 @@ using System.Reflection;
 using CefSharp.WinForms;
 using System.Net;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace SpeckleRhino
 {
