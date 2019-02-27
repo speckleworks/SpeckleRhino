@@ -12,7 +12,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR6", "SpeckleRhinoPlugin\SpeckleWinR6\SpeckleWinR6.csproj", "{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D65594C8-EA2E-46CA-A756-B1634EDC3AE3} = {D65594C8-EA2E-46CA-A756-B1634EDC3AE3}
-		{82EC14D9-01C7-46C7-8600-DB75F871740D} = {82EC14D9-01C7-46C7-8600-DB75F871740D}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "SpeckleGrasshopper\SpeckleGrasshopper.csproj", "{82EC14D9-01C7-46C7-8600-DB75F871740D}"

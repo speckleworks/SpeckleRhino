@@ -41,7 +41,7 @@ namespace SpeckleRhino
 
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
-
+      SpeckleCore.SpeckleInitializer.Initialize();
       SpeckleCore.LocalContext.Init();
 
       Browser = _originalBrowser;
