@@ -25,7 +25,6 @@ build:
 after_build:
   # zip everything up into a .rhi package
   - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleRhinoPlugin\SpeckleWinR6\bin\Release\*
-  - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleRhinoPlugin\SpeckleWinR5\bin\Release\*
   - 7z a -tzip -r specklerhino.rhi %APPVEYOR_BUILD_FOLDER%\SpeckleGrasshopper\bin\Release\*
 artifacts:
 - path: specklerhino.rhi
