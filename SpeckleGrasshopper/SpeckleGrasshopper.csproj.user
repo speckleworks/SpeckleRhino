@@ -3,4 +3,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Program Files\Rhino 6\System\Rhino.exe</StartProgram>
+  </PropertyGroup>
 </Project>
