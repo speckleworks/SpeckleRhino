@@ -427,6 +427,7 @@ namespace SpeckleGrasshopper
 
     public void UpdateOutputStructure( )
     {
+      //TODO: Check if we're out or under range, and add default layers as such.
       List<Layer> toRemove, toAdd, toUpdate;
       toRemove = new List<Layer>(); toAdd = new List<Layer>(); toUpdate = new List<Layer>();
 
@@ -465,7 +466,7 @@ namespace SpeckleGrasshopper
 
       foreach ( Layer layer in Layers )
       {
-
+        //TODO: Check if we're out or under range, and add default layers as such.
         var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
 
         if ( subset.Count == 0 ) continue;
