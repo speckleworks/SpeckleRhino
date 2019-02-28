@@ -151,18 +151,12 @@
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
     <Delete Files="$(TargetPath)" />
-    <!--     <ItemGroup>
-      <SqlLiteRefHack Include="$(ProjectDir)bin\$(ConfigurationName)\**\x64\*.*">
-      </SqlLiteRefHack>
-    </ItemGroup>
-    <Copy SourceFiles="@(SqlLiteRefHack)" DestinationFolder="$(ProjectDir)bin\$(ConfigurationName)\">
-    </Copy> -->
-    <!--<ItemGroup>
+    <ItemGroup>
       <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
-    </ItemGroup>-->
-    <!--<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
+    </ItemGroup>
+    <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
       <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
-    </Copy>-->
+    </Copy>
   </Target>
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
