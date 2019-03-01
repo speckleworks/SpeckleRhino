@@ -19,7 +19,12 @@ namespace SpeckleGrasshopper.Management
 
     Action ExpireComponent;
 
-    public ListStreams( ) : base( "Streams", "Streams", "Lists your existing Speckle streams for a specified account.", "Speckle", "Management" ) { }
+    public ListStreams( ) : base( "Streams", "Streams", "Lists your existing Speckle streams for a specified account.", "Speckle", "Management" )
+    {
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
+
+    }
 
     protected override void RegisterInputParams( GH_InputParamManager pManager )
     {
@@ -58,11 +63,11 @@ namespace SpeckleGrasshopper.Management
       OldAccount = Account;
 
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
-      Client.StreamsGetAllAsync("fields=streamId,name,description&isComputedResult=false").ContinueWith( tsk =>
-       {
-         UserStreams = tsk.Result.Resources.ToList();
-         Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
-       } );
+      Client.StreamsGetAllAsync( "fields=streamId,name,description&isComputedResult=false" ).ContinueWith( tsk =>
+         {
+           UserStreams = tsk.Result.Resources.ToList();
+           Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
+         } );
     }
 
     protected override System.Drawing.Bitmap Icon

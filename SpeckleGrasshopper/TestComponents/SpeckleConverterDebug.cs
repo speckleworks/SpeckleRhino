@@ -16,7 +16,6 @@ using Newtonsoft.Json;
 using System.Dynamic;
 
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper
@@ -29,6 +28,8 @@ namespace SpeckleGrasshopper
           "Serialises a Rhino object to a Speckle object.",
           "Speckle", "Converters" )
     {
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
     public override Guid ComponentGuid
@@ -86,6 +87,8 @@ namespace SpeckleGrasshopper
           "Deserialises Speckle (geometry) objects to Rhino objects.",
           "Speckle", "Converters" )
     {
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
     protected override void RegisterInputParams( GH_InputParamManager pManager )

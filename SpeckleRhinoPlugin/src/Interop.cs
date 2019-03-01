@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using System.IO;
 
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using Rhino;
@@ -42,7 +41,7 @@ namespace SpeckleRhino
 
     public Interop( ChromiumWebBrowser _originalBrowser )
     {
-
+      SpeckleCore.SpeckleInitializer.Initialize();
       SpeckleCore.LocalContext.Init();
 
       Browser = _originalBrowser;
@@ -464,7 +463,7 @@ namespace SpeckleRhino
       if ( myClient != null && myClient is RhinoSender )
       {
         ( ( RhinoSender ) myClient ).Client.Stream.Name = name;
-        ( ( RhinoSender ) myClient ).Client.BroadcastMessage( new { eventType = "update-name" } );
+        ( ( RhinoSender ) myClient ).Client.BroadcastMessage( "stream", ( ( RhinoSender ) myClient ).StreamId, new { eventType = "update-name" } );
       }
     }
 

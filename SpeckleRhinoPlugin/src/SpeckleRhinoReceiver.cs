@@ -3,7 +3,6 @@ using Newtonsoft.Json.Serialization;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -183,7 +182,7 @@ namespace SpeckleRhino
           LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
           // filter out the objects that were not in the cache and still need to be retrieved
-          var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
+          var payload = Client.Stream.Objects.Where( o => o.Type == "Placeholder" ).Select( obj => obj._id ).ToArray();
 
           // how many objects to request from the api at a time
           int maxObjRequestCount = 20;
@@ -327,11 +326,9 @@ namespace SpeckleRhino
     public void Bake( )
     {
       string parent = String.Format( "{0} | {1}", Client.Stream.Name, Client.Stream.StreamId );
-#if WINR6
+
       var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, -1 );
-#elif WINR5
-      var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, true );
-#endif
+
 
       if ( parentId == -1 )
       {
@@ -360,11 +357,8 @@ namespace SpeckleRhino
 
       foreach ( var spkLayer in Client.Stream.Layers )
       {
-#if WINR6
         var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, -1 );
-#elif WINR5
-        var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, true );
-#endif
+
 
         //This is always going to be the case. 
 
@@ -394,11 +388,9 @@ namespace SpeckleRhino
               };
 
               var parentLayerName = Rhino.RhinoDoc.ActiveDoc.Layers.First( l => l.Id == parentLayerId ).FullPath;
-#if WINR6
+
               var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, -1 );
-#elif WINR5
-              var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, true );
-#endif
+
 
               if ( layerExist == -1 )
               {
