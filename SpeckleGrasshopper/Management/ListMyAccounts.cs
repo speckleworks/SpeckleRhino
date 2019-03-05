@@ -22,7 +22,8 @@ namespace SpeckleGrasshopper.Management
 
     public ListMyAccounts( ) : base( "Accounts", "Accounts", "Lists your existing Speckle accounts.", "Speckle", "Management" )
     {
-      LocalContext.Init();
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
 

@@ -4,7 +4,6 @@ using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -256,7 +255,7 @@ namespace SpeckleRhino
         var cloneResult = Client.StreamCloneAsync( StreamId ).Result;
         Client.Stream.Children.Add( cloneResult.Clone.StreamId );
 
-        Client.BroadcastMessage( new { eventType = "update-children" } );
+        Client.BroadcastMessage( "stream", StreamId, new { eventType = "update-children" } );
       }
 
       if ( IsSendingUpdate )
@@ -316,7 +315,7 @@ namespace SpeckleRhino
 
       List<SpeckleObject> persistedObjects = new List<SpeckleObject>();
 
-      if ( convertedObjects.Count( obj => obj.Type == SpeckleObjectType.Placeholder ) != convertedObjects.Count )
+      if ( convertedObjects.Count( obj => obj.Type == "Placeholder" ) != convertedObjects.Count )
       {
         // create the update payloads
         count = 0;
@@ -382,7 +381,7 @@ namespace SpeckleRhino
             {
               foreach ( var oL in payload )
               {
-                if ( oL.Type != SpeckleObjectType.Placeholder )
+                if ( oL.Type != "Placeholder" )
                   LocalContext.AddSentObject( oL, Client.BaseUrl );
               }
             } );
@@ -447,7 +446,7 @@ namespace SpeckleRhino
       Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
       Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
 
-      Client.BroadcastMessage( new { eventType = "update-global" } );
+      Client.BroadcastMessage(  "stream", StreamId, new { eventType = "update-global" } );
 
       IsSendingUpdate = false;
       if ( Expired )

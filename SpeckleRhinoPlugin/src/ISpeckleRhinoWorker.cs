@@ -2,7 +2,6 @@
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

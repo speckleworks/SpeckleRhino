@@ -19,7 +19,6 @@ using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Special;
 using SpeckleCore;
 using SpeckleGrasshopper.Properties;
-using SpeckleRhinoConverter;
 
 namespace SpeckleGrasshopper
 {
@@ -64,9 +63,10 @@ namespace SpeckleGrasshopper
           "Sends data to Speckle.",
           "Speckle", "I/O")
     {
-      var hack = new ConverterHack();
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
+
       JobQueue = new OrderedDictionary();
-      LocalContext.Init();
     }
 
     public override void CreateAttributes()
@@ -121,7 +121,8 @@ namespace SpeckleGrasshopper
       }
       catch (Exception err)
       {
-        throw err;
+        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Failed to reinitialise sender." );
+        //throw err;
       }
       return base.Read(reader);
     }
@@ -327,7 +328,7 @@ namespace SpeckleGrasshopper
     {
       if (Client != null)
       {
-        Client.StreamUpdateAsync(Client.StreamId, new SpeckleStream() { Deleted = true });
+        //Client.StreamUpdateAsync(Client.StreamId, new SpeckleStream() { Deleted = true });
         Client.Dispose(false);
       }
       base.RemovedFromDocument(document);
@@ -412,7 +413,7 @@ namespace SpeckleGrasshopper
         var cloneResult = Client.StreamCloneAsync(StreamId).Result;
         Client.Stream.Children.Add(cloneResult.Clone.StreamId);
 
-        Client.BroadcastMessage(new { eventType = "update-children" });
+        Client.BroadcastMessage("stream", Client.StreamId, new { eventType = "update-children" });
 
         System.Windows.MessageBox.Show("Stream version saved. CloneId: " + cloneResult.Clone.StreamId);
       });
@@ -675,7 +676,7 @@ namespace SpeckleGrasshopper
       message["outputs"] = DefaultSpeckleOutputs;
       message["originalStreamId"] = Client.StreamId;
 
-      Client.BroadcastMessage(message);
+      Client.BroadcastMessage( "stream", Client.StreamId, message );
     }
     #endregion
 
@@ -745,7 +746,7 @@ namespace SpeckleGrasshopper
 
       List<SpeckleObject> persistedObjects = new List<SpeckleObject>();
 
-      if (convertedObjects.Count(obj => obj.Type == SpeckleObjectType.Placeholder) != convertedObjects.Count)
+      if (convertedObjects.Count(obj => obj.Type == "Placeholder") != convertedObjects.Count)
       {
         // create the update payloads
         int count = 0;
@@ -818,7 +819,7 @@ namespace SpeckleGrasshopper
            {
              foreach (var oL in payload)
              {
-               if (oL.Type != SpeckleObjectType.Placeholder)
+               if (oL.Type != "Placeholder" )
                {
                  LocalContext.AddSentObject(oL, Client.BaseUrl);
                }
@@ -863,7 +864,7 @@ namespace SpeckleGrasshopper
 
       var response = Client.StreamUpdateAsync(Client.StreamId, updateStream).Result;
 
-      Client.BroadcastMessage(new { eventType = "update-global" });
+      Client.BroadcastMessage( "stream", Client.StreamId, new { eventType = "update-global" });
 
       Log += response.Message;
       AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Data sent at " + DateTime.Now);
@@ -903,7 +904,7 @@ namespace SpeckleGrasshopper
       var updateResult = Client.StreamUpdateAsync(Client.StreamId, updateStream).Result;
 
       Log += updateResult.Message;
-      Client.BroadcastMessage(new { eventType = "update-meta" });
+      Client.BroadcastMessage("stream", Client.StreamId, new { eventType = "update-meta" });
     }
 
     public void ManualUpdate()
@@ -913,7 +914,7 @@ namespace SpeckleGrasshopper
        var cloneResult = Client.StreamCloneAsync(StreamId).Result;
        Client.Stream.Children.Add(cloneResult.Clone.StreamId);
 
-       Client.BroadcastMessage(new { eventType = "update-children" });
+       Client.BroadcastMessage( "stream", Client.StreamId, new { eventType = "update-children" });
 
        ForceUpdateData();
 
@@ -1094,7 +1095,7 @@ namespace SpeckleGrasshopper
 
         GH_PaletteStyle myTransparentStyle = new GH_PaletteStyle(System.Drawing.Color.FromArgb(0, 0, 0, 0));
 
-        var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + Base.Client.StreamId, highlight: 0, radius: 5);
+        var streamIdCapsule = GH_Capsule.CreateTextCapsule(box: StreamIdBounds, textbox: StreamIdBounds, palette: Base.EnableRemoteControl ? GH_Palette.Black : GH_Palette.Transparent, text: Base.EnableRemoteControl ? "Remote Controller" : "ID: " + (Base.Client != null ? Base.Client.StreamId : "error"), highlight: 0, radius: 5);
         streamIdCapsule.Render(graphics, myStyle);
         streamIdCapsule.Dispose();
 

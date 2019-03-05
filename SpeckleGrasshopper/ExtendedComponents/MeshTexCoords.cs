@@ -20,6 +20,8 @@ namespace SpeckleGrasshopper.Contrib
           "Encode Mesh texture coordinates to a string.",
           "Speckle", "Contrib" )
     {
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
     protected override void RegisterInputParams( GH_Component.GH_InputParamManager pManager )

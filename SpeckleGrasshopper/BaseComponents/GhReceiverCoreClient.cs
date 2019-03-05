@@ -10,16 +10,12 @@ using System.Diagnostics;
 using Grasshopper.Kernel.Parameters;
 
 using SpeckleCore;
-using SpeckleRhinoConverter;
-using SpecklePopup;
 
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
-using System.Dynamic;
-using System.Windows;
 using System.Threading.Tasks;
 using System.Drawing;
 using Grasshopper.GUI.Canvas;
@@ -57,8 +53,8 @@ namespace SpeckleGrasshopper
           "Receives data from Speckle.",
           "Speckle", "I/O" )
     {
-      var hack = new ConverterHack();
-      LocalContext.Init();
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
     public override void CreateAttributes( )
@@ -292,7 +288,7 @@ namespace SpeckleGrasshopper
       LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
       // filter out the objects that were not in the cache and still need to be retrieved
-      var payload = Client.Stream.Objects.Where( o => o.Type == SpeckleObjectType.Placeholder ).Select( obj => obj._id ).ToArray();
+      var payload = Client.Stream.Objects.Where( o => o.Type == "Placeholder" ).Select( obj => obj._id ).ToArray();
 
       // how many objects to request from the api at a time
       int maxObjRequestCount = 42;
@@ -431,6 +427,7 @@ namespace SpeckleGrasshopper
 
     public void UpdateOutputStructure( )
     {
+      //TODO: Check if we're out or under range, and add default layers as such.
       List<Layer> toRemove, toAdd, toUpdate;
       toRemove = new List<Layer>(); toAdd = new List<Layer>(); toUpdate = new List<Layer>();
 
@@ -444,10 +441,12 @@ namespace SpeckleGrasshopper
           Params.UnregisterOutputParameter( myparam );
       }
 
+      int k = 0;
       foreach ( var layer in toAdd )
       {
         Param_GenericObject newParam = getGhParameter( layer );
-        Params.RegisterOutputParam( newParam, ( int ) layer.OrderIndex );
+        Params.RegisterOutputParam( newParam,  layer.OrderIndex != null ? ( int ) layer.OrderIndex : k );
+        k++;
       }
 
       foreach ( var layer in toUpdate )
@@ -463,9 +462,14 @@ namespace SpeckleGrasshopper
       if ( Layers == null ) return;
       if ( ConvertedObjects.Count == 0 ) return;
 
+      int k = 0;
+
       foreach ( Layer layer in Layers )
       {
+        //TODO: Check if we're out or under range, and add default layers as such.
         var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
+
+        if ( subset.Count == 0 ) continue;
 
         if ( layer.Topology == "" )
           DA.SetDataList( ( int ) layer.OrderIndex, subset );
@@ -491,7 +495,8 @@ namespace SpeckleGrasshopper
               subsetCount += elCount;
             }
           }
-          DA.SetDataTree( ( int ) layer.OrderIndex, tree );
+          DA.SetDataTree( layer.OrderIndex!=null ? ( int ) layer.OrderIndex : k, tree );
+          k++;
         }
       }
     }
