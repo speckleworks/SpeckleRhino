@@ -17,8 +17,8 @@ namespace SpeckleGrasshopper
     private Timer Debouncer;
 
     public CreateSpeckleObject( )
-      : base( "Create a custom speckle object", "CSO",
-          "Creates a custom speckle object with whatever propeties you want.",
+      : base( "Create a Custom Speckle Object", "CSO",
+          "Creates a custom speckle object with whatever propeties you want. You can set them at your ease.",
           "Speckle", "Special" )
     {
       this.Params.ParameterNickNameChanged += Params_ParameterNickNameChanged;
@@ -153,7 +153,11 @@ namespace SpeckleGrasshopper
         {
           if ( valueExtract is IEnumerable<object> )
           {
+            valueExtract = ( ( IEnumerable<object> ) valueExtract ).Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) );
             myDictionary.Add( key, Converter.Serialise( valueExtract as IEnumerable<object> ) );
+          } else if( valueExtract is System.Collections.IDictionary )
+          {
+            myDictionary.Add( key, valueExtract );
           }
           else
           {

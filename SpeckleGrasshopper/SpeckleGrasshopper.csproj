@@ -73,7 +73,8 @@
     <Compile Include="ObjectCreation\CreateSpeckleObject.cs" />
     <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="GH_SpeckleObject.cs" />
-    <Compile Include="Management\ExpandObject.cs" />
+    <Compile Include="ObjectCreation\EncapsulateList.cs" />
+    <Compile Include="ObjectCreation\ExpandObject.cs" />
     <Compile Include="Management\ListMyAccounts.cs" />
     <Compile Include="Management\ListMyStreams.cs" />
     <Compile Include="ObjectCreation\ExpandSpeckleObject.cs" />

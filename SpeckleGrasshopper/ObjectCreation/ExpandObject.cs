@@ -24,7 +24,7 @@ namespace SpeckleGrasshopper.Management
 
     Dictionary<string, List<object>> Global;
 
-    public ExpandObject( ) : base( "Expand Object", "EO", "Expands an object's properties. With magic.", "Speckle", "Management" ) { }
+    public ExpandObject( ) : base( "Expand Object", "EO", "Expands an object's properties. With magic.", "Speckle", "Special" ) { }
 
     protected override void RegisterInputParams( GH_InputParamManager pManager )
     {

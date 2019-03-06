@@ -174,6 +174,15 @@ namespace SpeckleGrasshopper
               results.Add( Converter.Deserialise( x as IEnumerable<SpeckleObject> ) );
               isNestedList = true;
             }
+            else if ( x is IEnumerable<object> )
+            {
+              results.Add( ( ( IEnumerable<object> ) x ).Select( xx => Converter.Deserialise( xx as SpeckleObject ) ).ToList() );
+              isNestedList = true;
+            }
+            else if ( x is IDictionary )
+            {
+              results.Add( new GH_ObjectWrapper( x ) );
+            }
             else
               results.Add( new GH_ObjectWrapper( Converter.Deserialise( x as SpeckleObject ) ) );
           }
