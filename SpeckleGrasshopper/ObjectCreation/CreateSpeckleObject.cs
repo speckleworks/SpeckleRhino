@@ -123,6 +123,7 @@ namespace SpeckleGrasshopper
     protected override void RegisterOutputParams( GH_OutputParamManager pManager )
     {
       pManager.AddGenericParameter( "Speckle Object", "SO", "The newly created speckle object.", GH_ParamAccess.item );
+      pManager.AddGenericParameter( "Dictionary", "D", "Just the dictionary.", GH_ParamAccess.item );
     }
 
     protected override void SolveInstance( IGH_DataAccess DA )
@@ -150,7 +151,14 @@ namespace SpeckleGrasshopper
 
         try
         {
-          myDictionary.Add( key, Converter.Serialise( valueExtract ) );
+          if ( valueExtract is IEnumerable<object> )
+          {
+            myDictionary.Add( key, Converter.Serialise( valueExtract as IEnumerable<object> ) );
+          }
+          else
+          {
+            myDictionary.Add( key, Converter.Serialise( valueExtract ) );
+          }
         }
         catch ( Exception e )
         {
@@ -162,6 +170,7 @@ namespace SpeckleGrasshopper
       myObject.GenerateHash();
 
       DA.SetData( 0, myObject );
+      DA.SetData( 1, myDictionary );
       //new GH_SpeckleObject()
     }
 
