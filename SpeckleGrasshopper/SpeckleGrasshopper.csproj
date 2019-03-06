@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="UserDataUtils\CreateSpeckleObject.cs" />
     <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="GH_SpeckleObject.cs" />
     <Compile Include="Management\ExpandObject.cs" />
