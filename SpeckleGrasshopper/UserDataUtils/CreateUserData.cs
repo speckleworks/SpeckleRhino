@@ -91,7 +91,6 @@ namespace SpeckleGrasshopper
 
         if ( ghInputProperty == null )
         {
-          props.Set( key, "undefined" );
           continue;
         }
 
@@ -189,7 +188,6 @@ namespace SpeckleGrasshopper
       return new Tuple<bool, string>(hasErrors, validationErrors);
     }
 
-
     public GeometryBase getGeometryBase( object myObject )
     {
       if ( myObject is Rectangle3d ) return ( ( Rectangle3d ) myObject ).ToNurbsCurve();
@@ -257,6 +255,4 @@ namespace SpeckleGrasshopper
       get { return new Guid( "{d0350df1-fd31-4ae9-9154-815334c0b853}" ); }
     }
   }
-
-
 }
