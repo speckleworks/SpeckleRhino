@@ -72,7 +72,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterInputParams( GH_Component.GH_InputParamManager pManager )
     {
-      pManager.AddGenericParameter( "Dictionaries", "D", "Dictionaries to expand.", GH_ParamAccess.tree );
+      pManager.AddGenericParameter( "Dictionaries", "D", "Dictionaries or Speckle Objects to expand.", GH_ParamAccess.list );
     }
 
     /// <summary>
@@ -169,22 +169,52 @@ namespace SpeckleGrasshopper
           var isNestedList = false;
           foreach ( var x in global[ key ] )
           {
+            var t = x.GetType();
             if ( x is IEnumerable<SpeckleObject> )
             {
               results.Add( Converter.Deserialise( x as IEnumerable<SpeckleObject> ) );
               isNestedList = true;
+              continue;
             }
-            else if ( x is IEnumerable<object> )
+            else if ( x is IEnumerable<int> || x is IEnumerable<double> || x is IEnumerable<string> || x is IEnumerable<bool> )
             {
-              results.Add( ( ( IEnumerable<object> ) x ).Select( xx => Converter.Deserialise( xx as SpeckleObject ) ).ToList() );
+              switch ( x )
+              {
+                case IEnumerable<int> l:
+                  results.Add( l );
+                  break;
+                case IEnumerable<double> l:
+                  results.Add( l );
+                  break;
+                case IEnumerable<bool> l:
+                  results.Add( l );
+                  break;
+                case IEnumerable<string> l:
+                  results.Add( l );
+                  break;
+              }
               isNestedList = true;
+              continue;
+            }
+            else if ( x is IEnumerable<object> && !( x is IEnumerable<SpeckleObject> ) )
+            {
+              results.Add( ( ( IEnumerable<object> ) x ).Select( xx => { var res =  Converter.Deserialise( xx as SpeckleObject ); return res == null ? xx : res ; } ).ToList() );
+              isNestedList = true;
+              continue;
             }
             else if ( x is IDictionary )
             {
               results.Add( new GH_ObjectWrapper( x ) );
+              continue;
             }
             else
-              results.Add( new GH_ObjectWrapper( Converter.Deserialise( x as SpeckleObject ) ) );
+            {
+              if ( x is bool || x is string || x is double || x is int )
+                results.Add( x );
+              else
+                results.Add( new GH_ObjectWrapper( Converter.Deserialise( x as SpeckleObject ) ) );
+              continue;
+            }
           }
 
           if ( !isNestedList )

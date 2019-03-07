@@ -13,7 +13,7 @@ namespace SpeckleGrasshopper
   {
 
     public EncapsulateList( )
-      : base( "Encapsulate a Listt", "EL",
+      : base( "Encapsulate a List", "EL",
           "Encapsulates a list to be able to set it in the properties of a speckle object. Mostly because Dimitrie is confused about list and tree management in grasshopper.",
           "Speckle", "Special" )
     {
@@ -47,7 +47,32 @@ namespace SpeckleGrasshopper
     {
       var myList = new List<object>();
       DA.GetDataList( 0, myList);
-      DA.SetData( 0, new GH_ObjectWrapper( myList ) );
+      // DO NOT JUDGE
+      try
+      {
+        DA.SetData( 0, new GH_ObjectWrapper( myList.Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) ).Cast<int>().ToList() ) );
+        return;
+      }
+      catch { }
+      try
+      {
+        DA.SetData( 0, new GH_ObjectWrapper( myList.Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) ).Cast<double>().ToList() ) );
+        return;
+      }
+      catch { }
+      try
+      {
+        DA.SetData( 0, new GH_ObjectWrapper( myList.Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) ).Cast<string>().ToList() ) );
+        return;
+      }
+      catch { }
+      try
+      {
+        DA.SetData( 0, new GH_ObjectWrapper( myList.Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) ).Cast<bool>().ToList() ) );
+        return;
+      }
+      catch { }
+      DA.SetData( 0, new GH_ObjectWrapper( myList.Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) ).ToList() ) );
     }
   }
 }

@@ -151,17 +151,28 @@ namespace SpeckleGrasshopper
 
         try
         {
-          if ( valueExtract is IEnumerable<object> )
+          var tests = valueExtract is IEnumerable<object>;
+
+          if ( valueExtract is IEnumerable<int> || valueExtract is IEnumerable<double> || valueExtract is IEnumerable<string> || valueExtract is IEnumerable<bool> )
           {
-            valueExtract = ( ( IEnumerable<object> ) valueExtract ).Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) );
+            myDictionary.Add( key, valueExtract );
+          }
+          else if ( valueExtract is IEnumerable<object> )
+          {
+            //valueExtract = ( ( IEnumerable<object> ) valueExtract ).Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) );
             myDictionary.Add( key, Converter.Serialise( valueExtract as IEnumerable<object> ) );
-          } else if( valueExtract is System.Collections.IDictionary )
+          }
+
+          else if ( valueExtract is System.Collections.IDictionary )
           {
             myDictionary.Add( key, valueExtract );
           }
           else
           {
-            myDictionary.Add( key, Converter.Serialise( valueExtract ) );
+            if ( valueExtract is bool || valueExtract is string || valueExtract is double || valueExtract is int )
+              myDictionary.Add( key, valueExtract );
+            else
+              myDictionary.Add( key, Converter.Serialise( valueExtract ) );
           }
         }
         catch ( Exception e )
