@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SpeckleCore;
 using GH_IO.Serialization;
 using Grasshopper.Kernel.Types;
+using Grasshopper.Kernel;
 
 namespace SpeckleGrasshopper
 {
@@ -141,5 +142,27 @@ namespace SpeckleGrasshopper
     }
     #endregion
 
+  }
+
+  public class SpeckleObjectParameter : GH_PersistentParam<GH_SpeckleObject>
+  {
+    public SpeckleObjectParameter() : this("SpeckleObject", "SpeckleObject", "This is a SpeckleObject.", "Speckle", "Parameters") { }
+    public SpeckleObjectParameter(string name, string nickname, string description, string category, string subcategory)
+        : base(name, nickname, description, category, subcategory) { }
+    public SpeckleObjectParameter(GH_InstanceDescription tag) : base(tag) { }
+
+    //public override GH_Exposure Exposure => GH_Exposure.secondary;
+    protected override System.Drawing.Bitmap Icon => Properties.Resources.GenericIconXS;
+
+    // TODO: Create new GUID
+    public override System.Guid ComponentGuid => new Guid("{9be1632a-a114-4780-9dbe-d56c32938c95}");
+    protected override GH_GetterResult Prompt_Singular(ref GH_SpeckleObject value)
+    {
+      return GH_GetterResult.cancel;
+    }
+    protected override GH_GetterResult Prompt_Plural(ref List<GH_SpeckleObject> values)
+    {
+      return GH_GetterResult.cancel;
+    }
   }
 }
