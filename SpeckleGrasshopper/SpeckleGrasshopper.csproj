@@ -59,6 +59,9 @@
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="SpeckleCoreGeometryClasses">
+      <HintPath>..\..\SpeckleCoreGeometry\SpeckleCoreGeometryClasses\bin\Debug\SpeckleCoreGeometryClasses.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -91,6 +94,7 @@
     <Compile Include="UserDataUtils\ExpandUserDataComponent.cs" />
     <Compile Include="UserDataUtils\GetUserDataComponent.cs" />
     <Compile Include="UserDataUtils\GetValueAtKey.cs" />
+    <Compile Include="UserDataUtils\SchemaBuilderComponent.cs" />
     <Compile Include="UserDataUtils\SetUserDataComponent.cs" />
     <Compile Include="UserDataUtils\UserDataUtilsInfo.cs" />
   </ItemGroup>
