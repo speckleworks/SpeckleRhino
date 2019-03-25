@@ -24,9 +24,23 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         GH_DocumentObject.Menu_AppendItem(menu, type.ToString(), (item, e) => 
         {
+          
+          DeleteInputs();
           InitInputs(type);
+          
         });
       }
+    }
+
+    void DeleteInputs()
+    {
+      List<IGH_Param> mycurrentParams = this.Params.Input;
+      for (int i = mycurrentParams.Count - 1; i >= 0; i--)
+      {
+        Params.UnregisterInputParameter(mycurrentParams[i]);
+      }
+      
+     this.ExpireSolution(true);
     }
 
     void InitInputs(Type myType)
@@ -46,8 +60,8 @@ namespace SpeckleGrasshopper.UserDataUtils
 
         // Create new param based on property name
         Param_GenericObject newParam = new Param_GenericObject();
-        newParam.Name = propType.BaseType.Name.ToString();
-        newParam.NickName = propType.BaseType.Name.ToString();
+        newParam.Name = propName;
+        newParam.NickName = propName;
         newParam.MutableNickName = false;
 
         // check if input needs to be a list or item access
@@ -61,7 +75,7 @@ namespace SpeckleGrasshopper.UserDataUtils
         }
 
 
-        if (baseType is SpeckleObject)
+        if (baseType.Name == "SpeckleObject")
         {
           Params.RegisterInputParam(newParam);
         }
