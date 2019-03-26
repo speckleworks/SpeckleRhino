@@ -13,6 +13,9 @@ using System.Reflection;
 using SpeckleCore;
 using System.Windows.Forms;
 using System.Collections;
+using GH_IO.Serialization;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SpeckleGrasshopper
 {
@@ -46,6 +49,52 @@ namespace SpeckleGrasshopper
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
+    }
+
+    public override bool Write(GH_IWriter writer)
+    {
+      try
+      {
+        if (ObjectType != null)
+        {
+          using (var ms = new MemoryStream())
+          {
+            var formatter = new BinaryFormatter();
+            formatter.Serialize(ms, ObjectType);
+            var arr = ms.ToArray();
+            var arrr = arr;
+            writer.SetByteArray("objectype", ms.ToArray());
+          }
+        }
+      }
+      catch (Exception err)
+      {
+        throw err;
+      }
+      return base.Write(writer);
+    }
+
+    public override bool Read(GH_IReader reader)
+    {
+      try
+      {
+        var objectType = reader.GetByteArray("objectype");
+        var copy = objectType;
+        using (var ms = new MemoryStream())
+        {
+          ms.Write(objectType, 0, objectType.Length);
+          ms.Seek(0, SeekOrigin.Begin);
+          ObjectType = (Type)new BinaryFormatter().Deserialize(ms);
+          var x = ObjectType;
+        }
+        UpdateInputs();
+      }
+      catch (Exception err)
+      {
+        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to reinitialise sender.");
+        //throw err;
+      }
+      return base.Read(reader);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -121,7 +170,26 @@ namespace SpeckleGrasshopper
           }
 
           PropertyInfo prop = ObjectType.GetProperty(param.Name);
-          if (value.GetType() != prop.PropertyType)
+          if (prop.PropertyType.IsEnum)
+          {
+            try
+            {
+              prop.SetValue(inputObject, Enum.Parse(prop.PropertyType, (string)value));
+              continue;
+            }
+            catch { }
+
+            try
+            {
+              prop.SetValue(inputObject, (int)value);
+              continue;
+            }
+            catch { }
+
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + param.Name + ".");
+          }
+
+          else if (value.GetType() != prop.PropertyType)
           {
             try
             {
@@ -148,6 +216,7 @@ namespace SpeckleGrasshopper
 
             this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + param.Name + ".");
           }
+
           else
           {
             prop.SetValue(inputObject, value);
