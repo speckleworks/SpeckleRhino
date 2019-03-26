@@ -223,7 +223,7 @@ namespace SpeckleGrasshopper
           }
         }
       }
-      (inputObject as SpeckleObject).GenerateHash();
+      inputObject.GetType().GetMethod("GenerateHash").Invoke(inputObject, null);
       return inputObject;
     }
 
