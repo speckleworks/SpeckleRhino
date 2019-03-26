@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using SpeckleGrasshopper.Properties;
-
 using System.Linq;
-
+using System.Timers;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 using Grasshopper.Kernel.Types;
@@ -24,6 +23,7 @@ namespace SpeckleGrasshopper
     public Type ObjectType;
     public bool ExposeAllProperties;
 
+    private System.Timers.Timer Debouncer;
     public Action ExpireComponentAction;
 
     public ModifySpeckleObjectProperties( )
@@ -40,6 +40,24 @@ namespace SpeckleGrasshopper
       newParam.MutableNickName = false;
       newParam.Access = GH_ParamAccess.item;
       Params.RegisterOutputParam( newParam );
+    }
+
+    public override void AddedToDocument(GH_Document document)
+    {
+      base.AddedToDocument(document);
+      Debouncer = new System.Timers.Timer(2000); Debouncer.AutoReset = false;
+      Debouncer.Elapsed += (sender, e) =>
+      {
+        Rhino.RhinoApp.MainApplicationWindow.Invoke((Action)delegate { this.ExpireSolution(true); });
+      };
+
+      foreach (var param in Params.Input)
+      {
+        param.ObjectChanged += (sender, e) =>
+        {
+          Debouncer.Start();
+        };
+      }
     }
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -117,9 +135,9 @@ namespace SpeckleGrasshopper
         UpdateInputs();
       }
 
-      var modifiedObject = UpdateObjectProperties(inputObject);
-
-      DA.SetData("Result", modifiedObject);
+      var modifiedObject = CreateCopy(inputObject);
+      
+      DA.SetData("Result", UpdateObjectProperties(modifiedObject));
     }
     
     public void UpdateInputs()
@@ -225,6 +243,19 @@ namespace SpeckleGrasshopper
       }
       inputObject.GetType().GetMethod("GenerateHash").Invoke(inputObject, null);
       return inputObject;
+    }
+
+    public object CreateCopy(object inputObject)
+    {
+      var ret = Activator.CreateInstance(inputObject.GetType());
+
+      foreach (FieldInfo f in inputObject.GetType().GetFields())
+        f.SetValue(ret, f.GetValue(inputObject));
+
+      foreach (PropertyInfo p in inputObject.GetType().GetProperties().Where(p => p.CanWrite))
+        p.SetValue(ret, p.GetValue(inputObject));
+
+      return ret;
     }
 
     public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
