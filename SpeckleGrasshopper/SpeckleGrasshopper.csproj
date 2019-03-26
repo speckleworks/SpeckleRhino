@@ -70,6 +70,9 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="ObjectCreation\ConvertSpeckleObject.cs" />
+    <Compile Include="ObjectCreation\ModifySpeckleObjectProperties.cs" />
+    <Compile Include="ObjectCreation\CreateSpeckleKitObject.cs" />
     <Compile Include="ObjectCreation\CreateSpeckleObject.cs" />
     <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="GH_SpeckleObject.cs" />
@@ -101,6 +104,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
