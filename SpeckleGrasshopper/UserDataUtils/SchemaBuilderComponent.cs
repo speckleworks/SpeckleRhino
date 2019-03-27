@@ -12,6 +12,8 @@ namespace SpeckleGrasshopper.UserDataUtils
 {
   public class SchemaBuilderComponent : GH_Component
   {
+    public bool showAdditionalProps = false;
+    public Type selectedType = null;
     /// <summary>
     /// Initializes a new instance of the SchemaBuilderComponent class.
     /// </summary>
@@ -19,19 +21,43 @@ namespace SpeckleGrasshopper.UserDataUtils
     public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
     {
       base.AppendAdditionalMenuItems(menu);
+
+      GH_DocumentObject.Menu_AppendItem(menu, "Toggle Additional Properties (Status: " + showAdditionalProps + ")", (item, e) =>
+      {
+        showAdditionalProps = !showAdditionalProps;
+
+        if(selectedType is null)
+        {
+
+        }
+        else
+        {
+          DeleteInputs();
+          InitInputs(selectedType, showAdditionalProps);
+        }
+      });
+      
+
+      GH_DocumentObject.Menu_AppendSeparator( menu );
       var foundtypes = SpeckleCore.SpeckleInitializer.GetTypes();
-      foreach(Type type in foundtypes)
+
+
+      foreach (Type type in foundtypes)
       {
         GH_DocumentObject.Menu_AppendItem(menu, type.ToString(), (item, e) => 
         {
-          
+          selectedType = type;
           DeleteInputs();
-          InitInputs(type);
+          InitInputs(type, showAdditionalProps);
           
         });
       }
+
+
     }
 
+
+    // Delete inputs when object type is updated by the user
     void DeleteInputs()
     {
       List<IGH_Param> mycurrentParams = this.Params.Input;
@@ -39,16 +65,20 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         Params.UnregisterInputParameter(mycurrentParams[i]);
       }
-      
      this.ExpireSolution(true);
     }
 
-    void InitInputs(Type myType)
+
+
+    void InitInputs(Type myType, bool showAdditionalProps)
     {
       Console.WriteLine(myType.ToString());
       this.Message = myType.Name;
 
       System.Reflection.PropertyInfo[] propInfo = myType.GetProperties();
+
+
+      List<Param_GenericObject> inputParams = new List<Param_GenericObject>();
       for (int i = 0; i < propInfo.Length; i++)
       {
         // get property name and value
@@ -59,33 +89,66 @@ namespace SpeckleGrasshopper.UserDataUtils
         object propValue = propInfo.GetValue(i);
 
         // Create new param based on property name
-        Param_GenericObject newParam = new Param_GenericObject();
-        newParam.Name = propName;
-        newParam.NickName = propName;
-        newParam.MutableNickName = false;
+        Param_GenericObject newInputParam = new Param_GenericObject();
+        newInputParam.Name = propName;
+        newInputParam.NickName = propName;
+        newInputParam.MutableNickName = false;
 
         // check if input needs to be a list or item access
-        bool genericList = IsGenericList(propType);
-        if(genericList == true) {
-          newParam.Access = GH_ParamAccess.list;
+        bool genericListBool = IsGenericList(propType);
+        if(genericListBool == true) {
+          newInputParam.Access = GH_ParamAccess.list;
         }
         else
         {
-          newParam.Access = GH_ParamAccess.item;
+          newInputParam.Access = GH_ParamAccess.item;
         }
 
-
-        if (baseType.Name == "SpeckleObject")
+        if (showAdditionalProps == false)
         {
-          Params.RegisterInputParam(newParam);
+          if (baseType.Name == "SpeckleObject")
+          {
+            inputParams.Add(newInputParam);
+            Params.RegisterInputParam(newInputParam);
+            //void InitOutput(Type myType, )
+
+          }
+        }
+        else
+        {
+          inputParams.Add(newInputParam);
+          Params.RegisterInputParam(newInputParam);
         }
         
 
       }
+
+      DeleteOutput();
+      InitOutput(myType, inputParams);
+
+      
+
+
+    }
+    void InitOutput(Type myType, List<Param_GenericObject> myInputParams)
+    {
+      var outputObject = Activator.CreateInstance(myType);
+      // Create new param for output
+      Param_GenericObject newOutputParam = new Param_GenericObject();
+      newOutputParam.Name = myType.Name;
+      newOutputParam.NickName = myType.Name;
+      Params.RegisterOutputParam(newOutputParam);
       this.ExpireSolution(true);
+    }
 
-
-      //SpeckleCoreGeometryClasses.SpecklePoint mySpecklePoint = new SpecklePoint()
+    void DeleteOutput()
+    {
+      List<IGH_Param> mycurrentParams = this.Params.Output;
+      for (int i = mycurrentParams.Count - 1; i >= 0; i--)
+      {
+        Params.UnregisterOutputParameter(mycurrentParams[i]);
+      }
+      this.ExpireSolution(true);
     }
 
     public bool IsGenericList(Type myType)
