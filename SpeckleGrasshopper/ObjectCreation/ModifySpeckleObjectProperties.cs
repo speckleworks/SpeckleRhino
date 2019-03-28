@@ -22,8 +22,7 @@ namespace SpeckleGrasshopper
   {
     public Type ObjectType;
     public bool ExposeAllProperties;
-
-    private System.Timers.Timer Debouncer;
+    
     public Action ExpireComponentAction;
 
     public ModifySpeckleObjectProperties( )
@@ -34,30 +33,6 @@ namespace SpeckleGrasshopper
       SpeckleCore.SpeckleInitializer.Initialize();
       SpeckleCore.LocalContext.Init();
       ExpireComponentAction = () => this.ExpireSolution(true);
-      Param_GenericObject newParam = new Param_GenericObject();
-      newParam.Name = "Result";
-      newParam.NickName = "R";
-      newParam.MutableNickName = false;
-      newParam.Access = GH_ParamAccess.item;
-      Params.RegisterOutputParam( newParam );
-    }
-
-    public override void AddedToDocument(GH_Document document)
-    {
-      base.AddedToDocument(document);
-      Debouncer = new System.Timers.Timer(2000); Debouncer.AutoReset = false;
-      Debouncer.Elapsed += (sender, e) =>
-      {
-        Rhino.RhinoApp.MainApplicationWindow.Invoke((Action)delegate { this.ExpireSolution(true); });
-      };
-
-      foreach (var param in Params.Input)
-      {
-        param.ObjectChanged += (sender, e) =>
-        {
-          Debouncer.Start();
-        };
-      }
     }
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -67,6 +42,7 @@ namespace SpeckleGrasshopper
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
+      pManager.Register_GenericParam("Result", "R", "Resulting Speckle object.", GH_ParamAccess.item);
     }
 
     public override bool Write(GH_IWriter writer)
@@ -133,11 +109,17 @@ namespace SpeckleGrasshopper
       { 
         ObjectType = inputObject.GetType();
         UpdateInputs();
-      }
 
-      var modifiedObject = CreateCopy(inputObject);
+        var modifiedObject = CreateCopy(inputObject);
+        DA.SetData("Result", modifiedObject);
+      }
+      else
+      {
+        var modifiedObject = CreateCopy(inputObject);
+        DA.SetData("Result", UpdateObjectProperties(modifiedObject));
+      }
       
-      DA.SetData("Result", UpdateObjectProperties(modifiedObject));
+      Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
     }
     
     public void UpdateInputs()
@@ -162,8 +144,7 @@ namespace SpeckleGrasshopper
         newParam.MutableNickName = false;
         newParam.Access = GH_ParamAccess.item;
         newParam.Optional = true;
-        newParam.ObjectChanged += (sender, e) => Debouncer.Start();
-
+        
         Params.RegisterInputParam(newParam);
       }
       Params.OnParametersChanged();
