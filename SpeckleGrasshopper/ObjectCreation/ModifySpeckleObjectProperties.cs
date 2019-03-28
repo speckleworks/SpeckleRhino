@@ -162,6 +162,7 @@ namespace SpeckleGrasshopper
         newParam.MutableNickName = false;
         newParam.Access = GH_ParamAccess.item;
         newParam.Optional = true;
+        newParam.ObjectChanged += (sender, e) => Debouncer.Start();
 
         Params.RegisterInputParam(newParam);
       }
@@ -253,8 +254,9 @@ namespace SpeckleGrasshopper
         f.SetValue(ret, f.GetValue(inputObject));
 
       foreach (PropertyInfo p in inputObject.GetType().GetProperties().Where(p => p.CanWrite))
-        p.SetValue(ret, p.GetValue(inputObject));
-
+        if (p.Name != "_id")
+          p.SetValue(ret, p.GetValue(inputObject));
+      
       return ret;
     }
 
