@@ -29,7 +29,7 @@ namespace SpeckleGrasshopper
     public override void AddedToDocument( GH_Document document )
     {
       base.AddedToDocument( document );
-
+      
       Debouncer = new Timer( 2000 ); Debouncer.AutoReset = false;
       Debouncer.Elapsed += ( sender, e ) =>
       {

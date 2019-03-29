@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Timers;
 using SpeckleCore;
 using Grasshopper;
 using Grasshopper.Kernel;
@@ -40,11 +42,9 @@ namespace SpeckleGrasshopper.UserDataUtils
           InitInputs(selectedType, showAdditionalProps);
         }
       });
-      
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
       var foundtypes = SpeckleCore.SpeckleInitializer.GetTypes();
-
 
       foreach (Type type in foundtypes)
       {
@@ -52,10 +52,8 @@ namespace SpeckleGrasshopper.UserDataUtils
         {
           selectedType = type;
           InitInputs(type, showAdditionalProps);
-          
         });
       }
-
 
     }
 
@@ -79,9 +77,22 @@ namespace SpeckleGrasshopper.UserDataUtils
       Console.WriteLine(myType.ToString());
       this.Message = myType.Name;
 
-      System.Reflection.PropertyInfo[] propInfo = myType.GetProperties();
+      //System.Reflection.PropertyInfo[] propInfo = myType.GetProperties();
 
+      System.Reflection.PropertyInfo[] propInfo = new System.Reflection.PropertyInfo[] { };
+      if (showAdditionalProps == false)
+      {
+        // class props
+        propInfo = myType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
+      }
+      else
+      {
+        // inherited props
+        propInfo = myType.BaseType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
+      }
+
+      List<string> checkstrings = new List<string>();
       List<Param_GenericObject> inputParams = new List<Param_GenericObject>();
       for (int i = 0; i < propInfo.Length; i++)
       {
@@ -97,10 +108,12 @@ namespace SpeckleGrasshopper.UserDataUtils
         newInputParam.Name = propName;
         newInputParam.NickName = propName;
         newInputParam.MutableNickName = false;
+        newInputParam.Description = propName+" as "+propType.Name;
 
         // check if input needs to be a list or item access
-        bool genericListBool = IsGenericList(propType);
-        if(genericListBool == true) {
+        //bool genericListBool = IsGenericList(propType);
+        bool isCollection = typeof(IEnumerable<>).IsAssignableFrom(propType);
+        if (isCollection == true) {
           newInputParam.Access = GH_ParamAccess.list;
         }
         else
@@ -108,24 +121,16 @@ namespace SpeckleGrasshopper.UserDataUtils
           newInputParam.Access = GH_ParamAccess.item;
         }
 
-        if (showAdditionalProps == false)
-        {
-          if (baseType.Name == "SpeckleObject")
-          {
-            inputParams.Add(newInputParam);
-            Params.RegisterInputParam(newInputParam);
-            //void InitOutput(Type myType, )
 
-          }
-        }
-        else
-        {
-          inputParams.Add(newInputParam);
-          Params.RegisterInputParam(newInputParam);
-        }
+       inputParams.Add(newInputParam);
+       Params.RegisterInputParam(newInputParam);
+        
       }
+      List<string> mystrings = checkstrings;
       InitOutput(myType, inputParams);
+      this.Params.OnParametersChanged();
       this.ExpireSolution(true);
+      
     }
 
 
@@ -133,6 +138,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       DeleteOutput();
       var outputObject = Activator.CreateInstance(myType);
+      
       // Create new param for output
       Param_GenericObject newOutputParam = new Param_GenericObject();
       newOutputParam.Name = myType.Name;
