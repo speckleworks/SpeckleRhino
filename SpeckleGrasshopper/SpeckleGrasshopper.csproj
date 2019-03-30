@@ -65,6 +65,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -73,6 +74,7 @@
     <Compile Include="ObjectCreation\ConvertSpeckleObject.cs" />
     <Compile Include="ObjectCreation\ModifySpeckleObjectProperties.cs" />
     <Compile Include="ObjectCreation\CreateSpeckleKitObject.cs" />
+    <Compile Include="ExtendedComponents\XmlToSpeckleObject.cs" />
     <Compile Include="ObjectCreation\CreateSpeckleObject.cs" />
     <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="GH_SpeckleObject.cs" />
