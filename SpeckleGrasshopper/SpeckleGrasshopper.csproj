@@ -65,11 +65,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="ExtendedComponents\XmlToSpeckleObject.cs" />
     <Compile Include="ObjectCreation\CreateSpeckleObject.cs" />
     <Compile Include="ExtendedComponents\MeshTexCoords.cs" />
     <Compile Include="GH_SpeckleObject.cs" />
