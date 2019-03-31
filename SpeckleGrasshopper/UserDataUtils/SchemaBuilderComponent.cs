@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using System.Windows.Forms;
 using System.Linq;
@@ -78,7 +79,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       }
 
     }
-
+    //SpeckleCoreGeometryClasses.SpeckleArc myarc = new SpeckleCoreGeometryClasses.SpeckleLine()
     void InitInputsFromScratch(Type myType, bool showAdditionalProps)
     {
       DeleteInputs();
@@ -281,8 +282,10 @@ namespace SpeckleGrasshopper.UserDataUtils
     void InitOutput(Type myType, List<Param_GenericObject> myInputParams)
     {
       DeleteOutput();
+
       var outputObject = Activator.CreateInstance(myType);
-      List<IGH_Param> currentInputs = Params.Input;
+      outputObject = Convert.ChangeType(outputObject, myType);
+      
       // Create new param for output
       Param_GenericObject newOutputParam = new Param_GenericObject();
       newOutputParam.Name = myType.Name;
@@ -291,7 +294,8 @@ namespace SpeckleGrasshopper.UserDataUtils
       Grasshopper.Kernel.Data.GH_Path gH_Path = new Grasshopper.Kernel.Data.GH_Path(0);
 
       newOutputParam.AddVolatileData(gH_Path, 0, outputObject);
-
+      newOutputParam.ComputeData();
+      
       Params.RegisterOutputParam(newOutputParam);
       this.ExpireSolution(true);
     }
@@ -329,21 +333,150 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
 
     }
-
     /// <summary>
     /// This is the method that actually does the work.
     /// </summary>
     /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-      
+      if (selectedType is null)
+      {
+
+      }
+      else
+      {
+        
+        
+          
+        // instantiate object !!
+        var outputObject = Activator.CreateInstance(selectedType);
+        outputObject = Convert.ChangeType(outputObject, selectedType);
+        
+        int numInputs = Params.Input.Count;
+        for (int i = 0; i < numInputs; i++)
+        {
+          
+          if (Params.Input[i].Access == GH_ParamAccess.list)
+          {
+            List<object> ObjectsList = new List<object>();
+            DA.GetDataList(i, ObjectsList);
+            outputObject.GetType().GetProperty(Params.Input[i].Name).SetValue(outputObject, ObjectsList, null);
+          }
+          else if(Params.Input[i].Access == GH_ParamAccess.item)
+          {
+
+            dynamic inputObject = new Object(); // INPUT OBJECT ( PROPERTY )
+            DA.GetData(i, ref inputObject);
+
+            Type typeToCastTo = outputObject.GetType().GetProperty(Params.Input[i].Name).PropertyType; // TYPE OF PROP TO ATTACH TO OUTPUT OBJECT
+
+            string nameSpace = inputObject.GetType().Namespace;
+            if (nameSpace == "Grasshopper.Kernel.Types")
+            {
+              var myValue = inputObject.Value;
+              var myCastedValue = myValue;
+
+              try
+              {
+                myCastedValue = Convert.ChangeType(myValue, typeToCastTo);
+              }
+              catch{
+                myCastedValue = myValue;
+              }
+
+              outputObject.GetType().GetProperty(Params.Input[i].Name).SetValue(outputObject, myCastedValue, null);
+              string myValString = inputObject.Value.ToString();
+
+           
+
+              //Grasshopper.Kernel.Types.GH_Goo<object> myGooObject = (Grasshopper.Kernel.Types.GH_Goo<object>)inputObject;
+              
+              //outputObject.GetType().GetProperty(Params.Input[i].Name).SetValue(outputObject, myGooObject, null);
+            }
+            else
+            {
+              outputObject.GetType().GetProperty(Params.Input[i].Name).SetValue(outputObject, inputObject, null);
+            }
+
+
+            
+          }
+          
+        }
+
+        DA.SetData(0, outputObject);
+
+        /*
+        System.Reflection.PropertyInfo[] currentProperties = outputObject.GetType().GetProperties();
+        String[] currPropNames = new String[currentProperties.Length];
+        for (int i = 0; i < currentProperties.Length; i++)
+        {
+
+          currPropNames[i] = currentProperties[i].Name;
+        }
+        List<IGH_Param> currentParameters = this.Params.Input;
+        foreach (IGH_Param param in currentParameters)
+        {
+          var paramName = param.Name;
+          Grasshopper.Kernel.Data.IGH_Structure paramStruct = param.VolatileData;
+          var paramValue = paramStruct.get_Branch(0)[0];
+
+          string nameSpace = paramValue.GetType().Namespace;
+          if (nameSpace == "Grasshopper.Kernel.Types")
+          {
+            Type currType = paramValue.GetType();
+            if (currType.Equals(typeof(Grasshopper.Kernel.Types.GH_String)))
+            {
+              Grasshopper.Kernel.Types.GH_String specialString = (Grasshopper.Kernel.Types.GH_String)paramValue;
+              string new_str = specialString.Value;
+              paramValue = new_str;
+              outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, paramValue, null);
+            }
+            else
+            {
+              double[] array = { 0.0, 0.0, 0.0 };
+              List<double> newList = new List<double>(array);
+
+              outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, newList, null);
+            }
+          }
+          else
+          {
+
+            outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, paramValue, null);
+          }
+          Console.WriteLine("wow");
+        }
+        */
+
+
+
+
+        // Create new param for output
+        Param_GenericObject newOutputParam = new Param_GenericObject();
+        newOutputParam.Name = selectedType.Name;
+        newOutputParam.NickName = selectedType.Name;
+        
+
+        Grasshopper.Kernel.Data.GH_Path gH_Path = new Grasshopper.Kernel.Data.GH_Path(0);
+
+        bool bigsuccess = newOutputParam.AddVolatileData(gH_Path, 0, outputObject);
+        newOutputParam.ComputeData();
+
+        this.Params.OnParametersChanged();
+        
+      }
 
     }
+    public static T Cast<T>(object o)
+    {
+      return (T)o;
+    }
 
-    /// <summary>
-    /// Provides an Icon for the component.
-    /// </summary>
-    protected override System.Drawing.Bitmap Icon
+  /// <summary>
+  /// Provides an Icon for the component.
+  /// </summary>
+  protected override System.Drawing.Bitmap Icon
     {
       get
       {

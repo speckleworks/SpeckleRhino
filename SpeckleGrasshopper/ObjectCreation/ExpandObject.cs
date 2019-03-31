@@ -73,6 +73,7 @@ namespace SpeckleGrasshopper.Management
     {
       Objects = new List<object>();
       DA.GetDataList( 0, Objects );
+      
 
       List<Dictionary<string, object>> DictList = new List<Dictionary<string, object>>();
 
@@ -132,6 +133,7 @@ namespace SpeckleGrasshopper.Management
           }
           else
             DA.SetDataList( k++, Global[ key ] );
+         
         }
       }
 

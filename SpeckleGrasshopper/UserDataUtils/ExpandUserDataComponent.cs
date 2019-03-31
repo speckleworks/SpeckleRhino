@@ -157,6 +157,7 @@ namespace SpeckleGrasshopper
           {
             Params.Output[ k ].Name = Params.Output[ k ].NickName = key;
             DA.SetDataList( k++, global[ key ].Select( x => new GH_ObjectWrapper( x ) ) );
+            
           }
         }
         catch ( Exception e )
