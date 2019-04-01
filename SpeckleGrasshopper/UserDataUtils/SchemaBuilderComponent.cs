@@ -6,6 +6,7 @@ using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using System.Windows.Forms;
 using System.Linq;
+using Grasshopper.Kernel.Types;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
@@ -121,7 +122,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
 
       // find additional properties
-      System.Reflection.PropertyInfo[ ] addProps = myType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance );
+      System.Reflection.PropertyInfo[ ] addProps = myType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( p => p.CanWrite ).ToArray();
 
       List<Param_GenericObject> inputParams;
       RegisterInputParamerters( addProps, out inputParams );
@@ -150,6 +151,7 @@ namespace SpeckleGrasshopper.UserDataUtils
         newInputParam.NickName = propName;
         newInputParam.MutableNickName = false;
         newInputParam.Description = propName + " as " + propType.Name;
+        newInputParam.Optional = true;
 
         // check if input needs to be a list or item access
         bool isCollection = typeof( IEnumerable<> ).IsAssignableFrom( propType );
@@ -184,11 +186,6 @@ namespace SpeckleGrasshopper.UserDataUtils
         {
           Params.UnregisterInputParameter( myCurrentParams[ i ] );
         }
-        else
-        {
-
-        }
-
       }
       this.Params.OnParametersChanged();
       this.ExpireSolution( true );
@@ -279,40 +276,11 @@ namespace SpeckleGrasshopper.UserDataUtils
 
     }
 
-
     void InitOutput( Type myType, List<Param_GenericObject> myInputParams )
     {
       this.Params.Output[ 0 ].NickName = myType.Name;
-
-      //DeleteOutput();
-
-      //var outputObject = Activator.CreateInstance( myType );
-      //outputObject = Convert.ChangeType( outputObject, myType );
-
-      //// Create new param for output
-      //Param_GenericObject newOutputParam = new Param_GenericObject();
-      //newOutputParam.Name = myType.Name;
-      //newOutputParam.NickName = myType.Name;
-
-      //Grasshopper.Kernel.Data.GH_Path gH_Path = new Grasshopper.Kernel.Data.GH_Path( 0 );
-
-      //newOutputParam.AddVolatileData( gH_Path, 0, outputObject );
-      //newOutputParam.ComputeData();
-
-      //Params.RegisterOutputParam( newOutputParam );
-      //this.ExpireSolution( true );
+      this.Message = myType.Name;
     }
-
-
-    void DeleteOutput( )
-    {
-      //List<IGH_Param> mycurrentParams = this.Params.Output;
-      //for ( int i = mycurrentParams.Count - 1; i >= 0; i-- )
-      //{
-      //  Params.UnregisterOutputParameter( mycurrentParams[ i ] );
-      //}
-    }
-
 
     public SchemaBuilderComponent( )
       : base( "Schema Builder Component", "SBC",
@@ -349,7 +317,7 @@ namespace SpeckleGrasshopper.UserDataUtils
 
       // instantiate object !!
       var outputObject = Activator.CreateInstance( selectedType );
-      outputObject = Convert.ChangeType( outputObject, selectedType );
+      //outputObject = Convert.ChangeType( outputObject, selectedType );
 
       int numInputs = Params.Input.Count;
       for ( int i = 0; i < numInputs; i++ )
@@ -363,40 +331,62 @@ namespace SpeckleGrasshopper.UserDataUtils
         else if ( Params.Input[ i ].Access == GH_ParamAccess.item )
         {
 
-          dynamic inputObject = new Object(); // INPUT OBJECT ( PROPERTY )
-          DA.GetData( i, ref inputObject );
+          object ghInput = null; // INPUT OBJECT ( PROPERTY )
+          DA.GetData( i, ref ghInput );
 
-          Type typeToCastTo = outputObject.GetType().GetProperty( Params.Input[ i ].Name ).PropertyType; // TYPE OF PROP TO ATTACH TO OUTPUT OBJECT
-
-          string nameSpace = inputObject.GetType().Namespace;
-          if ( nameSpace == "Grasshopper.Kernel.Types" )
+          object innerValue = null;
+          try
           {
-            var myValue = inputObject.Value;
-            var myCastedValue = myValue;
-
-            try
-            {
-              myCastedValue = Convert.ChangeType( myValue, typeToCastTo );
-            }
-            catch
-            {
-              myCastedValue = myValue;
-            }
-
-            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( myCastedValue ), null );
-            string myValString = inputObject.Value.ToString();
+            innerValue = ghInput.GetType().GetProperty( "Value" ).GetValue( ghInput );
           }
-          else
+          catch
           {
-            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, inputObject, null );
+            innerValue = ghInput;
           }
+
+          if ( innerValue == null ) continue;
+
+          try
+          {
+            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, innerValue );
+          }
+          catch
+          {
+            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( innerValue ) );
+          }
+
+
+          //Type typeToCastTo = outputObject.GetType().GetProperty( Params.Input[ i ].Name ).PropertyType; // TYPE OF PROP TO ATTACH TO OUTPUT OBJECT
+
+          //string nameSpace = inputObject.GetType().Namespace;
+          //if ( nameSpace == "Grasshopper.Kernel.Types" )
+          //{
+          //  var myValue = inputObject.Value;
+          //  var myCastedValue = myValue;
+
+          //  try
+          //  {
+          //    myCastedValue = Convert.ChangeType( myValue, typeToCastTo );
+          //  }
+          //  catch
+          //  {
+          //    myCastedValue = myValue;
+          //  }
+
+          //  outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( myCastedValue ), null );
+          //  string myValString = inputObject.Value.ToString();
+          //}
+          //else
+          //{
+          //  outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, inputObject, null );
+          //}
 
 
 
         }
 
       }
-
+      outputObject.GetType().GetMethod( "GenerateHash" ).Invoke( outputObject, null );
       DA.SetData( 0, outputObject );
 
       /*
