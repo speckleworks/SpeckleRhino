@@ -26,7 +26,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       base.AppendAdditionalMenuItems(menu);
 
-
+      ///////////////////////////////////////////////////////////////////////////////
       // toggle optional properties
       GH_DocumentObject.Menu_AppendItem(menu, "Toggle Optional Properties (Status: " + showAdditionalProps + ")", (item, e) =>
       {
@@ -49,11 +49,34 @@ namespace SpeckleGrasshopper.UserDataUtils
         }
       });
 
+      ///////////////////////////////////////////////////////////////////////////////
+      
       GH_DocumentObject.Menu_AppendSeparator(menu);
+
+      ///////////////////////////////////////////////////////////////////////////////
+
+      /*
+      ToolStripDropDown myMenu = new ToolStripDropDown();
+      myMenu.Items.Add("lol");
+      Control myControl = new Control();
+      myControl.Name = "wow";
+
+      GH_DocumentObject.Menu_AppendItem(menu, "yo", (item, e) =>
+      {
+        ToolStripMenuItem myItem;
+        myItem = new ToolStripMenuItem("eeeeeee",);
+        menu.Items.Add(myItem);
+      });
+      */
+
+      ///////////////////////////////////////////////////////////////////////////////
+
+
       var foundtypes = SpeckleCore.SpeckleInitializer.GetTypes();
 
       foreach (Type type in foundtypes)
       {
+        
         GH_DocumentObject.Menu_AppendItem(menu, type.ToString(), (item, e) =>
         {
 
@@ -468,10 +491,6 @@ namespace SpeckleGrasshopper.UserDataUtils
       }
 
     }
-    public static T Cast<T>(object o)
-    {
-      return (T)o;
-    }
 
   /// <summary>
   /// Provides an Icon for the component.
@@ -482,7 +501,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         //You can add image files to your project resources and access them like this:
         // return Resources.IconForThisComponent;
-        return null;
+        return SpeckleGrasshopper.Properties.Resources.SchemaBuilder;
       }
     }
 
