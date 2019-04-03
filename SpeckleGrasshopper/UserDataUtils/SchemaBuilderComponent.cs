@@ -25,7 +25,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       base.AppendAdditionalMenuItems( menu );
 
-
+      ///////////////////////////////////////////////////////////////////////////////
       // toggle optional properties
       GH_DocumentObject.Menu_AppendItem( menu, "Toggle Optional Properties (Status: " + showAdditionalProps + ")", ( item, e ) =>
        {
@@ -44,6 +44,7 @@ namespace SpeckleGrasshopper.UserDataUtils
        } );
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
+
       var foundtypes = SpeckleCore.SpeckleInitializer.GetTypes();
 
       foreach ( Type type in foundtypes )
@@ -395,7 +396,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         //You can add image files to your project resources and access them like this:
         // return Resources.IconForThisComponent;
-        return null;
+        return SpeckleGrasshopper.Properties.Resources.SchemaBuilder;
       }
     }
 

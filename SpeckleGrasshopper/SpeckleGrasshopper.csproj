@@ -124,6 +124,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\icon-01.png" />
+    <None Include="Resources\SchemaBuilder.ico" />
     <None Include="Resources\SetUserData.png" />
     <None Include="Resources\json.png" />
     <None Include="Resources\GetUserData.png" />
