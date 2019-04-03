@@ -7,6 +7,7 @@ using Grasshopper.Kernel.Parameters;
 using System.Windows.Forms;
 using System.Linq;
 using Grasshopper.Kernel.Types;
+using System.Collections;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
@@ -20,9 +21,6 @@ namespace SpeckleGrasshopper.UserDataUtils
     public bool showAdditionalProps = false;
     public Type selectedType = null;
 
-    //
-
-
     public override void AppendAdditionalMenuItems( ToolStripDropDown menu )
     {
       base.AppendAdditionalMenuItems( menu );
@@ -32,12 +30,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       GH_DocumentObject.Menu_AppendItem( menu, "Toggle Optional Properties (Status: " + showAdditionalProps + ")", ( item, e ) =>
        {
          showAdditionalProps = !showAdditionalProps;
-
-         if ( selectedType is null )
-         {
-           //graceful exit: don't show any properties because no type has been selected so far.
-         }
-         else
+         if ( selectedType != null )
          {
            if ( showAdditionalProps )
            {
@@ -92,10 +85,9 @@ namespace SpeckleGrasshopper.UserDataUtils
       System.Reflection.PropertyInfo[ ] props = new System.Reflection.PropertyInfo[ ] { };
 
       if ( showAdditionalProps == false )
-        props = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public );
+        props = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( p => p.CanWrite ).ToArray();
       else
-        props = myType.GetProperties();
-
+        props = myType.GetProperties().Where( p => p.CanWrite ).ToArray();
 
 
       List<Param_GenericObject> inputParams;
@@ -120,7 +112,6 @@ namespace SpeckleGrasshopper.UserDataUtils
 
     void AddAdditionalInputs( Type myType )
     {
-
       // find additional properties
       System.Reflection.PropertyInfo[ ] addProps = myType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( p => p.CanWrite ).ToArray();
 
@@ -154,8 +145,8 @@ namespace SpeckleGrasshopper.UserDataUtils
         newInputParam.Optional = true;
 
         // check if input needs to be a list or item access
-        bool isCollection = typeof( IEnumerable<> ).IsAssignableFrom( propType );
-        if ( isCollection == true )
+        bool isCollection = typeof( System.Collections.IEnumerable ).IsAssignableFrom( propType ) && propType != typeof( string );
+        if ( isCollection )
         {
           newInputParam.Access = GH_ParamAccess.list;
         }
@@ -175,7 +166,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     void RemoveAdditionalInputs( Type myType )
     {
       // removes additional properties and makes sure the type's inputs remain the same.
-      System.Reflection.PropertyInfo[ ] previouslyAddedProps = myType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance );
+      System.Reflection.PropertyInfo[ ] previouslyAddedProps = myType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( p => p.CanWrite ).ToArray();
       int numberOfAddedProps = previouslyAddedProps.Length;
       List<IGH_Param> myCurrentParams = this.Params.Input;
       int myCurrentParamsCount = myCurrentParams.Count;
@@ -200,7 +191,7 @@ namespace SpeckleGrasshopper.UserDataUtils
 
       System.Reflection.PropertyInfo[ ] props = new System.Reflection.PropertyInfo[ ] { };
 
-      props = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public );
+      props = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( p => p.CanWrite ).ToArray();
 
       if ( showAdditionalProps == false ) // just reinit params
       {
@@ -217,8 +208,10 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         // unregister previous type props and register new type props
         // keeps additional properties intact for high user expectations
-        System.Reflection.PropertyInfo[ ] previousProps_All = selectedType.GetProperties();
-        System.Reflection.PropertyInfo[ ] previousProps_ClassType = selectedType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public );
+        System.Reflection.PropertyInfo[ ] previousProps_All = selectedType.GetProperties().Where( p => p.CanWrite ).ToArray();
+
+        System.Reflection.PropertyInfo[ ] previousProps_ClassType = selectedType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( p => p.CanWrite ).ToArray();
+
 
 
         for ( int i = ( previousProps_All.Length - 1 ); i >= 0; i-- )
@@ -317,22 +310,40 @@ namespace SpeckleGrasshopper.UserDataUtils
 
       // instantiate object !!
       var outputObject = Activator.CreateInstance( selectedType );
-      //outputObject = Convert.ChangeType( outputObject, selectedType );
 
-      int numInputs = Params.Input.Count;
-      for ( int i = 0; i < numInputs; i++ )
+      for ( int i = 0; i < Params.Input.Count; i++ )
       {
         if ( Params.Input[ i ].Access == GH_ParamAccess.list )
         {
-          List<object> ObjectsList = new List<object>();
+          var ObjectsList = new List<object>();
           DA.GetDataList( i, ObjectsList );
-          outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, ObjectsList, null );
+
+          if ( ObjectsList.Count == 0 ) continue;
+
+          var listForSetting = ( IList ) Activator.CreateInstance( outputObject.GetType().GetProperty( Params.Input[ i ].Name ).PropertyType );
+          foreach ( var item in ObjectsList )
+          {
+            object innerVal = null;
+            try
+            {
+              innerVal = item.GetType().GetProperty( "Value" ).GetValue( item );
+            }
+            catch
+            {
+              innerVal = item;
+            }
+
+            listForSetting.Add( innerVal );
+          }
+
+          outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, listForSetting, null );
         }
         else if ( Params.Input[ i ].Access == GH_ParamAccess.item )
         {
-
           object ghInput = null; // INPUT OBJECT ( PROPERTY )
           DA.GetData( i, ref ghInput );
+
+          if ( ghInput == null ) continue;
 
           object innerValue = null;
           try
@@ -354,97 +365,20 @@ namespace SpeckleGrasshopper.UserDataUtils
           {
             outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( innerValue ) );
           }
-
-
-          //Type typeToCastTo = outputObject.GetType().GetProperty( Params.Input[ i ].Name ).PropertyType; // TYPE OF PROP TO ATTACH TO OUTPUT OBJECT
-
-          //string nameSpace = inputObject.GetType().Namespace;
-          //if ( nameSpace == "Grasshopper.Kernel.Types" )
-          //{
-          //  var myValue = inputObject.Value;
-          //  var myCastedValue = myValue;
-
-          //  try
-          //  {
-          //    myCastedValue = Convert.ChangeType( myValue, typeToCastTo );
-          //  }
-          //  catch
-          //  {
-          //    myCastedValue = myValue;
-          //  }
-
-          //  outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( myCastedValue ), null );
-          //  string myValString = inputObject.Value.ToString();
-          //}
-          //else
-          //{
-          //  outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, inputObject, null );
-          //}
-
-
-
         }
-
       }
+
+      // toggle hash generation
       outputObject.GetType().GetMethod( "GenerateHash" ).Invoke( outputObject, null );
+
+      // applicationId generation/setting
+      var appId = outputObject.GetType().GetProperty( "ApplicationId" ).GetValue( outputObject );
+      if ( appId == null )
+      {
+        var myGeneratedAppId = "gh/" + outputObject.GetType().GetProperty( "Hash" ).GetValue( outputObject );
+        outputObject.GetType().GetProperty( "ApplicationId" ).SetValue( outputObject, myGeneratedAppId );
+      }
       DA.SetData( 0, outputObject );
-
-      /*
-      System.Reflection.PropertyInfo[] currentProperties = outputObject.GetType().GetProperties();
-      String[] currPropNames = new String[currentProperties.Length];
-      for (int i = 0; i < currentProperties.Length; i++)
-      {
-
-        currPropNames[i] = currentProperties[i].Name;
-      }
-      List<IGH_Param> currentParameters = this.Params.Input;
-      foreach (IGH_Param param in currentParameters)
-      {
-        var paramName = param.Name;
-        Grasshopper.Kernel.Data.IGH_Structure paramStruct = param.VolatileData;
-        var paramValue = paramStruct.get_Branch(0)[0];
-
-        string nameSpace = paramValue.GetType().Namespace;
-        if (nameSpace == "Grasshopper.Kernel.Types")
-        {
-          Type currType = paramValue.GetType();
-          if (currType.Equals(typeof(Grasshopper.Kernel.Types.GH_String)))
-          {
-            Grasshopper.Kernel.Types.GH_String specialString = (Grasshopper.Kernel.Types.GH_String)paramValue;
-            string new_str = specialString.Value;
-            paramValue = new_str;
-            outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, paramValue, null);
-          }
-          else
-          {
-            double[] array = { 0.0, 0.0, 0.0 };
-            List<double> newList = new List<double>(array);
-
-            outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, newList, null);
-          }
-        }
-        else
-        {
-
-          outputObject.GetType().GetProperty(param.Name).SetValue(outputObject, paramValue, null);
-        }
-        Console.WriteLine("wow");
-      }
-      */
-
-      // Create new param for output
-      Param_GenericObject newOutputParam = new Param_GenericObject();
-      newOutputParam.Name = selectedType.Name;
-      newOutputParam.NickName = selectedType.Name;
-
-
-      Grasshopper.Kernel.Data.GH_Path gH_Path = new Grasshopper.Kernel.Data.GH_Path( 0 );
-
-      bool bigsuccess = newOutputParam.AddVolatileData( gH_Path, 0, outputObject );
-      newOutputParam.ComputeData();
-
-      this.Params.OnParametersChanged();
-
     }
 
     public static T Cast<T>( object o )
