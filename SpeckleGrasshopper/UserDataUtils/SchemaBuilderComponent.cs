@@ -275,9 +275,6 @@ namespace SpeckleGrasshopper.UserDataUtils
           {
             this.Params.UnregisterInputParameter(this.Params.Input[i]);
           }
-          else
-          {
-          }
         }
 
         List<Param_GenericObject> inputParams = new List<Param_GenericObject>();
