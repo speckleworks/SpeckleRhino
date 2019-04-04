@@ -18,6 +18,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     /// </summary>
     // global variables
     public bool showAdditionalProps = false;
+    public bool showApplicationId_Only = false;
     public Type selectedType = null;
 
     public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
@@ -25,7 +26,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       base.AppendAdditionalMenuItems(menu);
 
       ///////////////////////////////////////////////////////////////////////////////
-      // toggle optional properties
+
       GH_DocumentObject.Menu_AppendItem(menu, "Toggle Optional Properties (Status: " + showAdditionalProps + ")", (item, e) =>
       {
         showAdditionalProps = !showAdditionalProps;
@@ -39,6 +40,55 @@ namespace SpeckleGrasshopper.UserDataUtils
           else
           {
             RemoveAdditionalInputs(selectedType);
+          }
+        }
+      });
+
+      ///////////////////////////////////////////////////////////////////////////////
+
+      GH_DocumentObject.Menu_AppendSeparator(menu);
+
+      ///////////////////////////////////////////////////////////////////////////////
+
+      GH_DocumentObject.Menu_AppendItem(menu, "Toggle ApplicationId Only (Status: " + showApplicationId_Only + ")", (item, e) =>
+      {
+        showApplicationId_Only = !showApplicationId_Only;
+
+        if (selectedType != null)
+        {
+          if (showApplicationId_Only)
+          {
+            
+            if (showAdditionalProps)
+            {
+              // removes additional properties and makes sure the type's inputs remain the same.
+              System.Reflection.PropertyInfo[] previouslyAddedProps = selectedType.BaseType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite).ToArray(); ;
+              int numberOfAddedProps = previouslyAddedProps.Length;
+              List<IGH_Param> myCurrentParams = this.Params.Input;
+              int myCurrentParamsCount = myCurrentParams.Count;
+              int removeUntil = (myCurrentParamsCount - 1) - (myCurrentParamsCount - numberOfAddedProps);
+              for (int i = myCurrentParamsCount - 1; i >= 0; i--)
+              {
+                if (i >= myCurrentParamsCount - removeUntil - 1)
+                {
+                  Params.UnregisterInputParameter(myCurrentParams[i]);
+                }
+              }
+
+              AddOnlyApplicationId(selectedType);
+              showAdditionalProps = false;
+              this.ExpireSolution(true);
+            }
+            else
+            {
+              AddOnlyApplicationId(selectedType);
+            }
+            showAdditionalProps = false;
+            this.ExpireSolution(true);
+          }
+          else
+          {
+            RemoveOnlyApplicationId(selectedType);
           }
         }
       });
@@ -93,7 +143,47 @@ namespace SpeckleGrasshopper.UserDataUtils
       }
 
     }
-    //SpeckleCoreGeometryClasses.SpeckleArc myarc = new SpeckleCoreGeometryClasses.SpeckleLine()
+
+    void AddOnlyApplicationId(Type myType)
+    {
+      PropertyInfo[] props = myType.BaseType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+      foreach (PropertyInfo prop in props)
+      {
+        if(prop.Name == "ApplicationId")
+        {
+          Dictionary<PropertyInfo, bool> propsOptBool = new Dictionary<PropertyInfo, bool> {};
+          propsOptBool.Add(prop, false);
+          List<Param_GenericObject> inputParams;
+          RegisterInputParamerters(propsOptBool, out inputParams);
+        }
+      }
+      this.Params.OnParametersChanged();
+      this.ExpireSolution(true);
+    }
+
+
+
+    void RemoveOnlyApplicationId(Type myType)
+    {
+      for (int i = 0; i < this.Params.Input.Count; i++) {
+        if (this.Params.Input[i].Name == "ApplicationId")
+        {
+          Params.UnregisterInputParameter(this.Params.Input[i]);
+        }
+        else
+        {
+          continue;
+        }
+
+      }
+      this.Params.OnParametersChanged();
+      this.ExpireSolution(true);
+    }
+
+
+
+
+
     void InitInputsFromScratch(Type myType, bool showAdditionalProps)
     {
       DeleteInputs();
