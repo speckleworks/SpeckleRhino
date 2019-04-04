@@ -129,7 +129,7 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>11.0.1</Version>
     </PackageReference>
-    <PackageReference Include="RhinoCommon" IncludeAssets="build;compile">
+    <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="sqlite-net-pcl">
