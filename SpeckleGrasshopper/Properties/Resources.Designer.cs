@@ -63,6 +63,16 @@ namespace SpeckleGrasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Convert {
+            get {
+                object obj = ResourceManager.GetObject("Convert", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Create_Objectxs_ {
             get {
                 object obj = ResourceManager.GetObject("Create_Objectxs_", resourceCulture);
@@ -136,6 +146,16 @@ namespace SpeckleGrasshopper.Properties {
         internal static System.Drawing.Bitmap json {
             get {
                 object obj = ResourceManager.GetObject("json", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap NewObject {
+            get {
+                object obj = ResourceManager.GetObject("NewObject", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
