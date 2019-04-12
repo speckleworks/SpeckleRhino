@@ -7,136 +7,59 @@ using Grasshopper.Kernel.Parameters;
 using System.Windows.Forms;
 using System.Linq;
 using System.Collections;
+using GH_IO.Serialization;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
   public class SchemaBuilderComponent : GH_Component
   {
 
-    /// <summary>
-    /// Initializes a new instance of the SchemaBuilderComponent class.
-    /// </summary>
+    public Type SelectedType;
+    public List<PropertyInfo> SelectedTypeProps;
+    public Dictionary<string, bool> OptionalPropsMask;
+    public List<ToolStripItem> OptionalPropsItems;
 
+    public SchemaBuilderComponent( )
+      : base( "Schema Builder Component", "SBC",
+              "Builds Speckle Types through reflecting upon SpeckleCore and SpeckleKits.",
+              "Speckle", "SpeckleKits" )
+    {
+      // Set up optional properties mask and generate the toolstrip menu that we will add in the dropdown
+      OptionalPropsMask = new Dictionary<string, bool>();
+      OptionalPropsItems = new List<ToolStripItem>();
+      foreach ( var prop in typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" ) )
+      {
+        OptionalPropsMask.Add( prop.Name, false );
+        var tsi = new ToolStripMenuItem( prop.Name ) { Name = prop.Name, Checked = false, CheckOnClick = true };
+        tsi.CheckStateChanged += ( sender, e ) =>
+        {
+          var key = ( ( ToolStripMenuItem ) sender ).Name;
+          OptionalPropsMask[ key ] = !OptionalPropsMask[ key ];
 
-    // global variables
-    public bool showAdditionalProps = false;
-    public bool showApplicationId_Only = false;
-    public Type selectedType = null;
-    public bool checkAll = false;
+          if ( OptionalPropsMask[ key ] )
+            RegisterPropertyAsInputParameter( prop, Params.Input.Count );
+          else
+            UnregisterPropertyInput( prop );
 
-    PropertyInfo[ ] props = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Skip( 1 ).ToArray();
-    ToolStripMenuItem[ ] collectionItems = new ToolStripMenuItem[ typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Skip( 1 ).ToArray().Length ];
+          Params.OnParametersChanged();
+          ExpireSolution( true );
+        };
+        OptionalPropsItems.Add( tsi );
+      }
+    }
 
     public override void AppendAdditionalMenuItems( ToolStripDropDown menu )
     {
       base.AppendAdditionalMenuItems( menu );
 
-      ///////////////////////////////////////////////////////////////////////////////
+      var myDropDown = GH_DocumentObject.Menu_AppendItem( menu, "Overwrite Custom Properties" );
+      myDropDown.DropDownItems.AddRange( OptionalPropsItems.ToArray() );
 
-      ToolStripMenuItem myDropDown = GH_DocumentObject.Menu_AppendItem( menu, "Overwrite Custom Properties" );
-      myDropDown.ShowDropDown();
+      Menu_AppendSeparator( menu );
 
-      if ( selectedType != null )
-      {
-        bool isEmpty = collectionItems.All( x => x == null );
-
-        if ( !isEmpty )
-        {
-          //unsuscribe from event
-          for ( int i = 0; i < props.Length; i++ )
-            collectionItems[ i ].CheckStateChanged -= CheckStateChangeEvent;
-
-
-          for ( int i = 0; i < props.Length; i++ )
-          {
-            myDropDown.DropDownItems.Add( collectionItems[ i ] );
-            collectionItems[ i ].CheckOnClick = true;
-            collectionItems[ i ].CheckStateChanged += CheckStateChangeEvent;
-          }
-
-          myDropDown.DropDown.Closing += DropDown_Closing;
-          void DropDown_Closing( object sender, ToolStripDropDownClosingEventArgs e )
-          {
-            if ( e.CloseReason == ToolStripDropDownCloseReason.ItemClicked )
-            {
-              e.Cancel = true;
-            }
-          }
-
-          //-------------------------------------------------------------------------------------------------
-
-          myDropDown.DropDownItems.Add( new ToolStripSeparator() );
-
-          //-------------------------------add global toggle to (un)check everything----------------------------------------------------------
-
-          ToolStripButton checkitall = new ToolStripButton( "Expand/Collapse", System.Drawing.SystemIcons.Warning.ToBitmap(), CheckAllToggle );
-          checkitall.AutoToolTip = false;
-
-          myDropDown.DropDownItems.Add( checkitall );
-
-          void CheckAllToggle( object sender, EventArgs e )
-          {
-
-            for ( int i = 0; i < props.Length; i++ )
-              collectionItems[ i ].CheckStateChanged -= CheckStateChangeEvent;
-            if ( checkAll == false )
-            {
-              for ( int i = 0; i < props.Length; i++ )
-              {
-                collectionItems[ i ].CheckState = CheckState.Checked;
-              }
-              checkAll = true;
-
-            }
-            else
-            {
-              for ( int i = 0; i < props.Length; i++ )
-              {
-                collectionItems[ i ].CheckState = CheckState.Unchecked;
-              }
-              checkAll = false;
-            }
-
-            myDropDown.DropDown.Refresh();
-            UpdateOptionalInputs();
-
-
-            for ( int i = 0; i < props.Length; i++ )
-              collectionItems[ i ].CheckStateChanged += CheckStateChangeEvent;
-
-          }
-        }
-      }
-      else // if ToolStripMenuItems is empty, initialize them with selected prop type
-      {
-        myDropDown.Enabled = false;
-        for ( int i = 0; i < props.Length; i++ )
-        {
-          //propsStatus[i] = false;
-          PropertyInfo prop = props[ i ];
-          ToolStripMenuItem item = new ToolStripMenuItem( prop.Name );
-          item.Name = prop.Name;
-          item.Text = prop.Name;
-          collectionItems[ i ] = item;
-          item.Checked = false;
-        }
-        this.ExpireSolution( true );
-      }
-      //-------------------------------------------------------------------------------------------------
-
-
-
-      ///////////////////////////////////////////////////////////////////////////////
-
-      GH_DocumentObject.Menu_AppendSeparator( menu );
-
-      ///////////////////////////////////////////////////////////////////////////////
-
-
-      var foundtypes = SpeckleCore.SpeckleInitializer.GetTypes();
-      Dictionary<Assembly, ToolStripDropDownMenu> subMenus = new Dictionary<Assembly, ToolStripDropDownMenu>();
-
-      var assemblies = SpeckleCore.SpeckleInitializer.GetAssemblies().Where( ass => foundtypes.Any( t => t.Assembly == ass ) );
+      var subMenus = new Dictionary<Assembly, ToolStripDropDownMenu>();
+      var types = SpeckleCore.SpeckleInitializer.GetTypes();
+      var assemblies = SpeckleCore.SpeckleInitializer.GetAssemblies().Where( ass => types.Any( t => t.Assembly == ass ) );
 
       foreach ( Assembly assembly in assemblies )
       {
@@ -146,113 +69,43 @@ namespace SpeckleGrasshopper.UserDataUtils
         subMenus[ assembly ] = ( ToolStripDropDownMenu ) addedMenuItem.GetType().GetProperty( "DropDown" ).GetValue( addedMenuItem );
       }
 
-      foreach ( Type type in foundtypes )
-      {
-
-        subMenus[ type.Assembly ].Items.Add( type.Name, null, ( item, e ) =>
-           {
-
-             if ( selectedType != null && selectedType.Equals( type ) ) // Same selected type as before
-          {
-            //graceful exit: don't do anything because type is the same as before.
-          }
-             else if ( selectedType != null && !selectedType.Equals( type ) ) // Different selected type as before, reinit input!
-          {
-               AdaptInputs( type );
-               selectedType = type;
-             }
-             else if ( selectedType == null ) // Type was null
-          {
-               InitInputsFromScratch( type );
-               selectedType = type;
-             }
-           } );
-      }
+      foreach ( Type type in types )
+        subMenus[ type.Assembly ].Items.Add( type.Name, null, ( sender, e ) => SwitchToType( type ) );
 
     }
 
-    // MENU UI ENDS HERE
-    ///////////////////////////////////////////////////////////////////////////////
-
-
-
-    void CheckStateChangeEvent( object sender, EventArgs e )
+    /// <summary>
+    /// Handles the change to the selected type.
+    /// </summary>
+    /// <param name="myType"></param>
+    public void SwitchToType( Type myType )
     {
-      UpdateOptionalInputs();
+      if ( SelectedType == myType ) return;
+
+      // unregister old
+      if ( SelectedType != null )
+        foreach ( var p in SelectedType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( pinfo => pinfo.Name != "Type" ) )
+          UnregisterPropertyInput( p );
+
+      // register new
+      int k = 0;
+      foreach ( var p in myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( pinfo => pinfo.Name != "Type" ) )
+        RegisterPropertyAsInputParameter( p, k++ );
+
+      SelectedType = myType;
+      Params.Output[ 0 ].NickName = myType.Name;
+      Params.OnParametersChanged();
+      ExpireSolution( true );
     }
 
-    void UpdateOptionalInputs( )
-    {
-      Rhino.RhinoApp.WriteLine( "e" );
-
-      props = selectedType.BaseType.GetProperties( BindingFlags.Public | BindingFlags.Instance ).Skip( 1 ).ToArray();
-
-      string[ ] InputNames = new string[ Params.Input.Count ];
-      for ( int i = 0; i < InputNames.Length; i++ )
-        InputNames[ i ] = Params.Input[ i ].NickName;
-
-      for ( int i = 0; i < collectionItems.Length; i++ )
-      {
-        if ( collectionItems[ i ].CheckState is CheckState.Checked )
-        {
-          // check if exists in params. if exists, do nothing. if does not exist, add
-          string colName = collectionItems[ i ].Name;
-
-          if ( !InputNames.Contains( colName ) )
-            RegisterPropertyAsInputParameter( props[ i ] );
-        }
-        else if ( collectionItems[ i ].CheckState is CheckState.Unchecked )
-        {
-          string colName = collectionItems[ i ].Name;
-          // check if exists in params. if exists, remove. if does not exist, do nothing.
-
-          if ( InputNames.Contains( colName ) )
-          {
-            for ( int j = 0; j < Params.Input.Count; j++ )
-            {
-              if ( Params.Input[ j ].Name == colName )
-                Params.UnregisterInputParameter( Params.Input[ j ] );
-            }
-          }
-        }
-      }
-
-      this.Params.OnParametersChanged();
-      this.ExpireSolution( true );
-    }
-
-    void InitInputsFromScratch( Type myType )
-    {
-      DeleteInputs();
-
-      Console.WriteLine( myType.ToString() );
-      this.Message = myType.Name;
-
-      PropertyInfo[ ] props = new PropertyInfo[ ] { };
-      props = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Skip( 1 ).ToArray();
-
-      List<Param_GenericObject> inputParams;
-      RegisterInputParamerters( props, out inputParams );
-
-      InitOutput( myType );
-      this.Params.OnParametersChanged();
-      this.ExpireSolution( true );
-    }
-
-    // Delete inputs when object type is updated by the user
-    void DeleteInputs( )
-    {
-      for ( int i = this.Params.Input.Count - 1; i >= 0; i-- )
-        Params.UnregisterInputParameter( this.Params.Input[ i ] );
-    }
-
-
-
-    void RegisterPropertyAsInputParameter( PropertyInfo prop )
+    /// <summary>
+    /// Adds a property to the component's inputs.
+    /// </summary>
+    /// <param name="prop"></param>
+    void RegisterPropertyAsInputParameter( PropertyInfo prop, int index )
     {
       // get property name and value
       Type propType = prop.PropertyType;
-      Type baseType = propType.BaseType;
 
       string propName = prop.Name;
       object propValue = prop;
@@ -275,125 +128,81 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         newInputParam.Access = GH_ParamAccess.item;
       }
-      Params.RegisterInputParam( newInputParam );
-
+      Params.RegisterInputParam( newInputParam, index );
     }
 
-    void RegisterInputParamerters( PropertyInfo[ ] props, out List<Param_GenericObject> inputParams )
+    public void UnregisterPropertyInput( PropertyInfo myProp )
     {
-      List<Param_GenericObject> _inputParams = new List<Param_GenericObject>();
-
-
-      for ( int i = 0; i < props.Length; i++ )
+      for ( int i = Params.Input.Count - 1; i >= 0; i-- )
       {
-        // get property name and value
-        Type propType = props[ i ].PropertyType;
-        Type baseType = propType.BaseType;
-
-        string propName = props[ i ].Name;
-        object propValue = props[ i ];
-
-        // Create new param based on property name
-        Param_GenericObject newInputParam = new Param_GenericObject();
-        newInputParam.Name = propName;
-        newInputParam.NickName = propName;
-        newInputParam.MutableNickName = false;
-        newInputParam.Description = propName + " as " + propType.Name;
-        newInputParam.Optional = true;
-
-        // check if input needs to be a list or item access
-        bool isCollection = typeof( System.Collections.IEnumerable ).IsAssignableFrom( propType ) && propType != typeof( string );
-        if ( isCollection == true )
+        if ( Params.Input[ i ].Name == myProp.Name )
         {
-          newInputParam.Access = GH_ParamAccess.list;
-        }
-        else
-        {
-          newInputParam.Access = GH_ParamAccess.item;
-        }
-
-        Params.RegisterInputParam( newInputParam );
-        _inputParams.Add( newInputParam );
-      }
-
-      inputParams = _inputParams;
-    }
-
-    void AdaptInputs( Type myType )
-    {
-      this.Message = myType.Name;
-
-
-      PropertyInfo[ ] nextProps = myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Skip( 1 ).ToArray();
-
-
-      PropertyInfo[ ] currentProps = selectedType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Skip( 1 ).ToArray();
-      string[ ] currentPropsNames = new string[ currentProps.Length ];
-      for ( int i = 0; i < currentProps.Length; i++ )
-        currentPropsNames[ i ] = Params.Input[ i ].Name;
-
-      for ( int i = this.Params.Input.Count - 1; i >= 0; i-- )
-      {
-        if ( currentPropsNames.Contains( Params.Input[ i ].Name ) )
-
           Params.UnregisterInputParameter( Params.Input[ i ] );
-
+          return;
+        }
       }
+    }
 
-
-      for ( int i = nextProps.Length - 1; i >= 0; i-- )
+    /// <summary>
+    /// Makes sure we deserialise correctly, and reinstate everything there is to reinstate:
+    /// - selected type properties
+    /// - optional properties
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <returns></returns>
+    public override bool Read( GH_IReader reader )
+    {
+      bool isInit = reader.GetBoolean( "init" );
+      if ( isInit )
       {
-        // get property name and value
-        Type propType = nextProps[ i ].PropertyType;
-        Type baseType = propType.BaseType;
+        var selectedTypeName = reader.GetString( "type" );
+        var selectedTypeAssembly = reader.GetString( "assembly" );
+        var myOptionalProps = SpeckleCore.Converter.getObjFromBytes( reader.GetByteArray( "optionalmask" ) ) as Dictionary<string, bool>;
 
-        string propName = nextProps[ i ].Name;
-        object propValue = nextProps[ i ];
-
-        // Create new param based on property name
-        Param_GenericObject newInputParam = new Param_GenericObject();
-        newInputParam.Name = propName;
-        newInputParam.NickName = propName;
-        newInputParam.MutableNickName = false;
-        newInputParam.Description = propName + " as " + propType.Name;
-        newInputParam.Optional = true;
-
-        // check if input needs to be a list or item access
-        bool isCollection = typeof( System.Collections.IEnumerable ).IsAssignableFrom( propType ) && propType != typeof( string );
-        if ( isCollection == true )
+        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName && t.AssemblyQualifiedName == selectedTypeAssembly );
+        if ( selectedType != null )
         {
-          newInputParam.Access = GH_ParamAccess.list;
+          SwitchToType( selectedType );
+          OptionalPropsMask = myOptionalProps;
+
+          var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
+          foreach ( var kvp in OptionalPropsMask )
+          {
+            if ( kvp.Value )
+            {
+              RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
+            }
+          }
         }
         else
         {
-          newInputParam.Access = GH_ParamAccess.item;
+          AddRuntimeMessage( GH_RuntimeMessageLevel.Error, string.Format( "Type {0} from the {1} kit was not found. Are you sure you have it installed?", selectedTypeName, selectedTypeAssembly ) );
         }
-
-        Params.RegisterInputParam( newInputParam, 0 );
-
       }
 
-      /*
-        DeleteInputs();
-      List<Param_GenericObject> inputParams = new List<Param_GenericObject>();
-      RegisterInputParamerters(props, out inputParams);
-      */
-      InitOutput( myType );
-      this.Params.OnParametersChanged();
-      this.ExpireSolution( true );
+      return base.Read( reader );
     }
 
-    void InitOutput( Type myType )
+    /// <summary>
+    /// Serialises the current state of the component, making sure we save:
+    /// - the optional property dictionary
+    /// - the current type.
+    /// </summary>
+    /// <param name="writer"></param>
+    /// <returns></returns>
+    public override bool Write( GH_IWriter writer )
     {
-      this.Params.Output[ 0 ].NickName = myType.Name;
-      this.Message = myType.Name;
-    }
+      if ( SelectedType != null )
+      {
+        writer.SetBoolean( "init", true );
+        writer.SetString( "type", SelectedType.Name );
+        writer.SetString( "assembly", SelectedType.AssemblyQualifiedName );
+        writer.SetByteArray( "optionalmask", SpeckleCore.Converter.getBytes( OptionalPropsMask ) );
+      }
+      else
+        writer.SetBoolean( "init", false );
 
-    public SchemaBuilderComponent( )
-      : base( "Schema Builder Component", "SBC",
-              "Builds Speckle Types through reflecting upon SpeckleCore and SpeckleKits.",
-              "Speckle", "User Data Utils" )
-    {
+      return base.Write( writer );
     }
 
     /// <summary>
@@ -410,19 +219,20 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       pManager.Register_GenericParam( "Object", "Object", "The created object." );
     }
+
     /// <summary>
     /// This is the method that actually does the work.
     /// </summary>
     /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
     protected override void SolveInstance( IGH_DataAccess DA )
     {
-      if ( selectedType is null )
+      if ( SelectedType is null )
       {
         return;
       }
 
       // instantiate object !!
-      var outputObject = Activator.CreateInstance( selectedType );
+      var outputObject = Activator.CreateInstance( SelectedType );
       DA.SetData( 0, outputObject );
 
       for ( int i = 0; i < Params.Input.Count; i++ )
@@ -482,8 +292,9 @@ namespace SpeckleGrasshopper.UserDataUtils
         }
       }
 
-      // toggle hash generation
-      outputObject.GetType().GetMethod( "GenerateHash" ).Invoke( outputObject, null );
+      // toggle hash generation onyl if it's not overriden
+      if ( OptionalPropsMask[ "Hash" ] == false )
+        outputObject.GetType().GetMethod( "GenerateHash" ).Invoke( outputObject, null );
 
       // applicationId generation/setting
       var appId = outputObject.GetType().GetProperty( "ApplicationId" ).GetValue( outputObject );
