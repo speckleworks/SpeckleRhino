@@ -3,7 +3,6 @@ using Newtonsoft.Json.Serialization;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
-using SpeckleRhinoConverter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,7 +50,7 @@ namespace SpeckleRhino
       Client.OnWsMessage += Client_OnWsMessage;
       Client.OnError += Client_OnError;
 
-      Client.IntializeReceiver( ( string ) payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), ( string ) payload.account.apiToken );
+      Client.IntializeReceiver( ( string ) payload.streamId, Context.GetDocumentName(), "Rhino", Context.GetDocumentGuid(), ( string ) payload.account.token );
 
       Display = new SpeckleDisplayConduit();
       Display.Enabled = true;
@@ -62,17 +61,17 @@ namespace SpeckleRhino
     #region events
     private void Client_OnError( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnLogData( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnReady( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client } ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
 
       Context.UserClients.Add( this );
 
@@ -86,7 +85,8 @@ namespace SpeckleRhino
         Context.NotifySpeckleFrame( "client-expired", StreamId, "" );
         return;
       }
-
+      if ( e == null ) return;
+      if ( e.EventObject == null ) return;
       switch ( ( string ) e.EventObject.args.eventType )
       {
         case "update-global":
@@ -116,8 +116,8 @@ namespace SpeckleRhino
     {
       try
       {
-        var response = Client.StreamGetNameAsync( StreamId );
-        Client.Stream.Name = response.Result.Name;
+        var response = Client.StreamGetAsync( StreamId, "fields=name" );
+        Client.Stream.Name = response.Result.Resource.Name;
         Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() ); // i'm lazy
       }
       catch ( Exception err )
@@ -134,7 +134,7 @@ namespace SpeckleRhino
 
       try
       {
-        var streamGetResponse = Client.StreamGet( StreamId );
+        var streamGetResponse = Client.StreamGetAsync( StreamId, null ).Result;
 
         if ( streamGetResponse.Success == false )
         {
@@ -142,11 +142,11 @@ namespace SpeckleRhino
           Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
         }
 
-        Client.Stream = streamGetResponse.Stream;
+        Client.Stream = streamGetResponse.Resource;
 
         Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
       }
-      catch(Exception err)
+      catch ( Exception err )
       {
         Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
@@ -158,45 +158,71 @@ namespace SpeckleRhino
     public void UpdateGlobal( )
     {
       Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Global update received." ) );
-
       try
       {
-        var streamGetResponse = Client.StreamGet( StreamId );
+        var streamGetResponse = Client.StreamGetAsync( StreamId, null ).Result;
         if ( streamGetResponse.Success == false )
         {
           Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+          // TODO
+          // Try and get from cache
+          // First stream
+          // Then objects
         }
+        else
+        {
+          Client.Stream = streamGetResponse.Resource;
+          Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
+          Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
 
+          // add or update the newly received stream in the cache.
+          LocalContext.AddOrUpdateStream( Client.Stream, Client.BaseUrl );
 
-        Client.Stream = streamGetResponse.Stream;
-        var COPY = Client.Stream;
-        Context.NotifySpeckleFrame( "client-metadata-update", StreamId, Client.Stream.ToJson() );
-        Context.NotifySpeckleFrame( "client-is-loading", StreamId, "" );
+          // pass the object list through a cache check 
+          LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
-        // prepare payload
-        PayloadObjectGetBulk payload = new PayloadObjectGetBulk();
-        payload.Objects = Client.Stream.Objects.Where( o => !Context.SpeckleObjectCache.ContainsKey( o ) );
+          // filter out the objects that were not in the cache and still need to be retrieved
+          var payload = Client.Stream.Objects.Where( o => o.Type == "Placeholder" ).Select( obj => obj._id ).ToArray();
 
-        // bug in speckle core, no sync method for this :(
-        Client.ObjectGetBulkAsync( "omit=displayValue", payload ).ContinueWith( tres =>
-           {
-             if ( tres.Result.Success == false )
-               Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-             var copy = tres.Result;
+          // how many objects to request from the api at a time
+          int maxObjRequestCount = 20;
 
-           // add to cache
-           foreach ( var obj in tres.Result.Objects )
-               Context.SpeckleObjectCache[ obj.DatabaseId ] = obj;
+          // list to hold them into
+          var newObjects = new List<SpeckleObject>();
+          
+          // jump in `maxObjRequestCount` increments through the payload array
+          for ( int i = 0; i < payload.Length; i += maxObjRequestCount )
+          {
+            // create a subset
+            var subPayload = payload.Skip( i ).Take( maxObjRequestCount ).ToArray();
 
-           // populate real objects
-           Objects.Clear();
-             foreach ( var objId in Client.Stream.Objects )
-               Objects.Add( Context.SpeckleObjectCache[ objId ] );
+            // get it sync as this is always execed out of the main thread
+            var res = Client.ObjectGetBulkAsync( subPayload, "omit=displayValue" ).Result;
+            
+            // put them in our bucket
+            newObjects.AddRange( res.Resources );
+            Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( String.Format( "Got {0} out of {1} objects.", i, payload.Length ) ) );
+          }
 
-             DisplayContents();
-             Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
-           } );
+          // populate the retrieved objects in the original stream's object list
+          foreach ( var obj in newObjects )
+          {
+            var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
+            try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
+          }
+
+          // add objects to cache async
+          Task.Run( ( ) =>
+          {
+            foreach ( var obj in newObjects )
+            {
+              LocalContext.AddCachedObject( obj, Client.BaseUrl );
+            }
+          } );
+
+          DisplayContents();
+          Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
+        }
       }
       catch ( Exception err )
       {
@@ -204,15 +230,14 @@ namespace SpeckleRhino
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
-
     }
 
     public void UpdateChildren( )
     {
       try
       {
-        var getStream = Client.StreamGet( StreamId );
-        Client.Stream = getStream.Stream;
+        var getStream = Client.StreamGetAsync( StreamId, null ).Result;
+        Client.Stream = getStream.Resource;
 
         Context.NotifySpeckleFrame( "client-children", StreamId, Client.Stream.ToJson() );
       }
@@ -232,7 +257,7 @@ namespace SpeckleRhino
       Display.Colors = new List<System.Drawing.Color>();
       Display.VisibleList = new List<bool>();
 
-      var localCopy = Objects.ToList();
+      var localCopy = Client.Stream.Objects.ToList();
 
       int count = 0;
       foreach ( SpeckleObject myObject in localCopy )
@@ -265,12 +290,12 @@ namespace SpeckleRhino
       Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
     }
 
-    public SpeckleLayer GetLayerFromIndex( int index )
+    public SpeckleCore.Layer GetLayerFromIndex( int index )
     {
       return Client.Stream.Layers.FirstOrDefault( layer => ( ( index >= layer.StartIndex ) && ( index < layer.StartIndex + layer.ObjectCount ) ) );
     }
 
-    public System.Drawing.Color GetColorFromLayer( SpeckleLayer layer )
+    public System.Drawing.Color GetColorFromLayer( SpeckleCore.Layer layer )
     {
       System.Drawing.Color layerColor = System.Drawing.ColorTranslator.FromHtml( "#AEECFD" );
       try
@@ -301,18 +326,16 @@ namespace SpeckleRhino
     public void Bake( )
     {
       string parent = String.Format( "{0} | {1}", Client.Stream.Name, Client.Stream.StreamId );
-#if WINR6
+
       var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, -1 );
-#elif WINR5
-      var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, true );
-#endif
+
 
       if ( parentId == -1 )
       {
 
         //There is no layer in the document with the Stream Name | Stream Id as a name, so create one
 
-        var parentLayer = new Layer()
+        var parentLayer = new Rhino.DocObjects.Layer()
         {
           Color = System.Drawing.Color.Black,
           Name = parent
@@ -334,11 +357,8 @@ namespace SpeckleRhino
 
       foreach ( var spkLayer in Client.Stream.Layers )
       {
-#if WINR6
         var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, -1 );
-#elif WINR5
-        var layerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + spkLayer.Name, true );
-#endif
+
 
         //This is always going to be the case. 
 
@@ -359,7 +379,7 @@ namespace SpeckleRhino
               if ( parentLayerId == Guid.Empty )
                 parentLayerId = Rhino.RhinoDoc.ActiveDoc.Layers[ parentId ].Id;
 
-              var layer = new Layer()
+              var layer = new Rhino.DocObjects.Layer()
               {
                 Name = layerPath,
                 ParentLayerId = parentLayerId,
@@ -368,11 +388,9 @@ namespace SpeckleRhino
               };
 
               var parentLayerName = Rhino.RhinoDoc.ActiveDoc.Layers.First( l => l.Id == parentLayerId ).FullPath;
-#if WINR6
+
               var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, -1 );
-#elif WINR5
-              var layerExist = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parentLayerName + "::" + layer.Name, true );
-#endif
+
 
               if ( layerExist == -1 )
               {
@@ -389,7 +407,7 @@ namespace SpeckleRhino
           else
           {
 
-            var layer = new Layer()
+            var layer = new Rhino.DocObjects.Layer()
             {
               Name = spkLayer.Name,
               Id = Guid.Parse( spkLayer.Guid ),
@@ -416,7 +434,7 @@ namespace SpeckleRhino
 
     public void BakeLayer( string layerId )
     {
-      SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
+      SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
 
       // create or get parent
       string parent = String.Format( "{1} | {0}", Client.Stream.StreamId, Client.Stream.Name );
@@ -424,7 +442,7 @@ namespace SpeckleRhino
       var parentId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent, true );
       if ( parentId == -1 )
       {
-        var parentLayer = new Layer()
+        var parentLayer = new Rhino.DocObjects.Layer()
         {
           Color = System.Drawing.Color.Black,
           Name = parent
@@ -441,7 +459,7 @@ namespace SpeckleRhino
       int theLayerId = Rhino.RhinoDoc.ActiveDoc.Layers.FindByFullPath( parent + "::" + myLayer.Name, true );
       if ( theLayerId == -1 )
       {
-        var layer = new Layer()
+        var layer = new Rhino.DocObjects.Layer()
         {
           Name = myLayer.Name,
           Id = Guid.Parse( myLayer.Guid ),
@@ -478,7 +496,7 @@ namespace SpeckleRhino
 
     public void ToggleLayerHover( string layerId, bool status )
     {
-      SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
+      SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
       if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
 
       if ( status )
@@ -492,7 +510,7 @@ namespace SpeckleRhino
 
     public void ToggleLayerVisibility( string layerId, bool status )
     {
-      SpeckleLayer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
+      SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
       if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
 
       for ( int i = ( int ) myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++ )
@@ -519,11 +537,6 @@ namespace SpeckleRhino
 
     protected RhinoReceiver( SerializationInfo info, StreamingContext context )
     {
-      JsonConvert.DefaultSettings = ( ) => new JsonSerializerSettings()
-      {
-        ContractResolver = new CamelCasePropertyNamesContractResolver()
-      };
-
       Display = new SpeckleDisplayConduit();
       Display.Enabled = true;
 

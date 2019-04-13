@@ -14,120 +14,96 @@ using Newtonsoft.Json;
 
 namespace SpeckleGrasshopper.Management
 {
-    public class ListMyAccounts : GH_Component
+  public class ListMyAccounts : GH_Component
+  {
+    List<Account> Accounts = new List<Account>();
+    Account Selected;
+    Action ExpireComponent;
+
+    public ListMyAccounts( ) : base( "Accounts", "Accounts", "Lists your existing Speckle accounts.", "Speckle", "Management" )
     {
-        List<SpeckleAccount> Accounts = new List<SpeckleAccount>();
-        SpeckleAccount Selected;
-        Action ExpireComponent;
-
-        public ListMyAccounts() : base("Accounts", "Accounts", "Lists your existing Speckle accounts.", "Speckle", "Management") { }
-
-
-        public override bool Read(GH_IReader reader)
-        {
-            string serialisedAccount = "";
-            reader.TryGetString("selectedAccount", ref serialisedAccount);
-
-            if (serialisedAccount!="")
-            {
-                SpeckleAccount myAccount = JsonConvert.DeserializeObject<SpeckleAccount>(serialisedAccount);
-                Selected = myAccount;
-            }
-
-            return base.Read(reader);
-        }
-
-        public override bool Write(GH_IWriter writer)
-        {
-            writer.SetString("selectedAccount", JsonConvert.SerializeObject(Selected));
-            return base.Write(writer);
-        }
-
-        protected override void RegisterInputParams(GH_InputParamManager pManager)
-        {
-        }
-
-        protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-        {
-            pManager.Register_GenericParam("account", "A", "Selected account.");
-        }
-
-        public override void AddedToDocument(GH_Document document)
-        {
-            base.AddedToDocument(document);
-
-            ExpireComponent = () => this.ExpireSolution(true);
-
-            string strPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
-            strPath = strPath + @"\SpeckleSettings";
-
-            if (Directory.Exists(strPath) && Directory.EnumerateFiles(strPath, "*.txt").Count() > 0)
-                foreach (string file in Directory.EnumerateFiles(strPath, "*.txt"))
-                {
-                    string content = File.ReadAllText(file);
-                    string[] pieces = content.TrimEnd('\r', '\n').Split(',');
-
-                    Accounts.Add(new SpeckleAccount() { email = pieces[0], apiToken = pieces[1], serverName = pieces[2], restApi = pieces[3], rootUrl = pieces[4] });
-                }
-
-            if (Accounts.Count == 0)
-            {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No accounts present.");
-                return;
-            }
-        }
-
-        public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
-        {
-            base.AppendAdditionalMenuItems(menu);
-            int count = 0;
-
-            foreach (var account in Accounts)
-            {
-                Menu_AppendItem(menu, count++ + ". " + account.serverName, (sender, e) =>
-                {
-                    Selected = account;
-                    this.NickName = account.serverName;
-                    Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponent);
-                }, true);
-            }
-        }
-
-        protected override void SolveInstance(IGH_DataAccess DA)
-        {
-            if (Selected == null)
-            {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Right click the component and select an account.");
-                return;
-            }
-
-            AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, Selected.serverName);
-
-            DA.SetData(0, Selected);
-        }
-
-        protected override System.Drawing.Bitmap Icon
-        {
-            get
-            {
-                return Resources.GenericIconXS;
-            }
-        }
-
-        public override Guid ComponentGuid
-        {
-            get { return new Guid("{958de333-1ad0-4989-acbe-f59329d5b569}"); }
-        }
+      SpeckleCore.SpeckleInitializer.Initialize();
+      SpeckleCore.LocalContext.Init();
     }
 
-    public class SpeckleAccount
-    {
-        public string email { get; set; }
-        public string apiToken { get; set; }
-        public string serverName { get; set; }
-        public string restApi { get; set; }
-        public string rootUrl { get; set; }
 
-        public SpeckleAccount() { }
+    public override bool Read( GH_IReader reader )
+    {
+      string serialisedAccount = "";
+      reader.TryGetString( "selectedAccount", ref serialisedAccount );
+
+      if ( serialisedAccount != "" )
+      {
+        Account myAccount = JsonConvert.DeserializeObject<Account>( serialisedAccount );
+        Selected = myAccount;
+      }
+
+      return base.Read( reader );
     }
+
+    public override bool Write( GH_IWriter writer )
+    {
+      writer.SetString( "selectedAccount", JsonConvert.SerializeObject( Selected ) );
+      return base.Write( writer );
+    }
+
+    protected override void RegisterInputParams( GH_InputParamManager pManager )
+    {
+    }
+
+    protected override void RegisterOutputParams( GH_OutputParamManager pManager )
+    {
+      pManager.Register_GenericParam( "account", "A", "Selected account." );
+    }
+
+    public override void AddedToDocument( GH_Document document )
+    {
+      base.AddedToDocument( document );
+
+      ExpireComponent = ( ) => this.ExpireSolution( true );
+
+      Accounts = LocalContext.GetAllAccounts();
+    }
+    public override void AppendAdditionalMenuItems( ToolStripDropDown menu )
+    {
+      base.AppendAdditionalMenuItems( menu );
+      int count = 0;
+
+      foreach ( var account in Accounts )
+      {
+        Menu_AppendItem( menu, count++ + ". " + account.ServerName, ( sender, e ) =>
+         {
+           Selected = account;
+           this.NickName = account.ServerName;
+           Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
+         }, true );
+      }
+    }
+
+    protected override void SolveInstance( IGH_DataAccess DA )
+    {
+      if ( Selected == null )
+      {
+        this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Right click the component and select an account." );
+        return;
+      }
+
+      AddRuntimeMessage( GH_RuntimeMessageLevel.Remark, Selected.ServerName );
+
+      DA.SetData( 0, Selected );
+    }
+
+    protected override System.Drawing.Bitmap Icon
+    {
+      get
+      {
+        return Resources.GenericIconXS;
+      }
+    }
+
+    public override Guid ComponentGuid
+    {
+      get { return new Guid( "{958de333-1ad0-4989-acbe-f59329d5b569}" ); }
+    }
+  }
 }
