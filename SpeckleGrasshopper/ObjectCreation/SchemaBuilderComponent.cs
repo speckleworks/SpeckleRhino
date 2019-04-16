@@ -92,6 +92,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       foreach ( var p in myType.GetProperties( BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public ).Where( pinfo => pinfo.Name != "Type" ) )
         RegisterPropertyAsInputParameter( p, k++ );
 
+      Message = myType.Name;
       SelectedType = myType;
       Params.Output[ 0 ].NickName = myType.Name;
       Params.OnParametersChanged();
@@ -281,13 +282,57 @@ namespace SpeckleGrasshopper.UserDataUtils
 
           if ( innerValue == null ) continue;
 
-          try
+          PropertyInfo prop = outputObject.GetType().GetProperty(Params.Input[i].Name);
+          if (prop.PropertyType.IsEnum)
           {
-            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, innerValue );
+            try
+            {
+              prop.SetValue(outputObject, Enum.Parse(prop.PropertyType, (string)innerValue));
+              continue;
+            }
+            catch { }
+
+            try
+            {
+              prop.SetValue(outputObject, (int)innerValue);
+              continue;
+            }
+            catch { }
+
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
           }
-          catch
+
+          else if (innerValue.GetType() != prop.PropertyType)
           {
-            outputObject.GetType().GetProperty( Params.Input[ i ].Name ).SetValue( outputObject, SpeckleCore.Converter.Serialise( innerValue ) );
+            try
+            {
+              prop.SetValue(outputObject, innerValue);
+              continue;
+            }
+            catch { }
+
+            try
+            {
+              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
+              prop.SetValue(outputObject, conv);
+              continue;
+            }
+            catch { }
+
+            try
+            {
+              var conv = SpeckleCore.Converter.Serialise(innerValue);
+              prop.SetValue(outputObject, conv);
+              continue;
+            }
+            catch { }
+
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
+          }
+
+          else
+          {
+            prop.SetValue(outputObject, innerValue);
           }
         }
       }
@@ -315,7 +360,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       {
         //You can add image files to your project resources and access them like this:
         // return Resources.IconForThisComponent;
-        return SpeckleGrasshopper.Properties.Resources.SchemaBuilder;
+        return SpeckleGrasshopper.Properties.Resources.NewObject;
       }
     }
 
