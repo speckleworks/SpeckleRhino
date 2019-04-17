@@ -16,14 +16,21 @@ namespace SpeckleGrasshopper.UserDataUtils
 
     public Type SelectedType;
     public List<PropertyInfo> SelectedTypeProps;
+    public List<PropertyInfo> OptionalProps;
+    public ToolStripMenuItem OptionalPropDropdown;
+
     public Dictionary<string, bool> OptionalPropsMask;
     public List<ToolStripItem> OptionalPropsItems;
+    public bool CheckItAll = false;
 
     public SchemaBuilderComponent( )
       : base( "Schema Builder Component", "SBC",
               "Builds Speckle Types through reflecting upon SpeckleCore and SpeckleKits.",
               "Speckle", "SpeckleKits" )
     {
+      // holds all the speckle object props (the optional ones!)
+      OptionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" ).ToList();
+
       // Set up optional properties mask and generate the toolstrip menu that we will add in the dropdown
       OptionalPropsMask = new Dictionary<string, bool>();
       OptionalPropsItems = new List<ToolStripItem>();
@@ -46,14 +53,31 @@ namespace SpeckleGrasshopper.UserDataUtils
         };
         OptionalPropsItems.Add( tsi );
       }
+
+      OptionalPropsItems.Add( new ToolStripSeparator() );
+
+      OptionalPropsItems.Add( new ToolStripButton( "Expand/Collapse All", System.Drawing.SystemIcons.Warning.ToBitmap(), ( sender, e ) =>
+      {
+        CheckItAll = !CheckItAll;
+        int k = 0;
+        foreach ( var key in OptionalPropsMask.Keys.ToList() )
+        {
+          ( ( ToolStripMenuItem ) OptionalPropDropdown.DropDownItems[ k++ ] ).CheckState = CheckItAll ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+      } ) );
     }
 
     public override void AppendAdditionalMenuItems( ToolStripDropDown menu )
     {
       base.AppendAdditionalMenuItems( menu );
 
-      var myDropDown = GH_DocumentObject.Menu_AppendItem( menu, "Overwrite Custom Properties" );
-      myDropDown.DropDownItems.AddRange( OptionalPropsItems.ToArray() );
+      OptionalPropDropdown = GH_DocumentObject.Menu_AppendItem( menu, "Overwrite Custom Properties" );
+      OptionalPropDropdown.DropDownItems.AddRange( OptionalPropsItems.ToArray() );
+      OptionalPropDropdown.DropDown.Closing += ( sender, e ) =>
+      {
+        if ( e.CloseReason == ToolStripDropDownCloseReason.ItemClicked ) e.Cancel = true;
+      };
 
       Menu_AppendSeparator( menu );
 
@@ -282,57 +306,57 @@ namespace SpeckleGrasshopper.UserDataUtils
 
           if ( innerValue == null ) continue;
 
-          PropertyInfo prop = outputObject.GetType().GetProperty(Params.Input[i].Name);
-          if (prop.PropertyType.IsEnum)
+          PropertyInfo prop = outputObject.GetType().GetProperty( Params.Input[ i ].Name );
+          if ( prop.PropertyType.IsEnum )
           {
             try
             {
-              prop.SetValue(outputObject, Enum.Parse(prop.PropertyType, (string)innerValue));
+              prop.SetValue( outputObject, Enum.Parse( prop.PropertyType, ( string ) innerValue ) );
               continue;
             }
             catch { }
 
             try
             {
-              prop.SetValue(outputObject, (int)innerValue);
+              prop.SetValue( outputObject, ( int ) innerValue );
               continue;
             }
             catch { }
 
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
+            this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[ i ].Name + "." );
           }
 
-          else if (innerValue.GetType() != prop.PropertyType)
+          else if ( innerValue.GetType() != prop.PropertyType )
           {
             try
             {
-              prop.SetValue(outputObject, innerValue);
+              prop.SetValue( outputObject, innerValue );
               continue;
             }
             catch { }
 
             try
             {
-              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
-              prop.SetValue(outputObject, conv);
+              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject( ( string ) innerValue, prop.PropertyType );
+              prop.SetValue( outputObject, conv );
               continue;
             }
             catch { }
 
             try
             {
-              var conv = SpeckleCore.Converter.Serialise(innerValue);
-              prop.SetValue(outputObject, conv);
+              var conv = SpeckleCore.Converter.Serialise( innerValue );
+              prop.SetValue( outputObject, conv );
               continue;
             }
             catch { }
 
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
+            this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[ i ].Name + "." );
           }
 
           else
           {
-            prop.SetValue(outputObject, innerValue);
+            prop.SetValue( outputObject, innerValue );
           }
         }
       }
