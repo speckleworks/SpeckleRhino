@@ -20,232 +20,337 @@ namespace SpeckleGrasshopper
 {
   public class ModifySpeckleObjectProperties : GH_Component
   {
-    public Type ObjectType;
-    public bool ExposeAllProperties;
-
-    private System.Timers.Timer Debouncer;
-    public Action ExpireComponentAction;
+    public Type InputType;
+    public List<PropertyInfo> TypeProps;
+    public Dictionary<string, bool> OptionalPropsMask;
+    public List<ToolStripItem> OptionalPropsItems;
 
     public ModifySpeckleObjectProperties( )
       : base( "Modifies SpeckleObject Properties", "MSOP",
         "Allows properties of a SpeckleObject to be modified.",
         "Speckle", "SpeckleKits" )
     {
-      SpeckleCore.SpeckleInitializer.Initialize();
-      SpeckleCore.LocalContext.Init();
-      ExpireComponentAction = () => this.ExpireSolution(true);
-      Param_GenericObject newParam = new Param_GenericObject();
-      newParam.Name = "Result";
-      newParam.NickName = "R";
-      newParam.MutableNickName = false;
-      newParam.Access = GH_ParamAccess.item;
-      Params.RegisterOutputParam( newParam );
-    }
-
-    public override void AddedToDocument(GH_Document document)
-    {
-      base.AddedToDocument(document);
-      Debouncer = new System.Timers.Timer(2000); Debouncer.AutoReset = false;
-      Debouncer.Elapsed += (sender, e) =>
+      // Set up optional properties mask and generate the toolstrip menu that we will add in the dropdown
+      OptionalPropsMask = new Dictionary<string, bool>();
+      OptionalPropsItems = new List<ToolStripItem>();
+      foreach (var prop in typeof(SpeckleCore.SpeckleObject).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pinfo => pinfo.Name != "Type"))
       {
-        Rhino.RhinoApp.MainApplicationWindow.Invoke((Action)delegate { this.ExpireSolution(true); });
-      };
-
-      foreach (var param in Params.Input)
-      {
-        param.ObjectChanged += (sender, e) =>
+        OptionalPropsMask.Add(prop.Name, false);
+        var tsi = new ToolStripMenuItem(prop.Name) { Name = prop.Name, Checked = false, CheckOnClick = true };
+        tsi.CheckStateChanged += (sender, e) =>
         {
-          Debouncer.Start();
+          var key = ((ToolStripMenuItem)sender).Name;
+          OptionalPropsMask[key] = !OptionalPropsMask[key];
+
+          if (OptionalPropsMask[key])
+            RegisterPropertyAsInputParameter(prop, Params.Input.Count);
+          else
+            UnregisterPropertyInput(prop);
+
+          Params.OnParametersChanged();
+          ExpireSolution(true);
         };
+        OptionalPropsItems.Add(tsi);
       }
     }
 
+    /// <summary>
+    /// Registers all the input parameters for this component.
+    /// </summary>
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-      pManager.AddGenericParameter("SpeckleObject", "O", "Speckle object you want to modify.", GH_ParamAccess.item);
+      pManager.AddGenericParameter("Input", "Input", "Speckle object you want to modify.", GH_ParamAccess.item);
     }
 
+    /// <summary>
+    /// Registers all the output parameters for this component.
+    /// </summary>
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
+      pManager.Register_GenericParam("Object", "Object", "The modified object.");
     }
 
-    public override bool Write(GH_IWriter writer)
+    /// <summary>
+    /// Handles the change to the selected type.
+    /// </summary>
+    /// <param name="myType"></param>
+    public void SwitchToType(Type myType)
     {
-      try
-      {
-        if (ObjectType != null)
-        {
-          using (var ms = new MemoryStream())
-          {
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(ms, ObjectType);
-            var arr = ms.ToArray();
-            var arrr = arr;
-            writer.SetByteArray("objectype", ms.ToArray());
-          }
-        }
-      }
-      catch (Exception err)
-      {
-        throw err;
-      }
-      return base.Write(writer);
+      if (InputType == myType) return;
+
+      // unregister old
+      if (InputType != null)
+        foreach (var p in InputType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public).Where(pinfo => pinfo.Name != "Type"))
+          UnregisterPropertyInput(p);
+
+      // register new
+      int k = 1;
+      foreach (var p in myType.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public).Where(pinfo => pinfo.Name != "Type"))
+        RegisterPropertyAsInputParameter(p, k++);
+
+      InputType = myType;
+      Params.Output[0].NickName = myType.Name;
+      Params.OnParametersChanged();
+      ExpireSolution(true);
     }
 
+    /// <summary>
+    /// Makes sure we deserialise correctly, and reinstate everything there is to reinstate:
+    /// - type properties
+    /// - optional properties
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <returns></returns>
     public override bool Read(GH_IReader reader)
     {
-      try
+      bool isInit = reader.GetBoolean("init");
+      if (isInit)
       {
-        var objectType = reader.GetByteArray("objectype");
-        var copy = objectType;
-        using (var ms = new MemoryStream())
+        var selectedTypeName = reader.GetString("type");
+        var selectedTypeAssembly = reader.GetString("assembly");
+        var myOptionalProps = SpeckleCore.Converter.getObjFromBytes(reader.GetByteArray("optionalmask")) as Dictionary<string, bool>;
+
+        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault(t => t.Name == selectedTypeName && t.AssemblyQualifiedName == selectedTypeAssembly);
+        if (selectedType != null)
         {
-          ms.Write(objectType, 0, objectType.Length);
-          ms.Seek(0, SeekOrigin.Begin);
-          ObjectType = (Type)new BinaryFormatter().Deserialize(ms);
-          var x = ObjectType;
+          SwitchToType(selectedType);
+          OptionalPropsMask = myOptionalProps;
+
+          var optionalProps = typeof(SpeckleCore.SpeckleObject).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pinfo => pinfo.Name != "Type");
+          foreach (var kvp in OptionalPropsMask)
+          {
+            if (kvp.Value)
+            {
+              RegisterPropertyAsInputParameter(optionalProps.First(p => p.Name == kvp.Key), Params.Input.Count);
+            }
+          }
         }
-        UpdateInputs();
+        else
+        {
+          AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Type {0} from the {1} kit was not found. Are you sure you have it installed?", selectedTypeName, selectedTypeAssembly));
+        }
       }
-      catch (Exception err)
-      {
-        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Failed to reinitialise sender.");
-        //throw err;
-      }
+
       return base.Read(reader);
     }
 
+    /// <summary>
+    /// Serialises the current state of the component, making sure we save:
+    /// - the optional property dictionary
+    /// - the current type.
+    /// </summary>
+    /// <param name="writer"></param>
+    /// <returns></returns>
+    public override bool Write(GH_IWriter writer)
+    {
+      if (InputType != null)
+      {
+        writer.SetBoolean("init", true);
+        writer.SetString("type", InputType.Name);
+        writer.SetString("assembly", InputType.AssemblyQualifiedName);
+        writer.SetByteArray("optionalmask", SpeckleCore.Converter.getBytes(OptionalPropsMask));
+      }
+      else
+        writer.SetBoolean("init", false);
+
+      return base.Write(writer);
+    }
+
+    /// <summary>
+    /// Adds a property to the component's inputs.
+    /// </summary>
+    /// <param name="prop"></param>
+    void RegisterPropertyAsInputParameter(PropertyInfo prop, int index)
+    {
+      // get property name and value
+      Type propType = prop.PropertyType;
+
+      string propName = prop.Name;
+      object propValue = prop;
+
+      // Create new param based on property name
+      Param_GenericObject newInputParam = new Param_GenericObject();
+      newInputParam.Name = propName;
+      newInputParam.NickName = propName;
+      newInputParam.MutableNickName = false;
+      newInputParam.Description = propName + " as " + propType.Name;
+      newInputParam.Optional = true;
+
+      // check if input needs to be a list or item access
+      bool isCollection = typeof(System.Collections.IEnumerable).IsAssignableFrom(propType) && propType != typeof(string);
+      if (isCollection == true)
+      {
+        newInputParam.Access = GH_ParamAccess.list;
+      }
+      else
+      {
+        newInputParam.Access = GH_ParamAccess.item;
+      }
+      Params.RegisterInputParam(newInputParam, index);
+    }
+
+    public void UnregisterPropertyInput(PropertyInfo myProp)
+    {
+      for (int i = Params.Input.Count - 1; i >= 0; i--)
+      {
+        if (Params.Input[i].Name == myProp.Name)
+        {
+          Params.UnregisterInputParameter(Params.Input[i]);
+          return;
+        }
+      }
+    }
+
+    /// <summary>
+    /// This is the method that actually does the work.
+    /// </summary>
+    /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-      GH_ObjectWrapper input = null;
-      if (!DA.GetData("SpeckleObject", ref input))
-      {
-        this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Invalid object.");
-        return;
-      }
-
-      if (input.Value == null)
+      object inputObject = null;
+      if (!DA.GetData(0, ref inputObject))
         return;
 
-      object inputObject = input.Value;
-
-      if (inputObject.GetType() != ObjectType)
-      { 
-        ObjectType = inputObject.GetType();
-        UpdateInputs();
-      }
-
-      var modifiedObject = CreateCopy(inputObject);
-      
-      DA.SetData("Result", UpdateObjectProperties(modifiedObject));
-    }
-    
-    public void UpdateInputs()
-    {
-      // Unregister input parameter
-      while (Params.Input.Count() > 1)
+      try
       {
-        Params.UnregisterInputParameter(Params.Input.First(i => i.Name != "SpeckleObject"));
+        inputObject = inputObject.GetType().GetProperty("Value").GetValue(inputObject);
       }
+      catch { }
 
-      // Add input parameters
-      IEnumerable<PropertyInfo> props = ObjectType.GetProperties().Where(p => p.CanWrite);
-      
-      if (!ExposeAllProperties)
-        props = props.Where(p => !typeof(SpeckleObject).GetProperties().Any(s => s.Name == p.Name));
+      if (inputObject == null) return;
 
-      foreach (PropertyInfo p in props)
+      if (!inputObject.GetType().IsSubclassOf(typeof(SpeckleObject)))
+        inputObject = Converter.Serialise(inputObject);
+
+      if (inputObject == null) return;
+
+      if (InputType != inputObject.GetType())
+        SwitchToType(inputObject.GetType());
+
+      var outputObject = CreateCopy(inputObject);
+      DA.SetData(0, outputObject);
+
+      for (int i = 1; i < Params.Input.Count; i++)
       {
-        Param_GenericObject newParam = new Param_GenericObject();
-        newParam.Name = (string)p.Name;
-        newParam.NickName = (string)p.Name;
-        newParam.MutableNickName = false;
-        newParam.Access = GH_ParamAccess.item;
-        newParam.Optional = true;
-        newParam.ObjectChanged += (sender, e) => Debouncer.Start();
-
-        Params.RegisterInputParam(newParam);
-      }
-      Params.OnParametersChanged();
-    }
-
-    public object UpdateObjectProperties(object inputObject)
-    {
-      foreach (IGH_Param param in Params.Input)
-      {
-        if (param.Name == "SpeckleObject")
-          continue;
-
-        foreach (object o in param.VolatileData.AllData(false))
+        if (Params.Input[i].Access == GH_ParamAccess.list)
         {
-          object value = null;
+          var ObjectsList = new List<object>();
+          DA.GetDataList(i, ObjectsList);
+
+          if (ObjectsList.Count == 0) continue;
+
+          var listForSetting = (IList)Activator.CreateInstance(outputObject.GetType().GetProperty(Params.Input[i].Name).PropertyType);
+          foreach (var item in ObjectsList)
+          {
+            object innerVal = null;
+            try
+            {
+              innerVal = item.GetType().GetProperty("Value").GetValue(item);
+            }
+            catch
+            {
+              innerVal = item;
+            }
+
+            listForSetting.Add(innerVal);
+          }
+
+          outputObject.GetType().GetProperty(Params.Input[i].Name).SetValue(outputObject, listForSetting, null);
+        }
+        else if (Params.Input[i].Access == GH_ParamAccess.item)
+        {
+          object ghInput = null; // INPUT OBJECT ( PROPERTY )
+          DA.GetData(i, ref ghInput);
+
+          if (ghInput == null) continue;
+
+          object innerValue = null;
           try
           {
-            value = o.GetType().GetProperty("Value").GetValue(o);
+            innerValue = ghInput.GetType().GetProperty("Value").GetValue(ghInput);
           }
           catch
           {
-            continue;
+            innerValue = ghInput;
           }
 
-          PropertyInfo prop = ObjectType.GetProperty(param.Name);
+          if (innerValue == null) continue;
+
+          PropertyInfo prop = outputObject.GetType().GetProperty(Params.Input[i].Name);
           if (prop.PropertyType.IsEnum)
           {
             try
             {
-              prop.SetValue(inputObject, Enum.Parse(prop.PropertyType, (string)value));
+              prop.SetValue(outputObject, Enum.Parse(prop.PropertyType, (string)innerValue));
               continue;
             }
             catch { }
 
             try
             {
-              prop.SetValue(inputObject, (int)value);
+              prop.SetValue(outputObject, (int)innerValue);
               continue;
             }
             catch { }
 
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + param.Name + ".");
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
           }
 
-          else if (value.GetType() != prop.PropertyType)
+          else if (innerValue.GetType() != prop.PropertyType)
           {
             try
             {
-              prop.SetValue(inputObject, value);
+              prop.SetValue(outputObject, innerValue);
               continue;
             }
             catch { }
 
             try
             {
-              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)value, prop.PropertyType);
-              prop.SetValue(inputObject, conv);
+              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
+              prop.SetValue(outputObject, conv);
               continue;
             }
             catch { }
 
             try
             {
-              var conv = Converter.Serialise(value);
-              prop.SetValue(inputObject, conv);
+              var conv = SpeckleCore.Converter.Serialise(innerValue);
+              prop.SetValue(outputObject, conv);
               continue;
             }
             catch { }
 
-            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + param.Name + ".");
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to set " + Params.Input[i].Name + ".");
           }
 
           else
           {
-            prop.SetValue(inputObject, value);
+            prop.SetValue(outputObject, innerValue);
           }
         }
       }
-      inputObject.GetType().GetMethod("GenerateHash").Invoke(inputObject, null);
-      return inputObject;
+
+      // toggle hash generation onyl if it's not overriden
+      if (OptionalPropsMask["Hash"] == false)
+        outputObject.GetType().GetMethod("GenerateHash").Invoke(outputObject, null);
+
+      // applicationId generation/setting
+      var appId = outputObject.GetType().GetProperty("ApplicationId").GetValue(outputObject);
+      if (appId == null)
+      {
+        var myGeneratedAppId = "gh/" + outputObject.GetType().GetProperty("Hash").GetValue(outputObject);
+        outputObject.GetType().GetProperty("ApplicationId").SetValue(outputObject, myGeneratedAppId);
+      }
+
+      DA.SetData(0, outputObject);
     }
 
+    /// <summary>
+    /// Creates a deep copy of a SpeckleObject.
+    /// </summary>
+    /// <param name="inputObject"></param>
+    /// <returns></returns>
     public object CreateCopy(object inputObject)
     {
       var ret = Activator.CreateInstance(inputObject.GetType());
@@ -263,15 +368,14 @@ namespace SpeckleGrasshopper
     public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
     {
       base.AppendAdditionalMenuItems(menu);
-      
-      Menu_AppendItem(menu, "Expose all properties", (sender, e) =>
-        {
-          ExposeAllProperties = !ExposeAllProperties;
-          UpdateInputs();
-          Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
-        }, true, ExposeAllProperties);
+
+      var myDropDown = GH_DocumentObject.Menu_AppendItem(menu, "Overwrite Custom Properties");
+      myDropDown.DropDownItems.AddRange(OptionalPropsItems.ToArray());
     }
 
+    /// <summary>
+    /// Provides an Icon for the component.
+    /// </summary>
     protected override System.Drawing.Bitmap Icon
     {
       get
@@ -280,6 +384,9 @@ namespace SpeckleGrasshopper
       }
     }
 
+    /// <summary>
+    /// Gets the unique ID for this component. Do not change this ID after release.
+    /// </summary>
     public override Guid ComponentGuid
     {
       get { return new Guid("e6a41f67-a45a-4ba3-9f91-a3e66d12a778"); }
