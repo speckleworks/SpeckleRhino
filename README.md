@@ -8,7 +8,7 @@ This repository contains various projects for building Speckle Clients for Rhino
 
 ## Download
 
-> The [latest build is here](https://ci.appveyor.com/api/projects/SpeckleWorks/SpeckleRhino/artifacts/specklerhino.rhi?branch=master&job=Configuration%3DRelease) (from the `master` branch). Be sure to check out the [getting started guide](https://speckle.works/log/speckle-guide/) to get up to speed with some basics.
+> The [latest build is here](https://github.com/speckleworks/SpeckleInstaller/releases/latest). Be sure to check out the [getting started guide](https://speckle.works/log/speckle-guide/) to get up to speed with some basics.
 
 
 ## Building Speckle for Rhino
@@ -24,6 +24,8 @@ In order to debug/build Speckle for Rhino:
 5. Open SpeckleRhino.sln from the repository root.
 6. Restore nuget packages.
 7. Start debugging either SpeckleRhino or SpeckleGrasshopper. To build the solution, make sure you run first `npm run build` in the SpeckleView folder to generate the `dist.js` file.
+
+Note: by default, Speckle does not come with an object model. To actually be able to convert to and from Rhino when building/debugging, please clone and build the [SpeckleCoreGeometry](https://github.com/speckleworks/SpeckleCoreGeometry) repository.
 
 ## License 
 MIT 
