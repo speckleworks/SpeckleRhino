@@ -330,23 +330,23 @@ namespace SpeckleGrasshopper.UserDataUtils
           {
             try
             {
-              prop.SetValue( outputObject, innerValue );
+              var conv = SpeckleCore.Converter.Serialise(innerValue);
+              prop.SetValue(outputObject, conv);
               continue;
             }
             catch { }
 
             try
             {
-              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject( ( string ) innerValue, prop.PropertyType );
-              prop.SetValue( outputObject, conv );
+              prop.SetValue(outputObject, innerValue);
               continue;
             }
             catch { }
 
             try
             {
-              var conv = SpeckleCore.Converter.Serialise( innerValue );
-              prop.SetValue( outputObject, conv );
+              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
+              prop.SetValue(outputObject, conv);
               continue;
             }
             catch { }

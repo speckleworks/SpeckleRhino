@@ -317,6 +317,14 @@ namespace SpeckleGrasshopper
           {
             try
             {
+              var conv = SpeckleCore.Converter.Serialise(innerValue);
+              prop.SetValue(outputObject, conv);
+              continue;
+            }
+            catch { }
+
+            try
+            {
               prop.SetValue(outputObject, innerValue);
               continue;
             }
@@ -325,14 +333,6 @@ namespace SpeckleGrasshopper
             try
             {
               var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
-              prop.SetValue(outputObject, conv);
-              continue;
-            }
-            catch { }
-
-            try
-            {
-              var conv = SpeckleCore.Converter.Serialise(innerValue);
               prop.SetValue(outputObject, conv);
               continue;
             }
