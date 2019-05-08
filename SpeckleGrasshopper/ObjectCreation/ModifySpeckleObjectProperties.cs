@@ -22,8 +22,12 @@ namespace SpeckleGrasshopper
   {
     public Type InputType;
     public List<PropertyInfo> TypeProps;
+    public List<PropertyInfo> OptionalProps;
+    public ToolStripMenuItem OptionalPropDropdown;
+
     public Dictionary<string, bool> OptionalPropsMask;
     public List<ToolStripItem> OptionalPropsItems;
+    public bool CheckItAll = false;
 
     public ModifySpeckleObjectProperties( )
       : base( "Modifies SpeckleObject Properties", "MSOP",
@@ -52,6 +56,19 @@ namespace SpeckleGrasshopper
         };
         OptionalPropsItems.Add(tsi);
       }
+
+      OptionalPropsItems.Add(new ToolStripSeparator());
+
+      OptionalPropsItems.Add(new ToolStripButton("Expand/Collapse All", System.Drawing.SystemIcons.Warning.ToBitmap(), (sender, e) =>
+      {
+        CheckItAll = !CheckItAll;
+        int k = 0;
+        foreach (var key in OptionalPropsMask.Keys.ToList())
+        {
+          ((ToolStripMenuItem)OptionalPropDropdown.DropDownItems[k++]).CheckState = CheckItAll ? CheckState.Checked : CheckState.Unchecked;
+        }
+
+      }));
     }
 
     /// <summary>
@@ -369,8 +386,12 @@ namespace SpeckleGrasshopper
     {
       base.AppendAdditionalMenuItems(menu);
 
-      var myDropDown = GH_DocumentObject.Menu_AppendItem(menu, "Overwrite Custom Properties");
-      myDropDown.DropDownItems.AddRange(OptionalPropsItems.ToArray());
+      OptionalPropDropdown = GH_DocumentObject.Menu_AppendItem(menu, "Overwrite Custom Properties");
+      OptionalPropDropdown.DropDownItems.AddRange(OptionalPropsItems.ToArray());
+      OptionalPropDropdown.DropDown.Closing += (sender, e) =>
+      {
+        if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked) e.Cancel = true;
+      };
     }
 
     /// <summary>
