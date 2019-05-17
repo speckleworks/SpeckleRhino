@@ -1,4 +1,7 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Grasshopper.Kernel;
@@ -345,7 +348,7 @@ namespace SpeckleGrasshopper.UserDataUtils
 
             try
             {
-              var conv = Newtonsoft.Json.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
+              var conv = SNJ.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
               prop.SetValue(outputObject, conv);
               continue;
             }

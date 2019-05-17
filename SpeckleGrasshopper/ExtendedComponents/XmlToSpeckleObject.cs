@@ -1,10 +1,10 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using SpeckleGrasshopper.Properties;
 
 using Grasshopper.Kernel;
-
-using Newtonsoft.Json;
 using System.Xml;
 
 using SpeckleCore;
@@ -44,17 +44,17 @@ namespace SpeckleGrasshopper.Contrib
       var xml = new XmlDocument();
       xml.LoadXml(xml_in);
 
-      var jsonText = JsonConvert.SerializeXmlNode(xml, Newtonsoft.Json.Formatting.Indented, false);
+      var jsonText = SNJ.JsonConvert.SerializeXmlNode(xml, SNJ.Formatting.Indented, false);
 
-      JsonSerializerSettings jsonSS = new JsonSerializerSettings();
-      jsonSS.Formatting = Newtonsoft.Json.Formatting.Indented;
-      jsonSS.ReferenceLoopHandling = ReferenceLoopHandling.Ignore; 
-      jsonSS.PreserveReferencesHandling = PreserveReferencesHandling.None;
-      jsonSS.StringEscapeHandling = StringEscapeHandling.EscapeNonAscii;
-      jsonSS.NullValueHandling = NullValueHandling.Include;
-      jsonSS.Converters = new JsonConverter[] { new SpecklePropertiesConverter() };
+      SNJ.JsonSerializerSettings jsonSS = new SNJ.JsonSerializerSettings();
+      jsonSS.Formatting = SNJ.Formatting.Indented;
+      jsonSS.ReferenceLoopHandling = SNJ.ReferenceLoopHandling.Ignore; 
+      jsonSS.PreserveReferencesHandling = SNJ.PreserveReferencesHandling.None;
+      jsonSS.StringEscapeHandling = SNJ.StringEscapeHandling.EscapeNonAscii;
+      jsonSS.NullValueHandling = SNJ.NullValueHandling.Include;
+      jsonSS.Converters = new SNJ.JsonConverter[] { new SpecklePropertiesConverter() };
 
-      dynamic obj = JsonConvert.DeserializeObject<Dictionary<string, object>>(
+      dynamic obj = SNJ.JsonConvert.DeserializeObject<Dictionary<string, object>>(
         jsonText, jsonSS);
 
       var so = new SpeckleObject() { Properties = obj };

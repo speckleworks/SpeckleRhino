@@ -1,4 +1,6 @@
-﻿using Grasshopper.Kernel;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using SpeckleCore;
 using SpeckleGrasshopper.Properties;
@@ -10,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GH_IO.Serialization;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 
 namespace SpeckleGrasshopper.Management
 {
@@ -34,7 +36,7 @@ namespace SpeckleGrasshopper.Management
 
       if ( serialisedAccount != "" )
       {
-        Account myAccount = JsonConvert.DeserializeObject<Account>( serialisedAccount );
+        Account myAccount = SNJ.JsonConvert.DeserializeObject<Account>( serialisedAccount );
         Selected = myAccount;
       }
 
@@ -43,7 +45,7 @@ namespace SpeckleGrasshopper.Management
 
     public override bool Write( GH_IWriter writer )
     {
-      writer.SetString( "selectedAccount", JsonConvert.SerializeObject( Selected ) );
+      writer.SetString( "selectedAccount", SNJ.JsonConvert.SerializeObject( Selected ) );
       return base.Write( writer );
     }
 

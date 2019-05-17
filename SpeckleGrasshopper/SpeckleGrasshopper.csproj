@@ -59,6 +59,10 @@
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="SpeckleNewtonsoft">
+      <HintPath>..\SpeckleCore\SpeckleNewtonsoft.dll</HintPath>
+      <Aliases>SpeckleNewtonsoft</Aliases>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -142,9 +146,6 @@
   <ItemGroup>
     <PackageReference Include="Grasshopper" IncludeAssets="compile; build">
       <Version>6.0.18016.23451</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>11.0.1</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>

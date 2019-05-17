@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,7 +14,7 @@ using Grasshopper.Kernel.Parameters;
 using Grasshopper;
 using Grasshopper.Kernel.Data;
 
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using System.Dynamic;
 
 using SpeckleCore;
@@ -23,7 +25,7 @@ namespace SpeckleGrasshopper
 
   public class EncodeToSpeckle : GH_Component
   {
-    public EncodeToSpeckle( )
+    public EncodeToSpeckle()
       : base( "Serialiser", "SRL",
           "Serialises a Rhino object to a Speckle object.",
           "Speckle", "Converters" )
@@ -53,18 +55,24 @@ namespace SpeckleGrasshopper
       object myObj = null;
       DA.GetData( 0, ref myObj );
 
-      if ( myObj == null ) return;
+      if( myObj == null ) return;
 
-      var result = myObj.GetType().GetProperty( "Value" ).GetValue(myObj);
+      var result = myObj.GetType().GetProperty( "Value" ).GetValue( myObj );
 
       //object result = null;
       object conv;
-      if ( result != null )
+      if( result != null )
         conv = SpeckleCore.Converter.Serialise( result );
       else
         conv = SpeckleCore.Converter.Serialise( myObj );
 
-      DA.SetData( 0, JsonConvert.SerializeObject( conv, Formatting.Indented ) );
+      var settings = new SNJ.JsonSerializerSettings()
+      {
+        ReferenceLoopHandling = SNJ.ReferenceLoopHandling.Ignore,
+        Formatting = SNJ.Formatting.Indented
+      };
+
+      DA.SetData( 0, SNJ.JsonConvert.SerializeObject( conv, settings ) );
       DA.SetData( 1, conv );
     }
 
@@ -82,7 +90,7 @@ namespace SpeckleGrasshopper
 
   public class DecodeFromSpeckle : GH_Component
   {
-    public DecodeFromSpeckle( )
+    public DecodeFromSpeckle()
       : base( "Deserialiser", "DSR",
           "Deserialises Speckle (geometry) objects to Rhino objects.",
           "Speckle", "Converters" )
@@ -106,11 +114,11 @@ namespace SpeckleGrasshopper
       object myObj = null;
       DA.GetData( 0, ref myObj );
 
-      if ( myObj == null )
+      if( myObj == null )
         return;
 
       var cast = myObj as Grasshopper.Kernel.Types.GH_ObjectWrapper;
-      var result = Converter.Deserialise( ( SpeckleObject ) cast.Value );
+      var result = Converter.Deserialise( (SpeckleObject) cast.Value );
       //var result = SpeckleCore.Converter.FromAbstract( (SpeckleAbstract) cast.Value );
       DA.SetData( 0, new Grasshopper.Kernel.Types.GH_ObjectWrapper( result ) );
     }

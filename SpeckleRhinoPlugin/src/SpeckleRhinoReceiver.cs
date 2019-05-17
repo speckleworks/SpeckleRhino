@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;
@@ -39,7 +39,7 @@ namespace SpeckleRhino
     public RhinoReceiver( string _payload, Interop _parent )
     {
       Context = _parent;
-      dynamic payload = JsonConvert.DeserializeObject( _payload );
+      dynamic payload = SNJ.JsonConvert.DeserializeObject( _payload );
 
       StreamId = ( string ) payload.streamId;
 
@@ -61,17 +61,17 @@ namespace SpeckleRhino
     #region events
     private void Client_OnError( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
+      Context.NotifySpeckleFrame( "client-error", StreamId, SNJ.JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnLogData( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( e.EventData, Interop.camelCaseSettings ) );
     }
 
     public virtual void Client_OnReady( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, SNJ.JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client }, Interop.camelCaseSettings ) );
 
       Context.UserClients.Add( this );
 
@@ -104,7 +104,7 @@ namespace SpeckleRhino
           UpdateChildren();
           break;
         default:
-          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Unkown event: " + ( string ) e.EventObject.args.eventType ) );
+          Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Unkown event: " + ( string ) e.EventObject.args.eventType ) );
           break;
       }
     }
@@ -122,7 +122,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
@@ -130,7 +130,7 @@ namespace SpeckleRhino
 
     public void UpdateMeta( )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Metadata update received." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Metadata update received." ) );
 
       try
       {
@@ -139,7 +139,7 @@ namespace SpeckleRhino
         if ( streamGetResponse.Success == false )
         {
           Context.NotifySpeckleFrame( "client-error", StreamId, streamGetResponse.Message );
-          Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
+          Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Failed to retrieve global update." ) );
         }
 
         Client.Stream = streamGetResponse.Resource;
@@ -148,7 +148,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
@@ -157,7 +157,7 @@ namespace SpeckleRhino
 
     public void UpdateGlobal( )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Global update received." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Global update received." ) );
       try
       {
         var streamGetResponse = Client.StreamGetAsync( StreamId, null ).Result;
@@ -201,7 +201,7 @@ namespace SpeckleRhino
             
             // put them in our bucket
             newObjects.AddRange( res.Resources );
-            Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( String.Format( "Got {0} out of {1} objects.", i, payload.Length ) ) );
+            Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( String.Format( "Got {0} out of {1} objects.", i, payload.Length ) ) );
           }
 
           // populate the retrieved objects in the original stream's object list
@@ -226,7 +226,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }
@@ -243,7 +243,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
         Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
         return;
       }

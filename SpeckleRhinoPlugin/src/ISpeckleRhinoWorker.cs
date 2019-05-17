@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using SpeckleCore;

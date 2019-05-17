@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,7 +17,6 @@ using Grasshopper;
 using Grasshopper.Kernel.Data;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Drawing;
 using Grasshopper.GUI.Canvas;
@@ -307,7 +308,7 @@ namespace SpeckleGrasshopper
 
         // put them in our bucket
         newObjects.AddRange( res.Resources );
-        this.Message = JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
+        this.Message = SNJ.JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
       }
 
       foreach ( var obj in newObjects )
