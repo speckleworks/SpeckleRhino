@@ -306,7 +306,7 @@ namespace SpeckleRhino
       var convertedObjects = new List<SpeckleObject>();
       foreach ( RhinoObject obj in objs )
       {
-        var myObj = Converter.Serialise( obj.Geometry );
+        var myObj = Converter.Serialise( obj.Geometry ) as SpeckleObject;
         myObj.ApplicationId = obj.Id.ToString();
         convertedObjects.Add( myObj );
       }
