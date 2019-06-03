@@ -1,9 +1,10 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using System;
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using Rhino.Collections;
 using Grasshopper.Kernel.Types;
 using System.Windows.Forms;

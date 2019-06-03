@@ -72,7 +72,7 @@ namespace SpeckleGrasshopper
       }
       try
       {
-        Value = Converter.Serialise( source );
+        Value = Converter.Serialise( source ) as SpeckleObject;
         return true;
       }
       catch { return false; }

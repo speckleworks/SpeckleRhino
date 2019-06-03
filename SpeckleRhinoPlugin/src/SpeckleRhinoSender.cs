@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -48,7 +48,7 @@ namespace SpeckleRhino
     {
       Context = _Context;
 
-      dynamic InitPayload = JsonConvert.DeserializeObject<ExpandoObject>( _payload );
+      dynamic InitPayload = SNJ.JsonConvert.DeserializeObject<ExpandoObject>( _payload );
 
       Client = new SpeckleApiClient( ( string ) InitPayload.account.restApi, true );
 
@@ -70,7 +70,7 @@ namespace SpeckleRhino
               Client.Stream.Name = StreamName;
 
               Context.NotifySpeckleFrame( "set-gl-load", "", "false" );
-              Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
+              Context.NotifySpeckleFrame( "client-add", StreamId, SNJ.JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
               Context.UserClients.Add( this );
 
               InitTrackedObjects( InitPayload );
@@ -203,7 +203,7 @@ namespace SpeckleRhino
 
     private void Client_OnReady( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Ready Event." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Ready Event." ) );
     }
 
     private void DataSender_Elapsed( object sender, ElapsedEventArgs e )
@@ -211,29 +211,29 @@ namespace SpeckleRhino
       Debug.WriteLine( "Boing! Boing!" );
       DataSender.Stop();
       SendStaggeredUpdate();
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Update Sent." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Update Sent." ) );
     }
 
     private void MetadataSender_Elapsed( object sender, ElapsedEventArgs e )
     {
       Debug.WriteLine( "Ping! Ping!" );
       MetadataSender.Stop();
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "Update Sent." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "Update Sent." ) );
     }
 
     private void Client_OnWsMessage( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( "WS message received and ignored." ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( "WS message received and ignored." ) );
     }
 
     private void Client_OnLogData( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-log", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-log", StreamId, SNJ.JsonConvert.SerializeObject( e.EventData ) );
     }
 
     private void Client_OnError( object source, SpeckleEventArgs e )
     {
-      Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( e.EventData ) );
+      Context.NotifySpeckleFrame( "client-error", StreamId, SNJ.JsonConvert.SerializeObject( e.EventData ) );
     }
 
     public void ForceUpdate( )
@@ -306,7 +306,7 @@ namespace SpeckleRhino
       var convertedObjects = new List<SpeckleObject>();
       foreach ( RhinoObject obj in objs )
       {
-        var myObj = Converter.Serialise( obj.Geometry );
+        var myObj = Converter.Serialise( obj.Geometry ) as SpeckleObject;
         myObj.ApplicationId = obj.Id.ToString();
         convertedObjects.Add( myObj );
       }
@@ -339,7 +339,7 @@ namespace SpeckleRhino
           // Object is too big?
           if ( size > 2e6 )
           {
-            Context.NotifySpeckleFrame( "client-error", StreamId, JsonConvert.SerializeObject( "This stream contains a super big object. These will fail. Sorry for the bad error message - we're working on improving this." ) );
+            Context.NotifySpeckleFrame( "client-error", StreamId, SNJ.JsonConvert.SerializeObject( "This stream contains a super big object. These will fail. Sorry for the bad error message - we're working on improving this." ) );
             currentBucketObjects.Remove( convertedObject );
           }
 
@@ -388,7 +388,7 @@ namespace SpeckleRhino
           }
           catch ( Exception err )
           {
-            Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+            Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
             Context.NotifySpeckleFrame( "client-done-loading", StreamId, "" );
             IsSendingUpdate = false;
             return;
@@ -434,7 +434,7 @@ namespace SpeckleRhino
       }
       catch ( Exception err )
       {
-        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, JsonConvert.SerializeObject( err.Message ) );
+        Context.NotifySpeckleFrame( "client-error", Client.Stream.StreamId, SNJ.JsonConvert.SerializeObject( err.Message ) );
         IsSendingUpdate = false;
         return;
       }
@@ -537,7 +537,7 @@ namespace SpeckleRhino
     {
       Context = _Context;
 
-      Context.NotifySpeckleFrame( "client-add", StreamId, JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
+      Context.NotifySpeckleFrame( "client-add", StreamId, SNJ.JsonConvert.SerializeObject( new { stream = Client.Stream, client = Client, authToken = Client.AuthToken }, Interop.camelCaseSettings ) );
       Context.UserClients.Add( this );
     }
 

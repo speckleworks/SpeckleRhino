@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias SpeckleNewtonsoft;
+using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,7 +17,6 @@ using Grasshopper;
 using Grasshopper.Kernel.Data;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Drawing;
 using Grasshopper.GUI.Canvas;
@@ -285,7 +286,7 @@ namespace SpeckleGrasshopper
       this.Message = "Getting objects!";
 
       // pass the object list through a cache check 
-      LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
+      //LocalContext.GetCachedObjects( Client.Stream.Objects, Client.BaseUrl );
 
       // filter out the objects that were not in the cache and still need to be retrieved
       var payload = Client.Stream.Objects.Where( o => o.Type == "Placeholder" ).Select( obj => obj._id ).ToArray();
@@ -307,13 +308,21 @@ namespace SpeckleGrasshopper
 
         // put them in our bucket
         newObjects.AddRange( res.Resources );
-        this.Message = JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
+        this.Message = SNJ.JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
       }
 
-      foreach ( var obj in newObjects )
+      foreach( var obj in newObjects )
       {
-        var locationInStream = Client.Stream.Objects.FindIndex( o => o._id == obj._id );
-        try { Client.Stream.Objects[ locationInStream ] = obj; } catch { }
+        var matches = Client.Stream.Objects.FindAll( o => o._id == obj._id );
+
+        //TODO: Do this efficiently, this is rather brute force
+        for( int i = Client.Stream.Objects.Count - 1; i >= 0; i-- )
+        {
+          if(Client.Stream.Objects[i]._id == obj._id)
+          {
+            Client.Stream.Objects[ i ] = obj;
+          }
+        }
       }
 
       // add objects to cache async
