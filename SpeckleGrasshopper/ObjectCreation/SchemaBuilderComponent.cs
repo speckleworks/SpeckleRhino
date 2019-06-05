@@ -147,7 +147,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       newInputParam.Optional = true;
 
       // check if input needs to be a list or item access
-      bool isCollection = typeof( System.Collections.IEnumerable ).IsAssignableFrom( propType ) && propType != typeof( string );
+      bool isCollection = typeof( System.Collections.IEnumerable ).IsAssignableFrom( propType ) && propType != typeof( string ) && !propType.Name.ToLower().Contains( "dictionary" );
       if ( isCollection == true )
       {
         newInputParam.Access = GH_ParamAccess.list;
