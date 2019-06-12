@@ -384,7 +384,7 @@ namespace SpeckleGrasshopper
           return;
         }
 
-        System.Diagnostics.Process.Start(RestApi.Replace("api/v1", "view") + @"/?streams=" + StreamId);
+        System.Diagnostics.Process.Start(RestApi.Replace("/api/v1", "/#/view").Replace("/api", "/#/view") + @"/" + StreamId);
       });
 
       GH_DocumentObject.Menu_AppendItem(menu, "(API) View stream data.", (sender, e) =>
