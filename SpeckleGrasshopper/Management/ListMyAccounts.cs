@@ -1,5 +1,5 @@
-﻿extern alias SpeckleNewtonsoft;
-using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+﻿//extern alias SpeckleNewtonsoft;
+using SNJ = Newtonsoft.Json;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using SpeckleCore;

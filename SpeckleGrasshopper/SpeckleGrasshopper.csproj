@@ -59,10 +59,6 @@
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="SpeckleNewtonsoft">
-      <HintPath>..\SpeckleCore\SpeckleNewtonsoft.dll</HintPath>
-      <Aliases>SpeckleNewtonsoft</Aliases>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -120,16 +116,6 @@
     <None Include="Resources\sender_2.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SpeckleCore\SpeckleAccountManager\SpecklePopup.csproj">
-      <Project>{d65594c8-ea2e-46ca-a756-b1634edc3ae3}</Project>
-      <Name>SpecklePopup</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
-      <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
-      <Name>SpeckleCore</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\SetUserData.png" />
     <None Include="Resources\json.png" />
     <None Include="Resources\GetUserData.png" />
@@ -149,6 +135,12 @@
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>
+    </PackageReference>
+    <PackageReference Include="SpeckleCore">
+      <Version>1.6.0.333-wip</Version>
+    </PackageReference>
+    <PackageReference Include="SpecklePopup">
+      <Version>1.6.1.30-wip</Version>
     </PackageReference>
     <PackageReference Include="sqlite-net-pcl">
       <Version>1.5.231</Version>

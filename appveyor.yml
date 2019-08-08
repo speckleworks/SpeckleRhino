@@ -1,4 +1,4 @@
-version: '{build}'
+version: 1.5.4.{build}
 image: Visual Studio 2017
 configuration: Release
 install:
@@ -8,6 +8,14 @@ install:
   - ps: Install-Product node 8
   - node --version
   - npm --version
+
+# version
+assembly_info:
+  patch: true
+  file: AssemblyInfo.*
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+
 before_build:
   - nuget restore
   # nuget restore SpeckleCore/SpeckleCore/SpeckleCore.sln

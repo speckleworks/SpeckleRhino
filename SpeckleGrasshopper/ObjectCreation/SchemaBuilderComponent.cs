@@ -1,5 +1,5 @@
-﻿extern alias SpeckleNewtonsoft;
-using SNJ = SpeckleNewtonsoft.Newtonsoft.Json;
+﻿//extern alias SpeckleNewtonsoft;
+using SNJ = Newtonsoft.Json;
 
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ using GH_IO.Serialization;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
-  public class SchemaBuilderComponent : GH_Component
+  public class SchemaBuilderComponent : GH_Component, IGH_VariableParameterComponent
   {
 
     public Type SelectedType;
@@ -88,17 +88,22 @@ namespace SpeckleGrasshopper.UserDataUtils
       var types = SpeckleCore.SpeckleInitializer.GetTypes();
       var assemblies = SpeckleCore.SpeckleInitializer.GetAssemblies().Where( ass => types.Any( t => t.Assembly == ass ) );
 
-      foreach ( Assembly assembly in assemblies )
+      try
       {
-        menu.Items.Add( assembly.GetName().Name );
-        var addedMenuItem = menu.Items[ menu.Items.Count - 1 ];
+        foreach ( Assembly assembly in assemblies )
+        {
+          menu.Items.Add( assembly.GetName().Name );
+          var addedMenuItem = menu.Items[ menu.Items.Count - 1 ];
+          subMenus[ assembly ] = ( ToolStripDropDownMenu ) addedMenuItem.GetType().GetProperty( "DropDown" ).GetValue( addedMenuItem );
+        }
 
-        subMenus[ assembly ] = ( ToolStripDropDownMenu ) addedMenuItem.GetType().GetProperty( "DropDown" ).GetValue( addedMenuItem );
+        foreach ( Type type in types )
+          subMenus[ type.Assembly ].Items.Add( type.Name, null, ( sender, e ) => SwitchToType( type ) );
       }
-
-      foreach ( Type type in types )
-        subMenus[ type.Assembly ].Items.Add( type.Name, null, ( sender, e ) => SwitchToType( type ) );
-
+      catch ( Exception e )
+      {
+        System.Diagnostics.Debug.WriteLine( e.Message );
+      }
     }
 
     /// <summary>
@@ -187,20 +192,22 @@ namespace SpeckleGrasshopper.UserDataUtils
         var selectedTypeAssembly = reader.GetString( "assembly" );
         var myOptionalProps = SpeckleCore.Converter.getObjFromBytes( reader.GetByteArray( "optionalmask" ) ) as Dictionary<string, bool>;
 
-        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName && t.AssemblyQualifiedName == selectedTypeAssembly );
+        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName ); //&& t.AssemblyQualifiedName == selectedTypeAssembly );
+        SelectedType = selectedType;
         if ( selectedType != null )
         {
-          SwitchToType( selectedType );
-          OptionalPropsMask = myOptionalProps;
+          ////SwitchToType( selectedType );
+          //OptionalPropsMask = myOptionalProps;
 
-          var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
-          foreach ( var kvp in OptionalPropsMask )
-          {
-            if ( kvp.Value )
-            {
-              RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
-            }
-          }
+          //var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
+          //foreach ( var kvp in OptionalPropsMask )
+          //{
+          //  if ( kvp.Value )
+          //  {
+          //    if(false)
+          //      RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
+          //  }
+          //}
         }
         else
         {
@@ -256,6 +263,7 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       if ( SelectedType is null )
       {
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "Please select an object to initialise." );
         return;
       }
 
@@ -333,23 +341,23 @@ namespace SpeckleGrasshopper.UserDataUtils
           {
             try
             {
-              var conv = SpeckleCore.Converter.Serialise(innerValue);
-              prop.SetValue(outputObject, conv);
+              var conv = SpeckleCore.Converter.Serialise( innerValue );
+              prop.SetValue( outputObject, conv );
               continue;
             }
             catch { }
 
             try
             {
-              prop.SetValue(outputObject, innerValue);
+              prop.SetValue( outputObject, innerValue );
               continue;
             }
             catch { }
 
             try
             {
-              var conv = SNJ.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
-              prop.SetValue(outputObject, conv);
+              var conv = SNJ.JsonConvert.DeserializeObject( ( string ) innerValue, prop.PropertyType );
+              prop.SetValue( outputObject, conv );
               continue;
             }
             catch { }
@@ -376,6 +384,30 @@ namespace SpeckleGrasshopper.UserDataUtils
         outputObject.GetType().GetProperty( "ApplicationId" ).SetValue( outputObject, myGeneratedAppId );
       }
       DA.SetData( 0, outputObject );
+    }
+
+    public bool CanInsertParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public bool CanRemoveParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public IGH_Param CreateParameter( GH_ParameterSide side, int index )
+    {
+      return null;
+    }
+
+    public bool DestroyParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public void VariableParameterMaintenance( )
+    {
     }
 
     /// <summary>
