@@ -20,7 +20,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace SpeckleGrasshopper
 {
-  public class ModifySpeckleObjectProperties : GH_Component
+  public class ModifySpeckleObjectProperties : GH_Component, IGH_VariableParameterComponent
   {
     public Type InputType;
     public List<PropertyInfo> TypeProps;
@@ -129,20 +129,20 @@ namespace SpeckleGrasshopper
         var selectedTypeAssembly = reader.GetString("assembly");
         var myOptionalProps = SpeckleCore.Converter.getObjFromBytes(reader.GetByteArray("optionalmask")) as Dictionary<string, bool>;
 
-        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault(t => t.Name == selectedTypeName && t.AssemblyQualifiedName == selectedTypeAssembly);
+        var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName ); // && t.AssemblyQualifiedName == selectedTypeAssembly);
         if (selectedType != null)
         {
-          SwitchToType(selectedType);
-          OptionalPropsMask = myOptionalProps;
+          //SwitchToType( selectedType );
+          //OptionalPropsMask = myOptionalProps;
 
-          var optionalProps = typeof(SpeckleCore.SpeckleObject).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pinfo => pinfo.Name != "Type");
-          foreach (var kvp in OptionalPropsMask)
-          {
-            if (kvp.Value)
-            {
-              RegisterPropertyAsInputParameter(optionalProps.First(p => p.Name == kvp.Key), Params.Input.Count);
-            }
-          }
+          //var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
+          //foreach ( var kvp in OptionalPropsMask )
+          //{
+          //  if ( kvp.Value )
+          //  {
+          //    RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
+          //  }
+          //}
         }
         else
         {
@@ -394,6 +394,31 @@ namespace SpeckleGrasshopper
       {
         if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked) e.Cancel = true;
       };
+    }
+
+    public bool CanInsertParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public bool CanRemoveParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public IGH_Param CreateParameter( GH_ParameterSide side, int index )
+    {
+      return null;
+    }
+
+    public bool DestroyParameter( GH_ParameterSide side, int index )
+    {
+      return false;
+    }
+
+    public void VariableParameterMaintenance( )
+    {
+      return;
     }
 
     /// <summary>
