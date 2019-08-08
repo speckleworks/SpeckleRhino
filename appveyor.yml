@@ -1,6 +1,12 @@
-version: '{build}'
+# General Configuration
+version: 1.0.0.{build}
+skip_branch_with_pr: true
+
+# Environment Configuration
 image: Visual Studio 2017
-configuration: Release
+cache:
+  - '%LocalAppData%\NuGet\v3-cache'
+
 install:
   # init and update submodules
   - git submodule update --recursive --init
@@ -8,6 +14,18 @@ install:
   - ps: Install-Product node 8
   - node --version
   - npm --version
+
+ # version
+assembly_info:
+  patch: true
+  file: AssemblyInfo.*
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+
+# Build Configuration
+platform: Any CPU
+configuration: Release
+
 before_build:
   - nuget restore
   # nuget restore SpeckleCore/SpeckleCore/SpeckleCore.sln
@@ -19,17 +37,35 @@ before_build:
   - npm run build
   # return to build dir
   - cd ..
+
 build:
   project: SpeckleRhino.sln
   verbosity: minimal
+
 after_build:
   # zip everything up into a .rhi package
   # - 7z a -tzip -r specklerhino.rhi "%APPVEYOR_BUILD_FOLDER%\SpeckleRhinoPlugin\SpeckleWinR6\bin\Release\*"
   # - 7z a -tzip -r specklerhino.rhi "%APPVEYOR_BUILD_FOLDER%\SpeckleGrasshopper\bin\Release\*"
-  - 7z a -tzip -r specklerhino.rhi "%APPVEYOR_BUILD_FOLDER%\Release\*"
+  - 7z a -tzip -r SpeckleRhino-%APPVEYOR_BUILD_VERSION%.rhi "%APPVEYOR_BUILD_FOLDER%\Release\*"
+
 artifacts:
-- path: specklerhino.rhi
+- path: SpeckleRhino-%APPVEYOR_BUILD_VERSION%.rhi
   name: release
+
+deploy:
+  - release: SpeckleRhino-$(APPVEYOR_BUILD_VERSION)
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    description: 'Speckle client for Rhino and Grasshopper.'
+    provider: GitHub
+    auth_token:
+      secure: D5tPFvdQMg9sIe0sSvQjEWw4KAdOk1jyxNwiH5qP5DpDmUH6n6NgTdA+56vXS1Pe # your encrypted token from GitHub
+    artifact: SpeckleRhino-$(APPVEYOR_BUILD_VERSION).rhi
+    draft: false
+    prerelease: true
+    force_update: true
+    on:              # release from master branch only
+      appveyor_repo_tag: true        # deploy on tag push only
+
 notifications:
 - provider: Slack
   incoming_webhook: 
