@@ -31,16 +31,29 @@ namespace SpeckleGrasshopper.UserDataUtils
               "Builds Speckle Types through reflecting upon SpeckleCore and SpeckleKits.",
               "Speckle", "SpeckleKits" )
     {
+      GenerateOptionalPropsMenu();
+    }
+
+    public void GenerateOptionalPropsMenu( Dictionary<string, bool> mask = null )
+    {
       // holds all the speckle object props (the optional ones!)
       OptionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" ).ToList();
 
       // Set up optional properties mask and generate the toolstrip menu that we will add in the dropdown
       OptionalPropsMask = new Dictionary<string, bool>();
       OptionalPropsItems = new List<ToolStripItem>();
-      foreach ( var prop in typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" ) )
+
+      foreach ( var prop in OptionalProps )
       {
-        OptionalPropsMask.Add( prop.Name, false );
-        var tsi = new ToolStripMenuItem( prop.Name ) { Name = prop.Name, Checked = false, CheckOnClick = true };
+        var defaultStaus = false;
+        if ( mask != null )
+        {
+          if ( mask.ContainsKey( prop.Name ) ) defaultStaus = mask[ prop.Name ];
+        }
+
+        OptionalPropsMask.Add( prop.Name, defaultStaus );
+        var tsi = new ToolStripMenuItem( prop.Name ) { Name = prop.Name, Checked = defaultStaus, CheckOnClick = true };
+
         tsi.CheckStateChanged += ( sender, e ) =>
         {
           var key = ( ( ToolStripMenuItem ) sender ).Name;
@@ -194,19 +207,24 @@ namespace SpeckleGrasshopper.UserDataUtils
 
         var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName ); //&& t.AssemblyQualifiedName == selectedTypeAssembly );
         SelectedType = selectedType;
+        Message = SelectedType.Name;
+
+        GenerateOptionalPropsMenu( myOptionalProps );
+
         if ( selectedType != null )
         {
           ////SwitchToType( selectedType );
           //OptionalPropsMask = myOptionalProps;
 
           //var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
+          //int k = 0;
           //foreach ( var kvp in OptionalPropsMask )
           //{
           //  if ( kvp.Value )
           //  {
-          //    if(false)
-          //      RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
+          //    ( ( ToolStripMenuItem ) OptionalPropDropdown.DropDownItems[ k ] ).CheckState = CheckState.Checked;
           //  }
+          //  k++;
           //}
         }
         else
