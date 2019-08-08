@@ -31,6 +31,8 @@ namespace SpeckleGrasshopper
     string RestApi;
     public string StreamId;
 
+    public bool Deserialize = true;
+
     public bool Paused = false;
     public bool Expired = false;
 
@@ -74,6 +76,7 @@ namespace SpeckleGrasshopper
             formatter.Serialize( ms, Client );
             writer.SetByteArray( "speckleclient", ms.ToArray() );
           }
+        writer.SetBoolean("deserialize", this.Deserialize);
       }
       catch { }
       return base.Write( writer );
@@ -97,6 +100,8 @@ namespace SpeckleGrasshopper
 
           InitReceiverEventsAndGlobals();
         }
+
+        this.Deserialize = reader.GetBoolean("deserialize");
       }
       catch
       {
@@ -180,6 +185,16 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
       base.AppendAdditionalMenuItems( menu );
+      var toggleItem = new ToolStripMenuItem("Deserialize objects.") { Name = "Deserialize objects.", Checked = this.Deserialize, CheckOnClick = true };
+      toggleItem.CheckStateChanged += (sender, e) =>
+      {
+        this.Deserialize = ((ToolStripMenuItem)sender).Checked;
+        Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+      };
+      menu.Items.Add(toggleItem);
+
+      GH_DocumentObject.Menu_AppendSeparator(menu);
+
       GH_DocumentObject.Menu_AppendItem( menu, "Force refresh.", ( sender, e ) =>
       {
         if ( StreamId != null )
@@ -191,7 +206,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
-         System.Diagnostics.Process.Start( RestApi.Replace( "api/v1", "view" ) + @"/?streams=" + StreamId );
+         System.Diagnostics.Process.Start(RestApi.Replace("/api/v1", "/#/view").Replace("/api", "/#/view") + @"/" + StreamId);
        } );
 
       GH_DocumentObject.Menu_AppendItem( menu, "(API) View stream data.", ( sender, e ) =>
@@ -341,12 +356,14 @@ namespace SpeckleGrasshopper
 
       SpeckleObjects.Clear();
 
-      ConvertedObjects = SpeckleCore.Converter.Deserialise( Client.Stream.Objects );
+      Task.Run(() =>
+      {
+        ConvertedObjects = SpeckleCore.Converter.Deserialise(Client.Stream.Objects);
+        IsUpdating = false;
+        Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
 
-      this.Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
-
-      IsUpdating = false;
-      Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
+        this.Message = "Got data\n@" + DateTime.Now.ToString("hh:mm:ss");
+      });
     }
 
     public virtual void UpdateMeta( )
@@ -469,14 +486,21 @@ namespace SpeckleGrasshopper
     public void SetObjects( IGH_DataAccess DA )
     {
       if ( Layers == null ) return;
-      if ( ConvertedObjects.Count == 0 ) return;
+      if ( ConvertedObjects.Count == 0 && this.Deserialize ) return;
+      if ( Client.Stream.Objects.Count == 0 && !this.Deserialize) return;
+
+      List<object> chosenObjects;
+      if (this.Deserialize)
+        chosenObjects = ConvertedObjects;
+      else
+        chosenObjects = Client.Stream.Objects.Cast<object>().ToList();
 
       int k = 0;
 
       foreach ( Layer layer in Layers )
       {
         //TODO: Check if we're out or under range, and add default layers as such.
-        var subset = ConvertedObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
+        var subset = chosenObjects.GetRange( ( int ) layer.StartIndex, ( int ) layer.ObjectCount );
 
         if ( subset.Count == 0 ) continue;
 
