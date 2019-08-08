@@ -118,12 +118,6 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
-      <Project>{cfe27d3d-8a1a-43f9-9387-8fd9e119e174}</Project>
-      <Name>SpeckleCore</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -132,6 +126,9 @@
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>
+    </PackageReference>
+    <PackageReference Include="SpeckleCore">
+      <Version>1.6.0.333-wip</Version>
     </PackageReference>
     <PackageReference Include="sqlite-net-pcl">
       <Version>1.5.231</Version>
