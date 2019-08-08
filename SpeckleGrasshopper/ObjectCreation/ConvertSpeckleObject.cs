@@ -133,7 +133,6 @@ namespace SpeckleGrasshopper
         }
 
         return null;
-
       }
     }
 
