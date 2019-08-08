@@ -211,23 +211,7 @@ namespace SpeckleGrasshopper.UserDataUtils
 
         GenerateOptionalPropsMenu( myOptionalProps );
 
-        if ( selectedType != null )
-        {
-          ////SwitchToType( selectedType );
-          //OptionalPropsMask = myOptionalProps;
-
-          //var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
-          //int k = 0;
-          //foreach ( var kvp in OptionalPropsMask )
-          //{
-          //  if ( kvp.Value )
-          //  {
-          //    ( ( ToolStripMenuItem ) OptionalPropDropdown.DropDownItems[ k ] ).CheckState = CheckState.Checked;
-          //  }
-          //  k++;
-          //}
-        }
-        else
+        if ( selectedType == null )
         {
           AddRuntimeMessage( GH_RuntimeMessageLevel.Error, string.Format( "Type {0} from the {1} kit was not found. Are you sure you have it installed?", selectedTypeName, selectedTypeAssembly ) );
         }

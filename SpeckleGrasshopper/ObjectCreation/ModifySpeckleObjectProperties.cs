@@ -36,43 +36,58 @@ namespace SpeckleGrasshopper
         "Allows properties of a SpeckleObject to be modified.",
         "Speckle", "SpeckleKits" )
     {
+      GenerateOptionalPropsMenu();
+    }
+
+    public void GenerateOptionalPropsMenu( Dictionary<string, bool> mask = null )
+    {
+      // holds all the speckle object props (the optional ones!)
+      OptionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" ).ToList();
+
       // Set up optional properties mask and generate the toolstrip menu that we will add in the dropdown
       OptionalPropsMask = new Dictionary<string, bool>();
       OptionalPropsItems = new List<ToolStripItem>();
-      foreach (var prop in typeof(SpeckleCore.SpeckleObject).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pinfo => pinfo.Name != "Type"))
-      {
-        OptionalPropsMask.Add(prop.Name, false);
-        var tsi = new ToolStripMenuItem(prop.Name) { Name = prop.Name, Checked = false, CheckOnClick = true };
-        tsi.CheckStateChanged += (sender, e) =>
-        {
-          var key = ((ToolStripMenuItem)sender).Name;
-          OptionalPropsMask[key] = !OptionalPropsMask[key];
 
-          if (OptionalPropsMask[key])
-            RegisterPropertyAsInputParameter(prop, Params.Input.Count);
+      foreach ( var prop in OptionalProps )
+      {
+        var defaultStaus = false;
+        if ( mask != null )
+        {
+          if ( mask.ContainsKey( prop.Name ) ) defaultStaus = mask[ prop.Name ];
+        }
+
+        OptionalPropsMask.Add( prop.Name, defaultStaus );
+        var tsi = new ToolStripMenuItem( prop.Name ) { Name = prop.Name, Checked = defaultStaus, CheckOnClick = true };
+
+        tsi.CheckStateChanged += ( sender, e ) =>
+        {
+          var key = ( ( ToolStripMenuItem ) sender ).Name;
+          OptionalPropsMask[ key ] = !OptionalPropsMask[ key ];
+
+          if ( OptionalPropsMask[ key ] )
+            RegisterPropertyAsInputParameter( prop, Params.Input.Count );
           else
-            UnregisterPropertyInput(prop);
+            UnregisterPropertyInput( prop );
 
           Params.OnParametersChanged();
-          ExpireSolution(true);
+          ExpireSolution( true );
         };
-        OptionalPropsItems.Add(tsi);
+        OptionalPropsItems.Add( tsi );
       }
 
-      OptionalPropsItems.Add(new ToolStripSeparator());
+      OptionalPropsItems.Add( new ToolStripSeparator() );
 
-      OptionalPropsItems.Add(new ToolStripButton("Expand/Collapse All", System.Drawing.SystemIcons.Warning.ToBitmap(), (sender, e) =>
+      OptionalPropsItems.Add( new ToolStripButton( "Expand/Collapse All", System.Drawing.SystemIcons.Warning.ToBitmap(), ( sender, e ) =>
       {
         CheckItAll = !CheckItAll;
         int k = 0;
-        foreach (var key in OptionalPropsMask.Keys.ToList())
+        foreach ( var key in OptionalPropsMask.Keys.ToList() )
         {
-          ((ToolStripMenuItem)OptionalPropDropdown.DropDownItems[k++]).CheckState = CheckItAll ? CheckState.Checked : CheckState.Unchecked;
+          ( ( ToolStripMenuItem ) OptionalPropDropdown.DropDownItems[ k++ ] ).CheckState = CheckItAll ? CheckState.Checked : CheckState.Unchecked;
         }
 
-      }));
+      } ) );
     }
-
     /// <summary>
     /// Registers all the input parameters for this component.
     /// </summary>
@@ -130,21 +145,12 @@ namespace SpeckleGrasshopper
         var myOptionalProps = SpeckleCore.Converter.getObjFromBytes(reader.GetByteArray("optionalmask")) as Dictionary<string, bool>;
 
         var selectedType = SpeckleCore.SpeckleInitializer.GetTypes().FirstOrDefault( t => t.Name == selectedTypeName ); // && t.AssemblyQualifiedName == selectedTypeAssembly);
-        if (selectedType != null)
-        {
-          //SwitchToType( selectedType );
-          //OptionalPropsMask = myOptionalProps;
+        InputType = selectedType;
+        Message = selectedType.Name;
 
-          //var optionalProps = typeof( SpeckleCore.SpeckleObject ).GetProperties( BindingFlags.Public | BindingFlags.Instance ).Where( pinfo => pinfo.Name != "Type" );
-          //foreach ( var kvp in OptionalPropsMask )
-          //{
-          //  if ( kvp.Value )
-          //  {
-          //    RegisterPropertyAsInputParameter( optionalProps.First( p => p.Name == kvp.Key ), Params.Input.Count );
-          //  }
-          //}
-        }
-        else
+        GenerateOptionalPropsMenu( myOptionalProps );
+
+        if ( selectedType == null)
         {
           AddRuntimeMessage(GH_RuntimeMessageLevel.Error, string.Format("Type {0} from the {1} kit was not found. Are you sure you have it installed?", selectedTypeName, selectedTypeAssembly));
         }
@@ -243,8 +249,13 @@ namespace SpeckleGrasshopper
 
       if (inputObject == null) return;
 
-      if (InputType != inputObject.GetType())
-        SwitchToType(inputObject.GetType());
+      if (InputType == null || InputType != inputObject.GetType())
+      {
+        //return;
+        SwitchToType( inputObject.GetType() );
+      }
+      
+      //
 
       var outputObject = CreateCopy(inputObject);
       DA.SetData(0, outputObject);
