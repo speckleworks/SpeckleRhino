@@ -4,14 +4,14 @@ skip_branch_with_pr: true
 
 init:
   - ps: |
-      $releases = "https://api.github.com/repos/$env:APPVEYOR_REPO_NAME/releases"
-      $tag = (Invoke-WebRequest $releases | Convert-Json)[0].tag_name
       If($Env:APPVEYOR_REPO_TAG -eq "true")
       {
         Update-AppveyorBuild -Version "$Env:APPVEYOR_REPO_TAG_NAME"
       } 
       else 
       {
+        $releases = "https://api.github.com/repos/$env:APPVEYOR_REPO_NAME/releases"
+        $tag = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].tag_name
         Update-AppveyorBuild -Version "$tag.$Env:APPVEYOR_BUILD_VERSION-wip"
       }
 
