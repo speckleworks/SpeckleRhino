@@ -170,36 +170,6 @@ namespace SpeckleGrasshopper
             return;
           }
         }
-
-        //AuthToken = account.Token;
-
-        //NickName = "Initialising...";
-        //Locked = true;
-
-        //var myForm = new SpecklePopup.MainWindow(false, true);
-
-        //var some = new System.Windows.Interop.WindowInteropHelper(myForm)
-        //{
-        //  Owner = Rhino.RhinoApp.MainWindowHandle()
-        //};
-
-        //myForm.ShowDialog();
-
-        //if (myForm.restApi != null && myForm.apitoken != null)
-        //{
-        //  Client = new SpeckleApiClient(myForm.restApi);
-        //  RestApi = myForm.restApi;
-        //  Client.IntializeSender(myForm.apitoken, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString()).ContinueWith(task =>
-        //  {
-        //    Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponentAction);
-        //  });
-        //}
-        //else
-        //{
-        //  AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Account selection failed");
-        //  return;
-        //}
-
       }
       else
       {
@@ -214,7 +184,7 @@ namespace SpeckleGrasshopper
           NickName = "Anonymous Stream";
         }
         ////this.UpdateMetadata();
-        Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+        Rhino.RhinoApp.InvokeOnUiThread( ExpireComponentAction );
       };
 
       Client.OnWsMessage += OnWsMessage;
@@ -296,7 +266,7 @@ namespace SpeckleGrasshopper
 
               if ( JobQueue.Count == 1 ) // means we  just added one, so we need to start the solve loop
               {
-                Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponentAction );
+                Rhino.RhinoApp.InvokeOnUiThread( ExpireComponentAction );
               }
             }
             else

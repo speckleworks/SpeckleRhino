@@ -145,27 +145,6 @@ namespace SpeckleGrasshopper
 
         RestApi = account.RestApi;
         AuthToken = account.Token;
-
-
-        //RestApi = 
-
-        //var myForm = new SpecklePopup.MainWindow( false, true );
-
-        //var some = new System.Windows.Interop.WindowInteropHelper( myForm );
-        //some.Owner = Rhino.RhinoApp.MainWindowHandle();
-
-        //myForm.ShowDialog();
-
-        //if ( myForm.restApi != null && myForm.apitoken != null )
-        //{
-        //  RestApi = myForm.restApi;
-        //  AuthToken = myForm.apitoken;
-        //}
-        //else
-        //{
-        //  AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Account selection failed." );
-        //  return;
-        //}
       }
 
       StreamIdChanger = new System.Timers.Timer( 1000 ); StreamIdChanger.Enabled = false;
@@ -221,7 +200,7 @@ namespace SpeckleGrasshopper
       toggleItem.CheckStateChanged += ( sender, e ) =>
       {
         this.Deserialize = ( ( ToolStripMenuItem ) sender ).Checked;
-        Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
+        Rhino.RhinoApp.InvokeOnUiThread( expireComponentAction );
       };
       menu.Items.Add( toggleItem );
 
@@ -392,7 +371,7 @@ namespace SpeckleGrasshopper
        {
          ConvertedObjects = SpeckleCore.Converter.Deserialise( Client.Stream.Objects );
          IsUpdating = false;
-         Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
+         Rhino.RhinoApp.InvokeOnUiThread( expireComponentAction );
 
          this.Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
        } );
