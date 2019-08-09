@@ -76,7 +76,7 @@ namespace SpeckleGrasshopper
             formatter.Serialize( ms, Client );
             writer.SetByteArray( "speckleclient", ms.ToArray() );
           }
-        writer.SetBoolean("deserialize", this.Deserialize);
+        writer.SetBoolean( "deserialize", this.Deserialize );
       }
       catch { }
       return base.Write( writer );
@@ -101,7 +101,7 @@ namespace SpeckleGrasshopper
           InitReceiverEventsAndGlobals();
         }
 
-        this.Deserialize = reader.GetBoolean("deserialize");
+        this.Deserialize = reader.GetBoolean( "deserialize" );
       }
       catch
       {
@@ -117,23 +117,55 @@ namespace SpeckleGrasshopper
 
       if ( Client == null )
       {
-        var myForm = new SpecklePopup.MainWindow( false, true );
-
-        var some = new System.Windows.Interop.WindowInteropHelper( myForm );
-        some.Owner = Rhino.RhinoApp.MainWindowHandle();
-
-        myForm.ShowDialog();
-
-        if ( myForm.restApi != null && myForm.apitoken != null )
+        Account account = null;
+        try
         {
-          RestApi = myForm.restApi;
-          AuthToken = myForm.apitoken;
+          account = LocalContext.GetDefaultAccount();
         }
-        else
+        catch ( Exception err )
         {
-          AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Account selection failed." );
-          return;
         }
+
+        if ( account == null )
+        {
+          var signInWindow = new SpecklePopup.SignInWindow( true );
+          var helper = new System.Windows.Interop.WindowInteropHelper( signInWindow );
+          helper.Owner = Rhino.RhinoApp.MainWindowHandle();
+
+          signInWindow.ShowDialog();
+
+          if ( signInWindow.AccountListBox.SelectedIndex != -1 )
+            account = signInWindow.accounts[ signInWindow.AccountListBox.SelectedIndex ];
+          else
+          {
+            AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Account selection failed." );
+            return;
+          }
+        }
+
+        RestApi = account.RestApi;
+        AuthToken = account.Token;
+
+
+        //RestApi = 
+
+        //var myForm = new SpecklePopup.MainWindow( false, true );
+
+        //var some = new System.Windows.Interop.WindowInteropHelper( myForm );
+        //some.Owner = Rhino.RhinoApp.MainWindowHandle();
+
+        //myForm.ShowDialog();
+
+        //if ( myForm.restApi != null && myForm.apitoken != null )
+        //{
+        //  RestApi = myForm.restApi;
+        //  AuthToken = myForm.apitoken;
+        //}
+        //else
+        //{
+        //  AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Account selection failed." );
+        //  return;
+        //}
       }
 
       StreamIdChanger = new System.Timers.Timer( 1000 ); StreamIdChanger.Enabled = false;
@@ -185,15 +217,15 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
       base.AppendAdditionalMenuItems( menu );
-      var toggleItem = new ToolStripMenuItem("Deserialize objects.") { Name = "Deserialize objects.", Checked = this.Deserialize, CheckOnClick = true };
-      toggleItem.CheckStateChanged += (sender, e) =>
+      var toggleItem = new ToolStripMenuItem( "Deserialize objects." ) { Name = "Deserialize objects.", Checked = this.Deserialize, CheckOnClick = true };
+      toggleItem.CheckStateChanged += ( sender, e ) =>
       {
-        this.Deserialize = ((ToolStripMenuItem)sender).Checked;
-        Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+        this.Deserialize = ( ( ToolStripMenuItem ) sender ).Checked;
+        Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
       };
-      menu.Items.Add(toggleItem);
+      menu.Items.Add( toggleItem );
 
-      GH_DocumentObject.Menu_AppendSeparator(menu);
+      GH_DocumentObject.Menu_AppendSeparator( menu );
 
       GH_DocumentObject.Menu_AppendItem( menu, "Force refresh.", ( sender, e ) =>
       {
@@ -206,7 +238,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
        {
          if ( StreamId == null ) return;
-         System.Diagnostics.Process.Start(RestApi.Replace("/api/v1", "/#/view").Replace("/api", "/#/view") + @"/" + StreamId);
+         System.Diagnostics.Process.Start( RestApi.Replace( "/api/v1", "/#/view" ).Replace( "/api", "/#/view" ) + @"/" + StreamId );
        } );
 
       GH_DocumentObject.Menu_AppendItem( menu, "(API) View stream data.", ( sender, e ) =>
@@ -326,14 +358,14 @@ namespace SpeckleGrasshopper
         this.Message = SNJ.JsonConvert.SerializeObject( String.Format( "{0}/{1}", i, payload.Length ) );
       }
 
-      foreach( var obj in newObjects )
+      foreach ( var obj in newObjects )
       {
         var matches = Client.Stream.Objects.FindAll( o => o._id == obj._id );
 
         //TODO: Do this efficiently, this is rather brute force
-        for( int i = Client.Stream.Objects.Count - 1; i >= 0; i-- )
+        for ( int i = Client.Stream.Objects.Count - 1; i >= 0; i-- )
         {
-          if(Client.Stream.Objects[i]._id == obj._id)
+          if ( Client.Stream.Objects[ i ]._id == obj._id )
           {
             Client.Stream.Objects[ i ] = obj;
           }
@@ -356,14 +388,14 @@ namespace SpeckleGrasshopper
 
       SpeckleObjects.Clear();
 
-      Task.Run(() =>
-      {
-        ConvertedObjects = SpeckleCore.Converter.Deserialise(Client.Stream.Objects);
-        IsUpdating = false;
-        Rhino.RhinoApp.MainApplicationWindow.Invoke(expireComponentAction);
+      Task.Run( ( ) =>
+       {
+         ConvertedObjects = SpeckleCore.Converter.Deserialise( Client.Stream.Objects );
+         IsUpdating = false;
+         Rhino.RhinoApp.MainApplicationWindow.Invoke( expireComponentAction );
 
-        this.Message = "Got data\n@" + DateTime.Now.ToString("hh:mm:ss");
-      });
+         this.Message = "Got data\n@" + DateTime.Now.ToString( "hh:mm:ss" );
+       } );
     }
 
     public virtual void UpdateMeta( )
@@ -471,7 +503,7 @@ namespace SpeckleGrasshopper
       foreach ( var layer in toAdd )
       {
         Param_GenericObject newParam = getGhParameter( layer );
-        Params.RegisterOutputParam( newParam,  layer.OrderIndex != null ? ( int ) layer.OrderIndex : k );
+        Params.RegisterOutputParam( newParam, layer.OrderIndex != null ? ( int ) layer.OrderIndex : k );
         k++;
       }
 
@@ -487,10 +519,10 @@ namespace SpeckleGrasshopper
     {
       if ( Layers == null ) return;
       if ( ConvertedObjects.Count == 0 && this.Deserialize ) return;
-      if ( Client.Stream.Objects.Count == 0 && !this.Deserialize) return;
+      if ( Client.Stream.Objects.Count == 0 && !this.Deserialize ) return;
 
       List<object> chosenObjects;
-      if (this.Deserialize)
+      if ( this.Deserialize )
         chosenObjects = ConvertedObjects;
       else
         chosenObjects = Client.Stream.Objects.Cast<object>().ToList();
@@ -528,7 +560,7 @@ namespace SpeckleGrasshopper
               subsetCount += elCount;
             }
           }
-          DA.SetDataTree( layer.OrderIndex!=null ? ( int ) layer.OrderIndex : k, tree );
+          DA.SetDataTree( layer.OrderIndex != null ? ( int ) layer.OrderIndex : k, tree );
           k++;
         }
       }
