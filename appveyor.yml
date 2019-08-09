@@ -1,5 +1,5 @@
 # General Configuration
-version: $(APPVEYOR_REPO_TAG_NAME).{build}
+version: '$(APPVEYOR_REPO_TAG_NAME).$(APPVEYOR_BUILD_VERSION'
 skip_branch_with_pr: true
 
 # Environment Configuration
