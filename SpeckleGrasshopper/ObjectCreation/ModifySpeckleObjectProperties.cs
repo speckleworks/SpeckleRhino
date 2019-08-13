@@ -257,7 +257,9 @@ namespace SpeckleGrasshopper
       
       //
 
-      var outputObject = CreateCopy(inputObject);
+      var outputObject = (SpeckleObject) CreateCopy(inputObject);
+      if ( outputObject.Properties == null ) outputObject.Properties = new Dictionary<string, object>(); // hack
+
       DA.SetData(0, outputObject);
 
       for (int i = 1; i < Params.Input.Count; i++)
