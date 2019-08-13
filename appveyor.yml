@@ -12,8 +12,10 @@ init:
       {
         $releases = "https://api.github.com/repos/$env:APPVEYOR_REPO_NAME/releases"
         $tag = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].tag_name
-        Update-AppveyorBuild -Version "$tag.$Env:APPVEYOR_BUILD_VERSION-wip"
+        $spl = $tag.Split("-")[0]
+        Update-AppveyorBuild -Version "$spl.$Env:APPVEYOR_BUILD_VERSION-wip"
       }
+      Write-Host "Hello. Build version is: $Env:APPVEYOR_BUILD_VERSION"
 
 # Environment Configuration
 image: Visual Studio 2017
