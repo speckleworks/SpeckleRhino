@@ -70,13 +70,13 @@ artifacts:
 deploy:
   - release: SpeckleRhino-$(APPVEYOR_BUILD_VERSION)
     tag: $(APPVEYOR_REPO_TAG_NAME)
-    description: 'Speckle client for Rhino and Grasshopper.'
+    #description: ''
     provider: GitHub
     auth_token:
       secure: D5tPFvdQMg9sIe0sSvQjEWw4KAdOk1jyxNwiH5qP5DpDmUH6n6NgTdA+56vXS1Pe # your encrypted token from GitHub
     artifact: SpeckleRhino-$(APPVEYOR_BUILD_VERSION).rhi
-    draft: false
-    prerelease: true
+    #draft: false
+    #prerelease: false
     force_update: true
     on:              # release from master branch only
       appveyor_repo_tag: true        # deploy on tag push only
