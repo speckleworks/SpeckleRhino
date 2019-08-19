@@ -141,6 +141,12 @@ namespace SpeckleGrasshopper
         try
         {
           account = LocalContext.GetDefaultAccount();
+          RestApi = account.RestApi;
+          Client = new SpeckleApiClient( account.RestApi );
+          Client.IntializeSender( account.Token, Document.DisplayName, "Grasshopper", Document.DocumentID.ToString() ).ContinueWith( task =>
+          {
+            Rhino.RhinoApp.InvokeOnUiThread( ExpireComponentAction );
+          } );
         }
         catch ( Exception err )
         {
