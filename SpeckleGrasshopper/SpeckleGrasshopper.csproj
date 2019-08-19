@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="Loader.cs" />
     <Compile Include="ObjectCreation\ConvertSpeckleObject.cs" />
     <Compile Include="ObjectCreation\ModifySpeckleObjectProperties.cs" />
     <Compile Include="ExtendedComponents\XmlToSpeckleObject.cs" />
@@ -137,10 +138,10 @@
       <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="SpeckleCore">
-      <Version>1.6.0.333-wip</Version>
+      <Version>1.5.2.343</Version>
     </PackageReference>
     <PackageReference Include="SpecklePopup">
-      <Version>1.6.1.30-wip</Version>
+      <Version>1.6.2.34-wip</Version>
     </PackageReference>
     <PackageReference Include="sqlite-net-pcl">
       <Version>1.5.231</Version>
