@@ -47,7 +47,7 @@ namespace SpeckleGrasshopper
 
       speckleMenu.DropDown.Items.Add( "Speckle Documentation", null, ( s, a ) =>
       {
-        Process.Start( @"https://speckle.works/docs/start" );
+        Process.Start( @"https://speckle.works/docs/essentials/start" );
       } );
 
       speckleMenu.DropDown.Items.Add( "Speckle Forum", null, ( s, a ) =>
