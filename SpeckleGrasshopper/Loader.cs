@@ -14,6 +14,7 @@ namespace SpeckleGrasshopper
   public class Loader : GH_AssemblyPriority
   {
     System.Timers.Timer loadTimer;
+    static bool MenuHasBeenAdded = false;
 
     public Loader( ) { }
 
@@ -28,6 +29,12 @@ namespace SpeckleGrasshopper
     private void AddSpeckleMenu( object sender, ElapsedEventArgs e )
     {
       if ( Grasshopper.Instances.DocumentEditor == null ) return;
+
+      if ( MenuHasBeenAdded )
+      {
+        loadTimer.Stop();
+        return;
+      }
 
       var speckleMenu = new ToolStripMenuItem( "Speckle" );
       speckleMenu.DropDown.Items.Add( "Speckle Account Manager", null, ( s, a ) =>
@@ -62,6 +69,7 @@ namespace SpeckleGrasshopper
         {
           mainMenu.Items.Insert( mainMenu.Items.Count - 2, speckleMenu );
         } ) );
+        MenuHasBeenAdded = true;
         loadTimer.Stop();
       }
       catch ( Exception err )
