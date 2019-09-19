@@ -132,7 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper" IncludeAssets="compile; build">
-      <Version>6.0.18016.23451</Version>
+      <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>
