@@ -73,10 +73,13 @@ namespace SpeckleGrasshopper.Management
 
       foreach ( var account in Accounts )
       {
-        Menu_AppendItem( menu, count++ + ". " + account.ServerName, ( sender, e ) =>
+        string displayName = account.ServerName;
+        displayName = displayName.Substring(0, 10);
+        displayName += "... - " + account.Email.Substring(0,10) + "...";
+        Menu_AppendItem( menu, count++ + ". " + displayName, ( sender, e ) =>
          {
            Selected = account;
-           this.NickName = account.ServerName;
+           NickName = displayName;
            Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
          }, true );
       }
