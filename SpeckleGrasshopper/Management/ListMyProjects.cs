@@ -98,7 +98,7 @@ namespace SpeckleGrasshopper.Management
       {
         if (tsk.Result.Success == false)
         {
-          AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "There was an error getting the list of projects");
+          AddRuntimeMessage(GH_RuntimeMessageLevel.Error, tsk.Result.Message);
           return;
         }
         var newProjects = tsk.Result.Resources.ToList();
