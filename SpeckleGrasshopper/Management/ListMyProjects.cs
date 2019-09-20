@@ -7,6 +7,7 @@ using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 using SpeckleGrasshopper.Properties;
+using System.Windows.Forms;
 
 namespace SpeckleGrasshopper.Management
 {
@@ -15,7 +16,7 @@ namespace SpeckleGrasshopper.Management
   {
     List<Project> UserProjects = new List<Project>();
     SpeckleApiClient Client = new SpeckleApiClient();
-
+    Project SelectedProject = null;
     Action ExpireComponent;
 
     public ListMyProjects()
@@ -25,6 +26,25 @@ namespace SpeckleGrasshopper.Management
       LocalContext.Init();
     }
 
+    public override void AppendAdditionalMenuItems(ToolStripDropDown menu)
+    {
+      base.AppendAdditionalMenuItems(menu);
+      foreach (Project project in UserProjects)
+      {
+        var nameString = "";
+        if (project.number != null) { nameString += project.number + " - "; }
+        nameString += project.Name;
+        Menu_AppendItem(menu, nameString, (sender, e) => 
+        {
+          if (SelectedProject == project)
+          {
+            SelectedProject = null;
+          }
+          else { SelectedProject = project; }
+          Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponent);
+        },true, project == SelectedProject );
+      }
+    }
 
     /// <summary>
     /// Registers all the input parameters for this component.
@@ -39,13 +59,13 @@ namespace SpeckleGrasshopper.Management
     /// </summary>
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
-      pManager.AddGenericParameter("Projects", "P", "Projects you own or have write access to", GH_ParamAccess.list);
+      pManager.AddGenericParameter("Projects", "Ps", "Projects you own or have write access to", GH_ParamAccess.list);
+      pManager.AddGenericParameter("Selected Project", "P", "Double click this component to select one project", GH_ParamAccess.item);
     }
 
     public override void AddedToDocument(GH_Document document)
     {
       base.AddedToDocument(document);
-
       ExpireComponent = () => this.ExpireSolution(true);
     }
     /// <summary>
@@ -64,6 +84,13 @@ namespace SpeckleGrasshopper.Management
         return;
       }
 
+      if (SelectedProject == null)
+      {
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Right click this component to select a project");
+      }
+
+   
+      DA.SetData("Selected Project", SelectedProject);
       DA.SetDataList("Projects", UserProjects);
 
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
