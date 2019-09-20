@@ -16,7 +16,7 @@ namespace SpeckleGrasshopper.Management
 
     SpeckleApiClient Client = new SpeckleApiClient();
     Action ExpireComponent;
-    List<SpeckleStream> AddedStreams = new List<SpeckleStream>();
+    List<string> AddedStreamIds = new List<string>();
     public AddStreamsToProject()
       : base("AddStreamsToProject", "Add Streams","Add a list of streams to a project","Speckle", "Management")
     {
@@ -52,12 +52,14 @@ namespace SpeckleGrasshopper.Management
     /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-      var streams = new List<SpeckleStream>();
+      //var streams = new List<SpeckleStream>();
+      var streamObjects = new List<object>();
+      var streamIds = new List<string>();
       Project project = null;
       Account account = null;
 
       DA.GetData("Project", ref project);
-      DA.GetDataList("Streams", streams);
+      DA.GetDataList("Streams", streamObjects);
       DA.GetData("Account", ref account);
 
       if (null == project) {
@@ -66,7 +68,7 @@ namespace SpeckleGrasshopper.Management
         return;
       }
 
-      if (null == streams)
+      if (null == streamObjects)
       {
         AddRuntimeMessage(GH_RuntimeMessageLevel.Warning,
           "You must connect at least one stream to this component");
@@ -80,22 +82,50 @@ namespace SpeckleGrasshopper.Management
         return;
       }
 
-      if (null != AddedStreams && AddedStreams.Count > 0)
+      foreach (object streamObject in streamObjects)
       {
+        if (streamObject is Grasshopper.Kernel.Types.GH_String)
+        {
+          var streamId = (streamObject as Grasshopper.Kernel.Types.GH_String).Value;
+          streamIds.Add(streamId);
+          continue;
+        }
+        if (streamObject is Grasshopper.Kernel.Types.GH_ObjectWrapper)
+        {
+          var stream = (SpeckleStream)(streamObject as Grasshopper.Kernel.Types.GH_ObjectWrapper).Value;
+          if (null != stream)
+          {
+            streamIds.Add(stream.StreamId);
+            continue;
+          }
+          AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This component only works with streamIds or SpeckleStream objects");
+        }
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "This component only works with streamIds or SpeckleStream objects");
+        return;
+      }
+
+      if (null != AddedStreamIds && AddedStreamIds.Count > 0)
+      {
+        string addedList = "";
+        foreach (string streamId in AddedStreamIds)
+        {
+          addedList += streamId + ",";
+        }
+        addedList = addedList.Substring(0, addedList.Length - 1);
         AddRuntimeMessage(GH_RuntimeMessageLevel.Remark, "Added " +
-          AddedStreams.Select(stream => stream.StreamId).ToString() +
+          addedList +
           "to the project");
       }
 
       //Do nothing if the project already contains these streams
-      var streamsToAdd = streams.Where(stream => !project.Streams.Contains(stream.StreamId)).ToList();
+      var streamsToAdd = streamIds.Where(streamId => !project.Streams.Contains(streamId)).ToList();
       if (streamsToAdd.Count() < 1 )
       {
-        AddedStreams.Clear();
+        AddedStreamIds.Clear();
         return;
       }
 
-      project.Streams.AddRange(streamsToAdd.Select(stream => stream.StreamId));
+      project.Streams.AddRange(streamsToAdd);
 
       Client.BaseUrl = account.RestApi;
       Client.AuthToken = account.Token;
@@ -107,8 +137,8 @@ namespace SpeckleGrasshopper.Management
           AddRuntimeMessage(GH_RuntimeMessageLevel.Error, task.Result.Message);
           return;
         }
-        AddedStreams.Clear();
-        AddedStreams.AddRange(streamsToAdd);
+        AddedStreamIds.Clear();
+        AddedStreamIds.AddRange(streamsToAdd);
         Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponent);
       });
       
