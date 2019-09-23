@@ -15,8 +15,6 @@ namespace SpeckleGrasshopper.Management
     List<SpeckleStream> SharedStreams = new List<SpeckleStream>();
     SpeckleApiClient Client = new SpeckleApiClient();
 
-    Account OldAccount;
-
     Action ExpireComponent;
 
     public ListStreams( ) : base( "Streams", "Streams", "Lists your existing Speckle streams for a specified account.", "Speckle", "Management" )
@@ -46,27 +44,33 @@ namespace SpeckleGrasshopper.Management
 
     protected override void SolveInstance( IGH_DataAccess DA )
     {
-      object preAccount = null;
       Account Account = null;
-      DA.GetData( 0, ref preAccount );
+      DA.GetData( 0, ref Account );
 
-      Account = ( ( Account ) preAccount.GetType().GetProperty( "Value" ).GetValue( preAccount, null ) );
-
-      if ( Account == null )
+      if ( Account == null)
+      {
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Couldn't set the account");
         return;
+      }
 
       DA.SetDataList( 0, UserStreams );
-
-      if ( Account == OldAccount )
-        return;
-
-      OldAccount = Account;
-
+           
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
       Client.StreamsGetAllAsync( "fields=streamId,name,description&isComputedResult=false&deleted=false" ).ContinueWith( tsk =>
          {
-           UserStreams = tsk.Result.Resources.ToList();
-           Rhino.RhinoApp.MainApplicationWindow.Invoke( ExpireComponent );
+           if (tsk.Result.Success == false)
+           {
+             AddRuntimeMessage(GH_RuntimeMessageLevel.Error, tsk.Result.Message);
+             return;
+           }
+           var newStreams = tsk.Result.Resources.ToList();
+           var notUpdated = UserStreams.Select(x => x._id).SequenceEqual(newStreams.Select(x => x._id));
+
+           if (!notUpdated)
+           {
+             UserStreams = tsk.Result.Resources.ToList();
+             Rhino.RhinoApp.MainApplicationWindow.Invoke(ExpireComponent);
+           }
          } );
     }
 
@@ -74,7 +78,7 @@ namespace SpeckleGrasshopper.Management
     {
       get
       {
-        return Resources.GenericIconXS;
+        return Resources.Streams;
       }
     }
 

@@ -72,6 +72,8 @@
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
     <Compile Include="Loader.cs" />
+    <Compile Include="Management\AddStreamsToProject.cs" />
+    <Compile Include="Management\ListMyProjects.cs" />
     <Compile Include="ObjectCreation\ConvertSpeckleObject.cs" />
     <Compile Include="ObjectCreation\ModifySpeckleObjectProperties.cs" />
     <Compile Include="ExtendedComponents\XmlToSpeckleObject.cs" />
