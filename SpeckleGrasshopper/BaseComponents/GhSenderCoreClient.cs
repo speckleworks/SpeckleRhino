@@ -110,7 +110,7 @@ namespace SpeckleGrasshopper
           ms.Write( serialisedClient, 0, serialisedClient.Length );
           ms.Seek( 0, SeekOrigin.Begin );
           Client = ( SpeckleApiClient ) new BinaryFormatter().Deserialize( ms );
-          var x = Client;
+          Client.ClientType = "Grasshopper";
           RestApi = Client.BaseUrl;
           StreamId = Client.StreamId;
           WasSerialised = true;
@@ -122,7 +122,6 @@ namespace SpeckleGrasshopper
       catch ( Exception err )
       {
         this.AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Failed to reinitialise sender." );
-        //throw err;
       }
       return base.Read( reader );
     }

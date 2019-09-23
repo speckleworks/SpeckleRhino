@@ -549,6 +549,7 @@ namespace SpeckleRhino
         ms.Write( serialisedClient, 0, serialisedClient.Length );
         ms.Seek( 0, SeekOrigin.Begin );
         Client = ( SpeckleApiClient ) new BinaryFormatter().Deserialize( ms );
+        Client.ClientType = "Rhino";
         StreamId = Client.StreamId;
       }
 
