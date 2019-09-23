@@ -63,6 +63,26 @@ namespace SpeckleGrasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Accounts {
+            get {
+                object obj = ResourceManager.GetObject("Accounts", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap AddStreamToProject {
+            get {
+                object obj = ResourceManager.GetObject("AddStreamToProject", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Convert {
             get {
                 object obj = ResourceManager.GetObject("Convert", resourceCulture);
@@ -183,6 +203,16 @@ namespace SpeckleGrasshopper.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Projects {
+            get {
+                object obj = ResourceManager.GetObject("Projects", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap receiver_2 {
             get {
                 object obj = ResourceManager.GetObject("receiver_2", resourceCulture);
@@ -216,6 +246,16 @@ namespace SpeckleGrasshopper.Properties {
         internal static System.Drawing.Bitmap SetUserData {
             get {
                 object obj = ResourceManager.GetObject("SetUserData", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Streams {
+            get {
+                object obj = ResourceManager.GetObject("Streams", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

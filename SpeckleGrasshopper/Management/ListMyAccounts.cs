@@ -102,7 +102,7 @@ namespace SpeckleGrasshopper.Management
     {
       get
       {
-        return Resources.GenericIconXS;
+        return Resources.Accounts;
       }
     }
 
