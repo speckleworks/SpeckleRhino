@@ -7,6 +7,7 @@ using System.IO;
 using Rhino;
 using System.Net;
 using System.Diagnostics;
+using SpeckleRhino.UIBindings;
 
 namespace SpeckleRhino
 {
@@ -33,6 +34,8 @@ namespace SpeckleRhino
       SpecklePlugIn.Store = new Interop( SpecklePlugIn.Browser );
 
       SpecklePlugIn.Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
+
+      SpecklePlugIn.Browser.RegisterAsyncJsObject( "UiBindings", new RhinoUiBindings());
 
       this.Controls.Add( SpecklePlugIn.Browser );
       
