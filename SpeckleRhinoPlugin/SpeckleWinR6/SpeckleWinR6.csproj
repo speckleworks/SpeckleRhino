@@ -106,7 +106,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="UIBindings\Receiver.cs" />
     <Compile Include="UIBindings\RhinoUiBindings.cs" />
+    <Compile Include="UIBindings\Sender.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

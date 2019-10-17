@@ -7,14 +7,18 @@ using System.Timers;
 using CefSharp;
 using Newtonsoft.Json;
 using Rhino;
-//using CefSharp.Wpf;
+using SpeckleCore;
 using SpeckleUiBase;
 
 namespace SpeckleRhino.UIBindings
 {
   internal partial class RhinoUiBindings : SpeckleUIBindings
   {
+    // Ui store. 
     public List<dynamic> Clients;
+
+    // For receiver in memory diffing.
+    public List<SpeckleStream> LocalState;
 
     public bool SelectionExpired = true;
 
@@ -22,6 +26,7 @@ namespace SpeckleRhino.UIBindings
     {
       Browser = myBrowser;
       Clients = new List<dynamic>();
+      LocalState = new List<SpeckleStream>();
 
       // Selection Events
       RhinoDoc.SelectObjects += ( sender, e ) => { if( !Browser.IsBrowserInitialized ) return; SelectionExpired = true; };
@@ -84,6 +89,7 @@ namespace SpeckleRhino.UIBindings
     {
       var doc = RhinoDoc.ActiveDoc;
       doc.Strings.SetString( "speckle", JsonConvert.SerializeObject( Clients ) );
+      doc.Strings.SetString( "speckle-localstate", JsonConvert.SerializeObject( LocalState ) );
     }
 
     public override void SelectClientObjects( string args )
@@ -98,16 +104,27 @@ namespace SpeckleRhino.UIBindings
 
     public override string GetFileClients()
     {
-      var strings = RhinoDoc.ActiveDoc.Strings.GetValue( "speckle" );
+      var clientsString = RhinoDoc.ActiveDoc.Strings.GetValue( "speckle" );
+      var localStateString = RhinoDoc.ActiveDoc.Strings.GetValue( "speckle-localstate" );
       try
       {
-        Clients = JsonConvert.DeserializeObject<List<dynamic>>( strings );
+        Clients = JsonConvert.DeserializeObject<List<dynamic>>( clientsString );
       }
       catch( Exception e )
       {
         Clients = new List<dynamic>();
       }
-      return strings;
+
+      try
+      {
+        LocalState = JsonConvert.DeserializeObject<List<SpeckleStream>>( localStateString );
+      }
+      catch( Exception e )
+      {
+        LocalState = new List<SpeckleStream>();
+      }
+
+      return clientsString;
     }
 
     public override string GetDocumentId()
@@ -132,6 +149,7 @@ namespace SpeckleRhino.UIBindings
 
     public override List<ISelectionFilter> GetSelectionFilters()
     {
+      var layerNames = RhinoDoc.ActiveDoc.Layers.Select( layer => layer.FullPath ).ToList();
       return new List<ISelectionFilter>
       {
         new ElementsSelectionFilter
@@ -139,9 +157,23 @@ namespace SpeckleRhino.UIBindings
           Name = "Selection",
           Icon = "mouse",
           Selection = new List<string>()
+        },
+        new ListSelectionFilter
+        {
+          Name = "Layers",
+          Icon = "layers",
+          Values = layerNames
         }
       };
     }
+  }
 
+  public class RhinoLayerSelectionFilter : ISelectionFilter
+  {
+    public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    public string Icon { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    public string Type => throw new NotImplementedException();
+
+    public List<String> Selection = new List<string>();
   }
 }
