@@ -126,7 +126,7 @@ namespace SpeckleRhino
 
     private void RhinoDoc_DeselectObjects( object sender, RhinoObjectSelectionEventArgs e )
     {
-      Debug.WriteLine( "Deselect event" );
+      //Debug.WriteLine( "Deselect event" );
       SelectionInfoNeedsToBeSentYeMighty = true;
       return;
     }

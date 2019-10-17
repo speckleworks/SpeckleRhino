@@ -3,95 +3,145 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
+using CefSharp;
+using Newtonsoft.Json;
+using Rhino;
+//using CefSharp.Wpf;
 using SpeckleUiBase;
 
 namespace SpeckleRhino.UIBindings
 {
-  class RhinoUiBindings : SpeckleUIBindings
+  internal partial class RhinoUiBindings : SpeckleUIBindings
   {
-    public override void AddObjectsToSender( string args )
+    public List<dynamic> Clients;
+
+    public bool SelectionExpired = true;
+
+    public RhinoUiBindings( IWebBrowser myBrowser )
     {
-      throw new NotImplementedException();
+      Browser = myBrowser;
+      Clients = new List<dynamic>();
+
+      // Selection Events
+      RhinoDoc.SelectObjects += ( sender, e ) => { if( !Browser.IsBrowserInitialized ) return; SelectionExpired = true; };
+      RhinoDoc.DeselectObjects += ( sender, e ) => { if( !Browser.IsBrowserInitialized ) return; SelectionExpired = true; };
+      RhinoDoc.DeselectAllObjects += ( sender, e ) => { if( !Browser.IsBrowserInitialized ) return; SelectionExpired = true; };
+      RhinoApp.Idle += RhinoApp_Idle;
+
+      RhinoDoc.BeginSaveDocument += RhinoDoc_BeginSaveDocument;
     }
 
-    public override void AddReceiver( string args )
+    private void RhinoDoc_BeginSaveDocument( object sender, DocumentSaveEventArgs e )
     {
-      throw new NotImplementedException();
+      SaveClients();
     }
 
-    public override void AddSelectionToSender( string args )
+    private void RhinoApp_Idle( object sender, EventArgs e )
     {
-      throw new NotImplementedException();
+      if( !Browser.IsBrowserInitialized ) return;
+      if( SelectionExpired )
+      {
+        SelectionExpired = false;
+        var selectedObjectsCount = RhinoDoc.ActiveDoc.Objects.GetSelectedObjects( false, false ).ToList().Count;
+        NotifyUi( "update-selection-count", JsonConvert.SerializeObject( new
+        {
+          selectedObjectsCount
+        } ) );
+      }
     }
 
-    public override void AddSender( string args )
+    public void GetOldFileClients()
     {
-      throw new NotImplementedException();
+      //TODO: migrate old clients to new clients. somehow.
+      string[ ] receiverKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames( "speckle-client-receivers" );
+      string[ ] senderKeys = RhinoDoc.ActiveDoc.Strings.GetEntryNames( "speckle-client-senders" );
     }
 
-    public override void BakeReceiver( string args )
+    public override void ShowAccountsPopup()
     {
-      throw new NotImplementedException();
-    }
+      Rhino.RhinoApp.InvokeOnUiThread( new Action( () =>
+      {
+        var signInWindow = new SpecklePopup.SignInWindow();
+        var helper = new System.Windows.Interop.WindowInteropHelper( signInWindow );
+        helper.Owner = Rhino.RhinoApp.MainWindowHandle();
 
-    public override string GetApplicationHostName( )
-    {
-      return "Rhino";
-    }
-
-    public override string GetDocumentId( )
-    {
-      throw new NotImplementedException();
-    }
-
-    public override string GetDocumentLocation( )
-    {
-      throw new NotImplementedException();
-    }
-
-    public override string GetFileClients( )
-    {
-      throw new NotImplementedException();
-    }
-
-    public override string GetFileName( )
-    {
-      throw new NotImplementedException();
-    }
-
-    public override List<ISelectionFilter> GetSelectionFilters( )
-    {
-      throw new NotImplementedException();
-    }
-
-    public override void PushSender( string args )
-    {
-      throw new NotImplementedException();
+        signInWindow.ShowDialog();
+        DispatchStoreActionUi( "getAccounts" );
+      } ) );
     }
 
     public override void RemoveClient( string args )
     {
-      throw new NotImplementedException();
+      var client = JsonConvert.DeserializeObject<dynamic>( args );
+      var index = Clients.FindIndex( cl => cl.clientId == client.clientId );
+      if( index < 0 ) return;
+      Clients.RemoveAt( index );
+      SaveClients();
     }
 
-    public override void RemoveObjectsFromSender( string args )
+    public void SaveClients()
     {
-      throw new NotImplementedException();
-    }
-
-    public override void RemoveSelectionFromSender( string args )
-    {
-      throw new NotImplementedException();
+      var doc = RhinoDoc.ActiveDoc;
+      doc.Strings.SetString( "speckle", JsonConvert.SerializeObject( Clients ) );
     }
 
     public override void SelectClientObjects( string args )
     {
-      throw new NotImplementedException();
+      RhinoDoc.ActiveDoc.Objects.UnselectAll();
+      var client = JsonConvert.DeserializeObject<dynamic>( args );
+
+      // TODO: figure out what kind of filter this is, and "select" it. somehow.
+
+      RhinoDoc.ActiveDoc.Views.Redraw();
     }
 
-    public override void UpdateSender( string args )
+    public override string GetFileClients()
     {
-      throw new NotImplementedException();
+      var strings = RhinoDoc.ActiveDoc.Strings.GetValue( "speckle" );
+      try
+      {
+        Clients = JsonConvert.DeserializeObject<List<dynamic>>( strings );
+      }
+      catch( Exception e )
+      {
+        Clients = new List<dynamic>();
+      }
+      return strings;
     }
+
+    public override string GetDocumentId()
+    {
+      return RhinoDoc.ActiveDoc.RuntimeSerialNumber.ToString();
+    }
+
+    public override string GetFileName()
+    {
+      return RhinoDoc.ActiveDoc.Name;
+    }
+
+    public override string GetDocumentLocation()
+    {
+      return RhinoDoc.ActiveDoc.Path;
+    }
+
+    public override string GetApplicationHostName()
+    {
+      return "Rhino";
+    }
+
+    public override List<ISelectionFilter> GetSelectionFilters()
+    {
+      return new List<ISelectionFilter>
+      {
+        new ElementsSelectionFilter
+        {
+          Name = "Selection",
+          Icon = "mouse",
+          Selection = new List<string>()
+        }
+      };
+    }
+
   }
 }

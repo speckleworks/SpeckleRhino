@@ -7,14 +7,17 @@ using CefSharp.WinForms;
 using System.Net;
 using System.Windows.Forms;
 using System.Diagnostics;
+using Rhino.FileIO;
+using Rhino;
+using SpeckleRhino.UIBindings;
 
 namespace SpeckleRhino
 {
   public class SpecklePlugIn : Rhino.PlugIns.PlugIn
   {
-
-    public static Interop Store;
     public static ChromiumWebBrowser Browser;
+
+    internal static RhinoUiBindings RhinoUiBindings { get; set; }
 
     public SpecklePlugIn( )
     {
@@ -48,7 +51,7 @@ namespace SpeckleRhino
         Browser.Dispose();
       Cef.Shutdown();
 
-      Store?.Dispose();
+      //Store?.Dispose();
       SpecklePlugIn.Instance.PanelUserControl?.Dispose();
       base.OnShutdown();
     }
@@ -62,16 +65,11 @@ namespace SpeckleRhino
       var assemblyLocation = Assembly.GetExecutingAssembly().Location;
       var assemblyPath = Path.GetDirectoryName( assemblyLocation );
       var pathSubprocess = Path.Combine( assemblyPath, "CefSharp.BrowserSubprocess.exe" );
-      CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+      //CefSharpSettings.LegacyJavascriptBindingEnabled = true;
       var settings = new CefSettings
       {
         BrowserSubprocessPath = pathSubprocess
       };
-
-#if WINR5
-      //Not needed in Rhino 6
-      settings.CefCommandLineArgs.Add( "disable-gpu", "1" );
-#endif
 
       settings.CefCommandLineArgs.Add( "allow-file-access-from-files", "1" );
       settings.CefCommandLineArgs.Add( "disable-web-security", "1" );

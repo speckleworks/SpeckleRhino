@@ -19,25 +19,19 @@ namespace SpeckleRhino
   {
     /// <summary>
     /// This gets called every time a new file is opened. 
-    /// Therefore, we must init things here. It's the best way.
+    /// Therefore, we must init things here. It's the best way (that @didimitrie found so far).
     /// </summary>
     public SpeckleRhinoUserControl( )
     {
-      if( SpecklePlugIn.Store!=null)
-        SpecklePlugIn.Store.Dispose();
-
       InitializeComponent();
 
       SpecklePlugIn.InitializeCef();
       SpecklePlugIn.InitializeChromium();
 
-      SpecklePlugIn.Store = new Interop( SpecklePlugIn.Browser );
+      SpecklePlugIn.RhinoUiBindings = new RhinoUiBindings( SpecklePlugIn.Browser );
+      SpecklePlugIn.Browser.RegisterAsyncJsObject( "UiBindings", SpecklePlugIn.RhinoUiBindings );
 
-      SpecklePlugIn.Browser.RegisterAsyncJsObject( "Interop", SpecklePlugIn.Store );
-
-      SpecklePlugIn.Browser.RegisterAsyncJsObject( "UiBindings", new RhinoUiBindings());
-
-      this.Controls.Add( SpecklePlugIn.Browser );
+      Controls.Add( SpecklePlugIn.Browser );
       
       // Set the user control property on our plug-in
       SpecklePlugIn.Instance.PanelUserControl = this;
