@@ -254,8 +254,8 @@ namespace SpeckleRhino
     public void DisplayContents( )
     {
       Display.Geometry = new List<GeometryBase>();
-      Display.Colors = new List<System.Drawing.Color>();
-      Display.VisibleList = new List<bool>();
+      //Display.Colors = new List<System.Drawing.Color>();
+      //Display.VisibleList = new List<bool>();
 
       var localCopy = Client.Stream.Objects.ToList();
 
@@ -264,9 +264,9 @@ namespace SpeckleRhino
       {
         var gb = Converter.Deserialise( myObject );
 
-        Display.Colors.Add( GetColorFromLayer( GetLayerFromIndex( count ) ) );
+        //Display.Colors.Add( GetColorFromLayer( GetLayerFromIndex( count ) ) );
 
-        Display.VisibleList.Add( true );
+        //Display.VisibleList.Add( true );
 
         if ( gb is Rhino.Geometry.Box )
 #if WINR5
@@ -496,26 +496,26 @@ namespace SpeckleRhino
 
     public void ToggleLayerHover( string layerId, bool status )
     {
-      SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
-      if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
+      //SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
+      //if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
 
-      if ( status )
-      {
-        Display.HoverRange = new Interval( ( double ) myLayer.StartIndex, ( double ) ( myLayer.StartIndex + myLayer.ObjectCount ) );
-      }
-      else
-        Display.HoverRange = null;
-      Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
+      //if ( status )
+      //{
+      //  Display.HoverRange = new Interval( ( double ) myLayer.StartIndex, ( double ) ( myLayer.StartIndex + myLayer.ObjectCount ) );
+      //}
+      //else
+      //  Display.HoverRange = null;
+      //Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
     }
 
     public void ToggleLayerVisibility( string layerId, bool status )
     {
-      SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
-      if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
+      //SpeckleCore.Layer myLayer = Client.Stream.Layers.FirstOrDefault( l => l.Guid == layerId );
+      //if ( myLayer == null ) throw new Exception( "Bloopers. Layer not found." );
 
-      for ( int i = ( int ) myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++ )
-        Display.VisibleList[ i ] = status;
-      Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
+      //for ( int i = ( int ) myLayer.StartIndex; i < myLayer.StartIndex + myLayer.ObjectCount; i++ )
+      //  Display.VisibleList[ i ] = status;
+      //Rhino.RhinoDoc.ActiveDoc?.Views.Redraw();
     }
     #endregion
 

@@ -18,32 +18,11 @@ namespace SpeckleRhino
 
     public List<GeometryBase> Geometry { get; set; }
 
-    public List<Color> Colors { get; set; }
-
-    public List<bool> VisibleList { get; set; }
-
-    public Interval? HoverRange { get; set; }
-
     public SpeckleDisplayConduit( )
     {
       Geometry = new List<GeometryBase>();
-      Colors = new List<Color>();
-      VisibleList = new List<bool>();
     }
 
-    public SpeckleDisplayConduit( List<GeometryBase> _Geometry )
-    {
-      Geometry = _Geometry;
-      Colors = new List<Color>();
-      VisibleList = new List<bool>();
-    }
-
-    public SpeckleDisplayConduit( List<GeometryBase> _Geometry, List<Color> _Colors, List<bool> _VisibleList )
-    {
-      Geometry = _Geometry;
-      Colors = _Colors;
-      VisibleList = _VisibleList;
-    }
 
     protected override void CalculateBoundingBox( CalculateBoundingBoxEventArgs e )
     {
@@ -74,32 +53,35 @@ namespace SpeckleRhino
 
     protected override void PostDrawObjects( DrawEventArgs e )
     {
-      if ( VisibleList.Count == 0 ) return;
+      //if ( VisibleList.Count == 0 ) return;
 
       base.PostDrawObjects( e );
       int count = 0;
 
-      var LocalCopy = Geometry.ToArray();
+      //var LocalCopy = Geometry.ToArray();
 
-      foreach ( var obj in LocalCopy )
+      var color = Rhino.ApplicationSettings.AppearanceSettings.SelectedObjectColor;
+
+      foreach ( var obj in Geometry )
       {
-        if ( VisibleList[ count ] && obj != null && !obj.IsDocumentControlled )
+        if( obj.Disposed ) continue;
+        //if ( VisibleList[ count ] && obj != null && !obj.IsDocumentControlled )
           switch ( obj.ObjectType )
           {
             case Rhino.DocObjects.ObjectType.Point:
-              e.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, PointStyle.X, 2, Colors[ count ] );
+              e.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, PointStyle.X, 2, color );
               break;
 
             case Rhino.DocObjects.ObjectType.Curve:
-              e.Display.DrawCurve( ( Curve ) obj, Colors[ count ] );
+              e.Display.DrawCurve( ( Curve ) obj, color );
               break;
 
             case Rhino.DocObjects.ObjectType.Extrusion:
-              DisplayMaterial eMaterial = new DisplayMaterial( Colors[ count ], 0.5 );
+              DisplayMaterial eMaterial = new DisplayMaterial( color, 0.5 );
               e.Display.DrawBrepShaded( ( ( Extrusion ) obj ).ToBrep(), eMaterial );
               break;
             case Rhino.DocObjects.ObjectType.Brep:
-              DisplayMaterial bMaterial = new DisplayMaterial( Colors[ count ], 0.5 );
+              DisplayMaterial bMaterial = new DisplayMaterial( color, 0.5 );
               e.Display.DrawBrepShaded( ( Brep ) obj, bMaterial );
               //e.Display.DrawBrepWires((Brep)obj, Color.DarkGray, 1);
               break;
@@ -115,7 +97,7 @@ namespace SpeckleRhino
               }
               else
               {
-                DisplayMaterial mMaterial = new DisplayMaterial( Colors[ count ], 0.5 );
+                DisplayMaterial mMaterial = new DisplayMaterial( color, 0.5 );
                 e.Display.DrawMeshShaded( mesh, mMaterial );
               }
               //e.Display.DrawMeshWires((Mesh)obj, Color.DarkGray);
@@ -124,7 +106,7 @@ namespace SpeckleRhino
             case Rhino.DocObjects.ObjectType.TextDot:
               //e.Display.Draw3dText( ((TextDot)obj).Text, Colors[count], new Plane(((TextDot)obj).Point));
               var textDot = ( TextDot ) obj;
-              e.Display.DrawDot( textDot.Point, textDot.Text, Colors[ count ], Color.White );
+              e.Display.DrawDot( textDot.Point, textDot.Text, color, Color.White );
 
               break;
 
@@ -142,66 +124,6 @@ namespace SpeckleRhino
               break;
           }
         count++;
-      }
-    }
-
-    protected override void DrawOverlay( DrawEventArgs e )
-    {
-      base.DrawOverlay( e );
-      if ( HoverRange == null ) return;
-
-      var LocalCopy = Geometry.ToArray();
-
-      var selectColor = Rhino.ApplicationSettings.AppearanceSettings.SelectedObjectColor;
-
-      for ( int i = ( int ) HoverRange.Value.T0; i < HoverRange.Value.T1; i++ )
-      {
-        if ( LocalCopy[ i ] != null )
-        {
-          var obj = LocalCopy[ i ];
-          //if ( obj.IsDocumentControlled ) continue;
-
-          switch ( obj.ObjectType )
-          {
-            case Rhino.DocObjects.ObjectType.Point:
-              e.Display.DrawPoint( ( ( Rhino.Geometry.Point ) obj ).Location, PointStyle.X, 4, selectColor);
-              break;
-
-            case Rhino.DocObjects.ObjectType.Curve:
-              e.Display.DrawCurve( ( Curve ) obj, selectColor);
-              break;
-
-            case Rhino.DocObjects.ObjectType.Brep:
-              e.Display.DrawBrepWires((Brep)obj, selectColor, 1);
-              break;
-
-            case Rhino.DocObjects.ObjectType.Extrusion:
-              e.Display.DrawBrepWires((obj as Extrusion).ToBrep(), selectColor);
-              break;
-
-            case Rhino.DocObjects.ObjectType.Mesh:
-              e.Display.DrawMeshWires((Mesh)obj, selectColor);
-              break;
-
-            case Rhino.DocObjects.ObjectType.TextDot:
-              var textDot = ( TextDot ) obj;
-              e.Display.DrawDot( textDot.Point, textDot.Text, selectColor, Color.Black );
-              break;
-
-            case Rhino.DocObjects.ObjectType.Annotation:
-              if ( obj is TextEntity )
-              {
-                var textObj = ( Rhino.Geometry.TextEntity ) obj;
-#if WINR6
-                e.Display.Draw3dText( textObj.PlainText, selectColor, textObj.Plane, textObj.TextHeight, textObj.Font.FaceName );
-#else
-                e.Display.Draw3dText(textObj.Text, selectColor, textObj.Plane,textObj.TextHeight ,Rhino.RhinoDoc.ActiveDoc.Fonts[textObj.FontIndex].FaceName);
-#endif
-               }
-              break;
-          }
-        }
-
       }
     }
   }

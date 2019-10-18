@@ -81,7 +81,17 @@ namespace SpeckleRhino.UIBindings
       var client = JsonConvert.DeserializeObject<dynamic>( args );
       var index = Clients.FindIndex( cl => cl.clientId == client.clientId );
       if( index < 0 ) return;
+
       Clients.RemoveAt( index );
+
+      if( DCRS.ContainsKey( (string) client.clientId ) )
+      {
+        DCRS[ (string) client.clientId ].Enabled = false;
+        DCRS[ (string) client.clientId ].Geometry = new List<Rhino.Geometry.GeometryBase>(); // will it be GC'ed?
+        DCRS.Remove( (string) client.clientId ); // will it be GC'ed?
+        RhinoDoc.ActiveDoc.Views.Redraw();
+      }
+
       SaveClients();
     }
 

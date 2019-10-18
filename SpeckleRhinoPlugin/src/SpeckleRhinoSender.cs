@@ -483,7 +483,7 @@ namespace SpeckleRhino
       Display.Geometry = new List<GeometryBase>();
       if ( !status )
       {
-        Display.HoverRange = new Interval( 0, 0 );
+        //Display.HoverRange = new Interval( 0, 0 );
         RhinoDoc.ActiveDoc.Views.Redraw();
         return;
       }
@@ -500,7 +500,7 @@ namespace SpeckleRhino
           Display.Geometry.Add( obj.Geometry );
       }
 
-      Display.HoverRange = new Interval( 0, Display.Geometry.Count );
+      //Display.HoverRange = new Interval( 0, Display.Geometry.Count );
       RhinoDoc.ActiveDoc.Views.Redraw();
 
     }
