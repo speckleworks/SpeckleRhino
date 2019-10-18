@@ -95,6 +95,13 @@ namespace SpeckleRhino.UIBindings
       SaveClients();
     }
 
+    // TODO: Add to baseui
+    public void ClientUpdated( string args )
+    {
+      var client = JsonConvert.DeserializeObject<dynamic>( args );
+      // TODO: Check if receiver or sender, and do the right thing YO
+    }
+
     public void SaveClients()
     {
       var doc = RhinoDoc.ActiveDoc;
@@ -176,6 +183,10 @@ namespace SpeckleRhino.UIBindings
         }
       };
     }
+
+    // TODO: Add to baseui
+    public bool CanTogglePreview() => true;
+    public bool CanSelectObjects() => false;
   }
 
   public class RhinoLayerSelectionFilter : ISelectionFilter

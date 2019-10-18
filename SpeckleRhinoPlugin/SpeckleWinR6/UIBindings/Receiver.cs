@@ -23,6 +23,15 @@ namespace SpeckleRhino.UIBindings
 
     public Dictionary<string, SpeckleDisplayConduit> DCRS = new Dictionary<string, SpeckleDisplayConduit>();
 
+    // TODO: move to base ui
+    public void TogglePreview(string args)
+    {
+      var client = JsonConvert.DeserializeObject<dynamic>( args );
+      var DC = DCRS[ (string) client.clientId ];
+      DC.Enabled = !DC.Enabled;
+      RhinoDoc.ActiveDoc.Views.Redraw();
+    }
+
     public override void AddReceiver( string args )
     {
       var receiver = JsonConvert.DeserializeObject<dynamic>( args );
