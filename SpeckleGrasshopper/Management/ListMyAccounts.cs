@@ -31,21 +31,27 @@ namespace SpeckleGrasshopper.Management
 
     public override bool Read( GH_IReader reader )
     {
-      string serialisedAccount = "";
-      reader.TryGetString( "selectedAccount", ref serialisedAccount );
+      string restApi = "", email = "";
+      reader.TryGetString( "restapi", ref restApi );
+      reader.TryGetString( "email", ref email );
 
-      if ( serialisedAccount != "" )
+      try
       {
-        Account myAccount = SNJ.JsonConvert.DeserializeObject<Account>( serialisedAccount );
-        Selected = myAccount;
+        var acc = LocalContext.GetAccountByEmailAndRestApi( email, restApi );
+        Selected = acc;
       }
-
+      catch ( Exception e )
+      {
+        AddRuntimeMessage( GH_RuntimeMessageLevel.Error, "Account not found." );
+      }
       return base.Read( reader );
     }
 
     public override bool Write( GH_IWriter writer )
     {
-      writer.SetString( "selectedAccount", SNJ.JsonConvert.SerializeObject( Selected ) );
+      //writer.SetString( "selectedAccount", SNJ.JsonConvert.SerializeObject( Selected ) );
+      writer.SetString( "restapi", Selected.RestApi );
+      writer.SetString( "email", Selected.Email );
       return base.Write( writer );
     }
 
@@ -74,8 +80,8 @@ namespace SpeckleGrasshopper.Management
       foreach ( var account in Accounts )
       {
         string displayName = account.ServerName;
-        displayName = displayName.Substring(0, 10);
-        displayName += "... - " + account.Email.Substring(0,10) + "...";
+        displayName = displayName.Substring( 0, 10 );
+        displayName += "... - " + account.Email.Substring( 0, 10 ) + "...";
         Menu_AppendItem( menu, count++ + ". " + displayName, ( sender, e ) =>
          {
            Selected = account;

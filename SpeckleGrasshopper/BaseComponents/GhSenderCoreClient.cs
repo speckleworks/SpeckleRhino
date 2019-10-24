@@ -750,6 +750,11 @@ namespace SpeckleGrasshopper
 
       IsSendingUpdate = true;
 
+      // Hack for thesis: always create history
+      var cloneResult = Client.StreamCloneAsync( StreamId ).Result;
+      Client.Stream.Children.Add( cloneResult.Clone.StreamId );
+
+
       Message = String.Format( "Converting {0} \n objects", BucketObjects.Count );
 
       var convertedObjects = Converter.Serialise( BucketObjects ).ToList();
