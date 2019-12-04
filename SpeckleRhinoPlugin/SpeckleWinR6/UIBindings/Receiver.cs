@@ -23,19 +23,21 @@ namespace SpeckleRhino.UIBindings
 
     public Dictionary<string, SpeckleDisplayConduit> DCRS = new Dictionary<string, SpeckleDisplayConduit>();
 
-    // TODO: move to base ui
-    public void TogglePreview(string args)
+    // TODO: add overrdiable method to base ui
+    public void TogglePreview( string args )
     {
       var client = JsonConvert.DeserializeObject<dynamic>( args );
       var DC = DCRS[ (string) client.clientId ];
-      DC.Enabled = !DC.Enabled;
+      DC.Enabled = (bool) client.preview;
       RhinoDoc.ActiveDoc.Views.Redraw();
     }
 
     public override void AddReceiver( string args )
     {
       var receiver = JsonConvert.DeserializeObject<dynamic>( args );
-      Clients.Add( receiver );
+      var index = Clients.FindIndex( cl => cl.clientId == receiver.clientId );
+      if( index == -1 )
+        Clients.Add( receiver );
 
       if( !DCRS.ContainsKey( (string) receiver.clientId ) )
         DCRS[ (string) receiver.clientId ] = new SpeckleDisplayConduit();
@@ -200,7 +202,7 @@ namespace SpeckleRhino.UIBindings
         }
         catch( Exception e )
         {
-          errors += "Failed to convert " + obj.Type + " at index " + i + "<v-divider></v-divider>";
+          errors += "Failed to convert " + obj.Type + " at index " + i;
         }
         i++;
       }
@@ -215,7 +217,8 @@ namespace SpeckleRhino.UIBindings
         loading = false,
         isLoadingIndeterminate = true,
         loadingBlurb = string.Format( "Done." ),
-        errors
+        errors,
+        errorMsg = errors != "" ? "There are some errors ᕦ(ò_óˇ)ᕤ" : ""
       } ) );
 
       LocalState.Remove( previousStream );

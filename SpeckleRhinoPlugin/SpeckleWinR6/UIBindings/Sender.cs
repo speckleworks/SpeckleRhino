@@ -14,7 +14,10 @@ namespace SpeckleRhino.UIBindings
     public override void AddSender( string args )
     {
       var sender = JsonConvert.DeserializeObject<dynamic>( args );
-      Clients.Add( sender );
+      var index = Clients.FindIndex( cl => cl.clientId == sender.clientId );
+      if( index == -1 )
+        Clients.Add( sender );
+
       SaveClients();
     }
 

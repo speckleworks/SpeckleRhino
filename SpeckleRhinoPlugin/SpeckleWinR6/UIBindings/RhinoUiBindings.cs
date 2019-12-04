@@ -35,6 +35,28 @@ namespace SpeckleRhino.UIBindings
       RhinoApp.Idle += RhinoApp_Idle;
 
       RhinoDoc.BeginSaveDocument += RhinoDoc_BeginSaveDocument;
+
+      RhinoDoc.NewDocument += RhinoDoc_NewDocument;
+      RhinoDoc.EndOpenDocument += RhinoDoc_EndOpenDocument;
+    }
+
+    private void RhinoDoc_EndOpenDocument( object sender, DocumentOpenEventArgs e )
+    {
+      if( e.Merge ) return; // copy paste operation
+      
+      foreach(dynamic client in Clients.ToArray())
+      {
+        RemoveClient( JsonConvert.SerializeObject( client ) );
+      }
+      
+    }
+
+    private void RhinoDoc_NewDocument( object sender, DocumentEventArgs e )
+    {
+      foreach( dynamic client in Clients.ToArray() )
+      {
+        RemoveClient( JsonConvert.SerializeObject( client ) );
+      }
     }
 
     private void RhinoDoc_BeginSaveDocument( object sender, DocumentSaveEventArgs e )
@@ -100,6 +122,10 @@ namespace SpeckleRhino.UIBindings
     {
       var client = JsonConvert.DeserializeObject<dynamic>( args );
       // TODO: Check if receiver or sender, and do the right thing YO
+      if( client.role == "receiver")
+      {
+
+      }
     }
 
     public void SaveClients()
@@ -126,6 +152,19 @@ namespace SpeckleRhino.UIBindings
       try
       {
         Clients = JsonConvert.DeserializeObject<List<dynamic>>( clientsString );
+        foreach( var client in Clients )
+        {
+          if( client.type == "receiver" )
+          {
+            AddReceiver( JsonConvert.SerializeObject( client ) );
+            continue;
+          }
+          if( client.type == "sender" )
+          {
+            AddSender( JsonConvert.SerializeObject( client ) );
+            continue;
+          }
+        }
       }
       catch( Exception e )
       {
