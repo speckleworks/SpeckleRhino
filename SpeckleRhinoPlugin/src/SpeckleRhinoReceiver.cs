@@ -268,7 +268,7 @@ namespace SpeckleRhino
         List<IObject> iObjects;
         List<object> reminder;
 
-        BH.Engine.Speckle.Convert.ToBHoM(bhomObjectsWrapped, out bhomObjects, out iObjects, out reminder);
+        BH.Engine.Speckle.Convert.ToBHoM(bhomObjectsWrapped, out bhomObjects, out iObjects, out reminder); // COMES AS CUSTOM OBJECT: WHY?
 
         // Do stuff with these.
 

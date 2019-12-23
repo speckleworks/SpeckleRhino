@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2048
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleGrasshopper", "SpeckleGrasshopper\SpeckleGrasshopper.csproj", "{82EC14D9-01C7-46C7-8600-DB75F871740D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeckleWinR6", "SpeckleRhinoPlugin\SpeckleWinR6\SpeckleWinR6.csproj", "{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{290451B6-7EE1-47D2-81B9-C325578A561B}"
+	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{82EC14D9-01C7-46C7-8600-DB75F871740D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82EC14D9-01C7-46C7-8600-DB75F871740D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82EC14D9-01C7-46C7-8600-DB75F871740D}.Release|Any CPU.ActiveCfg = Release|x64
+		{82EC14D9-01C7-46C7-8600-DB75F871740D}.Release|Any CPU.Build.0 = Release|x64
+		{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}.Debug|Any CPU.Build.0 = Debug|x64
+		{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}.Release|Any CPU.ActiveCfg = Release|x64
+		{14E17074-9E4E-4AB8-A49B-8A2AB15B017D}.Release|Any CPU.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {54DDE026-6365-402B-AD34-B8B33C7B441D}
+	EndGlobalSection
+EndGlobal
