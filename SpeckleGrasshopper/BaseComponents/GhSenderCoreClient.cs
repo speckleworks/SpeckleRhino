@@ -391,6 +391,12 @@ namespace SpeckleGrasshopper
         }
       } );
 
+      GH_DocumentObject.Menu_AppendItem( menu, "Disable Debouncing (Status: " + DebouncingDisabled  + ")", ( sender, e ) =>
+      {
+        DebouncingDisabled = !DebouncingDisabled;
+        m_attributes.ExpireLayout();
+      } );
+
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
       GH_DocumentObject.Menu_AppendItem( menu, "View stream.", ( sender, e ) =>
