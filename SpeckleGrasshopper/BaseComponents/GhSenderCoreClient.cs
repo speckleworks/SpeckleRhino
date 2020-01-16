@@ -54,7 +54,7 @@ namespace SpeckleGrasshopper
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
-    public bool ManualMode = false, DebouncingDisabled = false;
+    public bool ManualMode = false, DebouncingDisabled = true;
 
     public string State;
 
@@ -542,6 +542,12 @@ namespace SpeckleGrasshopper
 
       State = "Expired";
 
+      if(DebouncingDisabled)
+      {
+        ForceUpdateData();
+        return;
+      }
+
       // All flags are good to start an update
       if ( !EnableRemoteControl && !ManualMode )
       {
@@ -745,7 +751,9 @@ namespace SpeckleGrasshopper
         return;
       }
 
-      if ( IsSendingUpdate )
+      // I believe the expected behaviour for https://github.com/speckleworks/SpeckleRhino/issues/286
+      // is to send data regardless of wether the previous update was done. 
+      if ( IsSendingUpdate && !DebouncingDisabled)
       {
         return;
       }
