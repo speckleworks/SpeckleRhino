@@ -54,7 +54,7 @@ namespace SpeckleGrasshopper
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
-    public bool ManualMode = false;
+    public bool ManualMode = false, DebouncingDisabled = false;
 
     public string State;
 
@@ -89,6 +89,7 @@ namespace SpeckleGrasshopper
             writer.SetByteArray( "speckleclient", ms.ToArray() );
             writer.SetBoolean( "remotecontroller", EnableRemoteControl );
             writer.SetBoolean( "manualmode", ManualMode );
+            writer.SetBoolean( "DebouncingDisabled", DebouncingDisabled );
           }
         }
       }
@@ -118,6 +119,7 @@ namespace SpeckleGrasshopper
 
         reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
         reader.TryGetBoolean( "manualmode", ref ManualMode );
+        reader.TryGetBoolean( "DebouncingDisabled", ref DebouncingDisabled );
       }
       catch ( Exception err )
       {
@@ -378,7 +380,7 @@ namespace SpeckleGrasshopper
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
       base.AppendAdditionalMenuItems( menu );
-      GH_DocumentObject.Menu_AppendItem( menu, "Toggle Manual Mode (Status: " + ManualMode + ")", ( sender, e ) =>
+      GH_DocumentObject.Menu_AppendItem( menu, $"{(ManualMode ? "Manual mode is enabled." : "Manual mode is disabled.")} Click to toggle.", ( sender, e ) =>
       {
         ManualMode = !ManualMode;
         m_attributes.ExpireLayout();
@@ -388,6 +390,12 @@ namespace SpeckleGrasshopper
           UpdateData();
         }
       } );
+
+      GH_DocumentObject.Menu_AppendItem( menu, $"{( DebouncingDisabled ? "Debouncing is disabled. " : "Debouncing is enabled." ) } Click to toggle.", ( sender, e ) =>
+       {
+         DebouncingDisabled = !DebouncingDisabled;
+         m_attributes.ExpireLayout();
+       } );
 
       GH_DocumentObject.Menu_AppendSeparator( menu );
 
@@ -539,6 +547,12 @@ namespace SpeckleGrasshopper
       }
 
       State = "Expired";
+
+      if ( DebouncingDisabled )
+      {
+        ForceUpdateData();
+        return;
+      }
 
       // All flags are good to start an update
       if ( !EnableRemoteControl && !ManualMode )
@@ -743,7 +757,9 @@ namespace SpeckleGrasshopper
         return;
       }
 
-      if ( IsSendingUpdate )
+      // I believe the expected behaviour for https://github.com/speckleworks/SpeckleRhino/issues/286
+      // is to send data regardless of wether the previous update was done. 
+      if ( IsSendingUpdate && !DebouncingDisabled )
       {
         return;
       }
