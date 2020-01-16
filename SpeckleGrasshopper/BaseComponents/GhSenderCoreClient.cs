@@ -54,7 +54,7 @@ namespace SpeckleGrasshopper
 
     public Dictionary<string, SpeckleObject> ObjectCache = new Dictionary<string, SpeckleObject>();
 
-    public bool ManualMode = false;
+    public bool ManualMode = false, DebouncingDisabled = false;
 
     public string State;
 
@@ -89,6 +89,7 @@ namespace SpeckleGrasshopper
             writer.SetByteArray( "speckleclient", ms.ToArray() );
             writer.SetBoolean( "remotecontroller", EnableRemoteControl );
             writer.SetBoolean( "manualmode", ManualMode );
+            writer.SetBoolean( "DebouncingDisabled", DebouncingDisabled );
           }
         }
       }
@@ -118,6 +119,7 @@ namespace SpeckleGrasshopper
 
         reader.TryGetBoolean( "remotecontroller", ref EnableRemoteControl );
         reader.TryGetBoolean( "manualmode", ref ManualMode );
+        reader.TryGetBoolean( "DebouncingDisabled", ref DebouncingDisabled );
       }
       catch ( Exception err )
       {
