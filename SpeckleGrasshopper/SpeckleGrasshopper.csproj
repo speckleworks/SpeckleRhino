@@ -100,6 +100,7 @@
     <Compile Include="UserDataUtils\GetUserDataComponent.cs" />
     <Compile Include="UserDataUtils\GetValueAtKey.cs" />
     <Compile Include="UserDataUtils\SetUserDataComponent.cs" />
+    <Compile Include="UserDataUtils\SetUserDataSpeckleObjectComponent.cs" />
     <Compile Include="UserDataUtils\UserDataUtilsInfo.cs" />
   </ItemGroup>
   <ItemGroup>
