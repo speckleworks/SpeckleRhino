@@ -170,7 +170,6 @@ namespace SpeckleGrasshopper
               {
                 list.Add(branch[k].GetType().GetProperty("Value").GetValue(branch[k], null));
               }
-              //var value = branch.Select(x => x.GetType().GetProperty("Value").GetValue(x, null));
               dict.Add(j.ToString(), list);
             }
 
@@ -179,11 +178,6 @@ namespace SpeckleGrasshopper
           default:
             continue;
         }
-
-
-        //if (ghInputProperty == null) continue;
-
-        //var valueExtract = ghInputProperty?.Value;//.GetType().GetProperty( "Value" ).GetValue( ghInputProperty, null );
 
         try
         {
@@ -201,18 +195,6 @@ namespace SpeckleGrasshopper
               myDictionary.Add(key, Converter.Serialise(val));
             }
           }
-
-
-          //if (valueExtract is IEnumerable<int> || valueExtract is IEnumerable<double> || valueExtract is IEnumerable<string> || valueExtract is IEnumerable<bool>)
-          //{
-          //  //myDictionary.Add(key, valueExtract);
-          //}
-          //else if (valueExtract is IEnumerable<object>)
-          //{
-          //  //valueExtract = ( ( IEnumerable<object> ) valueExtract ).Select( o => o.GetType().GetProperty( "Value" ).GetValue( o, null ) );
-          //  //myDictionary.Add(key, Converter.Serialise(valueExtract as IEnumerable<object>));
-          //}
-
           else if (valueExtract is System.Collections.IDictionary)
           {
             myDictionary.Add(key, valueExtract);
