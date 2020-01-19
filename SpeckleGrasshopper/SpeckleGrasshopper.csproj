@@ -86,6 +86,7 @@
     <Compile Include="Management\ListMyStreams.cs" />
     <Compile Include="ObjectCreation\ExpandSpeckleObject.cs" />
     <Compile Include="ObjectCreation\SchemaBuilderComponent.cs" />
+    <Compile Include="Parameters\Param_GenericAccess.cs" />
     <Compile Include="TestComponents\SpeckleConverterDebug.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -100,6 +101,7 @@
     <Compile Include="UserDataUtils\GetUserDataComponent.cs" />
     <Compile Include="UserDataUtils\GetValueAtKey.cs" />
     <Compile Include="UserDataUtils\SetUserDataComponent.cs" />
+    <Compile Include="UserDataUtils\SetUserDataSpeckleObjectComponent.cs" />
     <Compile Include="UserDataUtils\UserDataUtilsInfo.cs" />
   </ItemGroup>
   <ItemGroup>

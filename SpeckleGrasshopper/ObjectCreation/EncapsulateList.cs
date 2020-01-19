@@ -11,6 +11,7 @@ namespace SpeckleGrasshopper
 {
   public class EncapsulateList : GH_Component
   {
+    public override GH_Exposure Exposure => GH_Exposure.hidden;
 
     public EncapsulateList( )
       : base( "Encapsulate a List", "EL",

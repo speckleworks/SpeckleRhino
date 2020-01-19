@@ -102,19 +102,53 @@ namespace SpeckleGrasshopper
 
       foreach ( var obj in objs )
       {
-        var goo = obj as GH_ObjectWrapper;
+        GH_ObjectWrapper goo = null;
+        // FML Code moment: why are objects in gh sometimes NOT wrapped in GH goos? 
+        if ( obj is SpeckleObject o )
+        {
+          goo = new GH_ObjectWrapper( o );
+        } else if(obj is GH_SpeckleObject wtf)
+        {
+          goo = new GH_ObjectWrapper( wtf.Value );
+        }
+        else if ( obj is GH_ObjectWrapper wrapper )
+        {
+          goo = wrapper;
+        }
+
         if ( goo == null )
         {
           this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "We don't like nulls." );
           return;
         }
-        //ArchivableDictionary dict = goo.Value as ArchivableDictionary;
 
-        var dict = new Dictionary<string, object>();
+        Dictionary<string, object> dict = null;
+
         if ( goo.Value is SpeckleObject )
+        {
           dict = ( ( SpeckleObject ) goo.Value ).Properties;
+        }
         else if ( goo.Value is Dictionary<string, object> )
+        {
           dict = goo.Value as Dictionary<string, object>;
+        }
+        else if ( goo.Value is Dictionary<string, IEnumerable<object>> )
+        {
+          //Handle this Case right away
+          //For inputs that came from a DataTree
+          dict = goo.Value as Dictionary<string, object>;
+          var dict2 = goo.Value as Dictionary<string, IEnumerable<object>>;
+
+          foreach ( var item in dict2 )
+          {
+            global.Add( item.Key, item.Value.ToList() );
+          }
+
+          continue;
+        }
+        else
+          dict = new Dictionary<string, object>();
+
 
         if ( dict != null )
         {
@@ -198,7 +232,7 @@ namespace SpeckleGrasshopper
             }
             else if ( x is IEnumerable<object> && !( x is IEnumerable<SpeckleObject> ) )
             {
-              results.Add( ( ( IEnumerable<object> ) x ).Select( xx => { var res =  Converter.Deserialise( xx as SpeckleObject ); return res == null ? xx : res ; } ).ToList() );
+              results.Add( ( ( IEnumerable<object> ) x ).Select( xx => { var res = Converter.Deserialise( xx as SpeckleObject ); return res == null ? xx : res; } ).ToList() );
               isNestedList = true;
               continue;
             }
