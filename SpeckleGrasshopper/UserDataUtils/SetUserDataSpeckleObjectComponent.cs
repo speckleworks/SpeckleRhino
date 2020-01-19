@@ -59,6 +59,10 @@ namespace SpeckleGrasshopper.UserDataUtils
       try
       {
         var dict = ((GH_ObjectWrapper)dictObject).Value as Dictionary<string,object>;
+        if(dict ==null)
+        {
+          throw new Exception( "Cannot set non-dictionary type on speckle object." );
+        }
         speckleObject.Properties = dict;
       }
       catch
@@ -76,9 +80,8 @@ namespace SpeckleGrasshopper.UserDataUtils
     {
       get
       {
-        //You can add image files to your project resources and access them like this:
-        // return Resources.IconForThisComponent;
-        return null;
+        // TODO: new icon.
+        return Properties.Resources.SetUserData;
       }
     }
 
