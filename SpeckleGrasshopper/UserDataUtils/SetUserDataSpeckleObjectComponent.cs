@@ -58,12 +58,12 @@ namespace SpeckleGrasshopper.UserDataUtils
       
       try
       {
-        var dict = ((GH_ObjectWrapper)dictObject).Value as ArchivableDictionary;
-        speckleObject.Properties.Add(Params.Input[1].NickName, dict);
+        var dict = ((GH_ObjectWrapper)dictObject).Value as Dictionary<string,object>;
+        speckleObject.Properties = dict;
       }
       catch
       {
-        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Not an Archivable Dictionary, please provide a dictionary");
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Cannot set non-dictionary type on speckle object.");
       }
 
       DA.SetData(0, speckleObject);

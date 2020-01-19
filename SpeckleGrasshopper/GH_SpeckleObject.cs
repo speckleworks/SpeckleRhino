@@ -72,7 +72,7 @@ namespace SpeckleGrasshopper
       }
       try
       {
-        Value = Converter.Serialise( source ) as SpeckleObject;
+        Value = Converter.Serialise( source.GetType().GetProperty("Value").GetValue(source) ) as SpeckleObject;
         return true;
       }
       catch { return false; }
@@ -146,7 +146,7 @@ namespace SpeckleGrasshopper
 
   public class SpeckleObjectParameter : GH_PersistentParam<GH_SpeckleObject>
   {
-    public SpeckleObjectParameter() : this("SpeckleObject", "SpeckleObject", "This is a SpeckleObject.", "Speckle", "Parameters") { }
+    public SpeckleObjectParameter() : this("SpeckleObject", "SpeckleObject", "This is a SpeckleObject.", "Params", "Primitive") { }
     public SpeckleObjectParameter(string name, string nickname, string description, string category, string subcategory)
         : base(name, nickname, description, category, subcategory) { }
     public SpeckleObjectParameter(GH_InstanceDescription tag) : base(tag) { }

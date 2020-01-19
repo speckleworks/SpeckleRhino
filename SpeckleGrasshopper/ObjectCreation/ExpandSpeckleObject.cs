@@ -102,11 +102,19 @@ namespace SpeckleGrasshopper
 
       foreach (var obj in objs)
       {
-        var goo = obj as GH_ObjectWrapper;
-        if (goo == null)
+        GH_ObjectWrapper goo;
+        // FML Code moment: why are objects in gh sometimes NOT wrapped in GH goos? 
+        if ( !( obj is SpeckleObject ) )
         {
-          this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "We don't like nulls.");
-          return;
+          goo = obj as GH_ObjectWrapper;
+          if ( goo == null )
+          {
+            this.AddRuntimeMessage( GH_RuntimeMessageLevel.Warning, "We don't like nulls." );
+            return;
+          }
+        } else
+        {
+          goo = new GH_ObjectWrapper( obj );
         }
 
         Dictionary<string, object> dict = null;
