@@ -1,6 +1,7 @@
 ﻿using GH_IO.Serialization;
 using Grasshopper.Kernel;
 using SpeckleCore;
+using SpeckleGrasshopper.Parameters;
 using SpeckleGrasshopper.Properties;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace SpeckleGrasshopper.Management
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-      pManager.Register_GenericParam("streams", "S", "Streams that you own or are shared with you.");
+      pManager.AddParameter(new Param_SpeckleStreams(), "streams", "S", "Streams that you own or are shared with you.", GH_ParamAccess.list);
     }
 
     public override void AddedToDocument(GH_Document document)
@@ -57,7 +58,7 @@ namespace SpeckleGrasshopper.Management
         return;
       }
 
-      DA.SetDataList(0, UserStreams);
+      DA.SetDataList(0, UserStreams.Select(x => new GH_SpeckleStream(x)));
 
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
       Client.StreamsGetAllAsync("fields=streamId,name,description,parent,children,ancestors,tags,layers&isComputedResult=false&deleted=false").ContinueWith(tsk =>

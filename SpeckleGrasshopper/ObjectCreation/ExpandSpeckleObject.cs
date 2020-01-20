@@ -11,6 +11,7 @@ using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using SpeckleCore;
+using SpeckleGrasshopper.Parameters;
 using SpeckleGrasshopper.Utilities;
 
 namespace SpeckleGrasshopper
@@ -117,6 +118,10 @@ namespace SpeckleGrasshopper
         {
           goo = wrapper;
         }
+        else if (obj is GH_SpeckleStream speckleStream)
+        {
+          goo = new GH_ObjectWrapper(speckleStream.Value);
+        }
 
         if (goo == null)
         {
@@ -145,9 +150,9 @@ namespace SpeckleGrasshopper
             dict.Add(item.Key, item.Value.ToList());
           }
         }
-        else if (goo.Value is SpeckleStream)
+        else if (goo.Value is SpeckleStream speckleStream)
         {
-          var stream = goo.Value as SpeckleStream;
+          var stream = speckleStream;
           dict = stream.ToDictionary();
         }
         else
