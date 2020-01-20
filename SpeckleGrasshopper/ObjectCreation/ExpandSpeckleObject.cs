@@ -11,6 +11,7 @@ using Grasshopper.Kernel.Data;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
 using SpeckleCore;
+using SpeckleGrasshopper.Utilities;
 
 namespace SpeckleGrasshopper
 {
@@ -72,7 +73,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterInputParams( GH_Component.GH_InputParamManager pManager )
     {
-      pManager.AddGenericParameter( "Dictionaries", "D", "Dictionaries or Speckle Objects to expand.", GH_ParamAccess.list );
+      pManager.AddGenericParameter( "Dictionaries", "D", "Dictionaries or Speckle Objects to expand.", GH_ParamAccess.item );
     }
 
     /// <summary>
@@ -145,6 +146,11 @@ namespace SpeckleGrasshopper
           }
 
           continue;
+        }
+        else if (goo.Value is SpeckleStream)
+        {
+          var stream = goo.Value as SpeckleStream;
+          dict = stream.ToDictionary();
         }
         else
           dict = new Dictionary<string, object>();

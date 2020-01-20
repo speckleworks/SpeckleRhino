@@ -60,7 +60,7 @@ namespace SpeckleGrasshopper.Management
       DA.SetDataList(0, UserStreams);
 
       Client.BaseUrl = Account.RestApi; Client.AuthToken = Account.Token;
-      Client.StreamsGetAllAsync("fields=streamId,name,description,parent&isComputedResult=false&deleted=false").ContinueWith(tsk =>
+      Client.StreamsGetAllAsync("fields=streamId,name,description,parent,children,ancestors,tags,layers&isComputedResult=false&deleted=false").ContinueWith(tsk =>
        {
          if (tsk.Result.Success == false)
          {
