@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Types;
 using SpeckleCore;
+using SpeckleGrasshopper.Properties;
 
 namespace SpeckleGrasshopper.Parameters
 {
@@ -29,6 +30,8 @@ namespace SpeckleGrasshopper.Parameters
     {
       throw new NotImplementedException();
     }
+
+    protected override Bitmap Icon => Resources.GenericIconXS;
   }
 
   public class GH_SpeckleStream : GH_Goo<SpeckleStream>
