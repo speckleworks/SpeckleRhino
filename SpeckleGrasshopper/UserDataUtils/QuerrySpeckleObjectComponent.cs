@@ -18,7 +18,7 @@ namespace SpeckleGrasshopper
   public class QuerySpeckleObjectComponent : GH_Component, IGH_VariableParameterComponent
   {
     string serialisedUDs;
-    Dictionary<string, (GH_ParamAccess, int, object)> properties;
+    HashSet<string> properties;
     /// <summary>
     /// Initializes a new instance of the MyComponent1 class.
     /// </summary>
@@ -40,7 +40,7 @@ namespace SpeckleGrasshopper
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
       pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to query", GH_ParamAccess.item);
-      pManager.AddTextParameter("Path", "P", "Path of desired property, separated by dots.\nExample:'turtle.smallerTurtle.microTurtle'", GH_ParamAccess.list);
+      pManager.AddTextParameter("Path", "P", "Path of desired property, separated by dots.\nExample:'turtle.smallerTurtle.microTurtle'", GH_ParamAccess.tree);
     }
 
     /// <summary>
@@ -63,63 +63,84 @@ namespace SpeckleGrasshopper
 
       var dict = GHspeckleObject.Value.Properties;
 
-      var paths = new List<string>();
-      if (!DA.GetDataList(1, paths))
-        return;
-
-      object target = null;
-
       //First Pass on Iteration 0
       int o = 0;
+
       if (DA.Iteration == 0)
       {
-        properties = new Dictionary<string, (GH_ParamAccess, int, object)>();
-        foreach (var p in paths)
+        //Get All the Paths, even if on a tree
+        var allData = Params.Input.OfType<Param_String>()
+               .First()
+               .VolatileData.AllData(true)
+               .OfType<GH_String>()
+               .Select(s => s.Value);
+        if (!allData.Any())
         {
-          var temp = dict;
-          var keys = p.Split('.');
-          for (int i = 0; i < keys.Length; i++)
-          {
-            if (i == keys.Length - 1)
-              target = temp[keys[i]];
-            else
-            {
-              var t = temp[keys[i]];
-              if (t is Dictionary<string, object> d)
-                temp = d;
-              else if (t is SpeckleObject speckleObject)
-                temp = speckleObject.Properties;
-            }
-          }
-
-          if (target is List<object> myList)
-          {
-            properties.Add(p, (GH_ParamAccess.list, o, myList));
-            o++;
-          }
-          else if (target is object)
-          {
-            properties.Add(p, (GH_ParamAccess.item, o, target));
-            o++;
-          }
+          return;
+        }
+        properties = new HashSet<string>();
+        foreach (var p in allData)
+        {
+          properties.Add(p);
         }
       }
 
-      if(OutputMismatch() && DA.Iteration == 0)
+      if (OutputMismatch() && DA.Iteration == 0)
       {
         OnPingDocument().ScheduleSolution(5, d =>
         {
           AutoCreateOutputs(false);
         });
       }
-      else
+      else if(!OutputMismatch())
       {
-        foreach (var tuple in properties.Values)
+        o = 0;
+        foreach (var p in properties)
         {
-          if (tuple.Item1 == GH_ParamAccess.list)
-            DA.SetDataList(tuple.Item2, tuple.Item3 as IEnumerable<object>);
-          else if(tuple.Item1 == GH_ParamAccess.item)
-            DA.SetData(tuple.Item2, tuple.Item3);
+
+          var temp = dict;
+          var keys = p.Split('.');
+          object target = null;
+
+          for (int i = 0; i < keys.Length; i++)
+          {
+            if (i == keys.Length - 1)
+              if (temp.ContainsKey(keys[i]))
+              {
+                target = temp[keys[i]];
+              }
+              else
+              {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Parameter {o + 1} is missing data at [{i}]{keys[i]}");
+                continue;
+              }
+            else
+            {
+              if (temp.ContainsKey(keys[i]))
+              {
+                var t = temp[keys[i]];
+                if (t is Dictionary<string, object> d)
+                  temp = d;
+                else if (t is SpeckleObject speckleObject)
+                  temp = speckleObject.Properties;
+              }
+              else
+              {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Parameter {o + 1} is missing data at {keys[i]}");
+                continue;
+              }
+            }
+          }
+
+          if (target is List<object> myList)
+          {
+            DA.SetDataList(o, myList);
+          }
+          else if (target is object)
+          {
+            DA.SetDataList(o, new List<object> { target });
+          }
+          o++;
         }
       }
 
@@ -159,9 +180,10 @@ namespace SpeckleGrasshopper
       var countMatch = properties.Count() == Params.Output.Count;
       if (!countMatch) return true;
 
-      foreach (var name in properties)
+      var list = properties.ToList();
+      for (int i = 0; i < properties.Count; i++)
       {
-        if (!Params.Output.Select(p => p.NickName).Any(n => n == name.Key))
+        if (!(Params.Output[i].NickName == list[i]))
         {
           return true;
         }
@@ -194,22 +216,17 @@ namespace SpeckleGrasshopper
     {
       var tokens = properties;
       if (tokens == null) return;
-      var names = tokens.Keys.ToList();
+      var names = tokens.ToList();
       for (var i = 0; i < Params.Output.Count; i++)
       {
         if (i > names.Count - 1) return;
         var name = names[i];
-        var type = tokens[name];
 
         Params.Output[i].Name = $"{name}";
         Params.Output[i].NickName = $"{name}";
         Params.Output[i].Description = $"Data from property: {name}";
         Params.Output[i].MutableNickName = false;
-        
-        if (type.Item1 == GH_ParamAccess.item)
-          Params.Output[i].Access = GH_ParamAccess.item;
-        else if(type.Item1 == GH_ParamAccess.list)
-          Params.Output[i].Access = GH_ParamAccess.list;
+        Params.Output[i].Access = GH_ParamAccess.list;
       }
     }
 
