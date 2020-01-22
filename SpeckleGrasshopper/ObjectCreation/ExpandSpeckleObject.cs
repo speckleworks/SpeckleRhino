@@ -21,7 +21,7 @@ namespace SpeckleGrasshopper
 
     Dictionary<string, List<object>> global;
     Action expireComponent, setInputsAndExpireComponent;
-
+    //HashSet<string> properties;
     /// <summary>
     /// Initializes a new instance of the MyComponent1 class.
     /// </summary>
@@ -46,7 +46,6 @@ namespace SpeckleGrasshopper
           }
         }
 
-        //Params.OnParametersChanged();
         foreach (var key in global.Keys)
         {
           var myparam = Params.Output.FirstOrDefault(q => q.Name == key);
@@ -59,7 +58,7 @@ namespace SpeckleGrasshopper
 
         Params.OnParametersChanged();
         //end
-        this.ExpireSolution(true);
+        ExpireSolution(true);
       };
     }
 
@@ -74,7 +73,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
-      pManager.AddGenericParameter("Dictionaries", "D", "Dictionaries or Speckle Objects to expand.", GH_ParamAccess.item);
+      pManager.AddGenericParameter("Dictionaries", "D", "Dictionaries or Speckle Objects to expand.", GH_ParamAccess.tree); //Ignore Structures
     }
 
     /// <summary>
@@ -90,97 +89,109 @@ namespace SpeckleGrasshopper
     /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-      List<object> objs = new List<object>();
-      objs = Params.Input[0].VolatileData.AllData(true).ToList<object>();
+      var objs = Params.Input
+        .First()
+        .VolatileData
+        .AllData(true)
+        .ToList<object>();
 
-      if (objs.Count == 0)
+      //Create An output for all the inputs.
+      //object myObject = null;
+      if (!objs.Any())
       {
         this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "No dictionaries found.");
         return;
       }
 
-      global = new Dictionary<string, List<object>>();
-      var first = true;
-
-      foreach (var obj in objs)
+      var first = true; //Need to remove
+      if (DA.Iteration == 0)
       {
-        GH_ObjectWrapper goo = null;
-        // FML Code moment: why are objects in gh sometimes NOT wrapped in GH goos? 
-        if (obj is SpeckleObject o)
-        {
-          goo = new GH_ObjectWrapper(o);
-        }
-        else if (obj is GH_SpeckleObject wtf)
-        {
-          goo = new GH_ObjectWrapper(wtf.Value);
-        }
-        else if (obj is GH_ObjectWrapper wrapper)
-        {
-          goo = wrapper;
-        }
-        else if (obj is GH_SpeckleStream speckleStream)
-        {
-          goo = new GH_ObjectWrapper(speckleStream.Value);
-        }
+        global = new Dictionary<string, List<object>>();
 
-        if (goo == null)
-        {
-          this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "We don't like nulls.");
-          return;
-        }
+        //properties = new HashSet<string>();
 
-        Dictionary<string, object> dict = null;
-
-        if (goo.Value is SpeckleObject)
+        foreach (var obj in objs)
         {
-          dict = ((SpeckleObject)goo.Value).Properties;
-        }
-        else if (goo.Value is Dictionary<string, object>)
-        {
-          dict = goo.Value as Dictionary<string, object>;
-        }
-        else if (goo.Value is Dictionary<string, IEnumerable<object>>)
-        {
-          //For inputs that came from a DataTree
-          dict = new Dictionary<string, object>();//goo.Value as Dictionary<string, object>;
-          var dict2 = goo.Value as Dictionary<string, IEnumerable<object>>;
-
-          foreach (var item in dict2)
+          GH_ObjectWrapper goo = null;
+          // FML Code moment: why are objects in gh sometimes NOT wrapped in GH goos? 
+          if (obj is SpeckleObject o)
           {
-            dict.Add(item.Key, item.Value.ToList());
+            goo = new GH_ObjectWrapper(o);
+            //o.Properties.Keys.ToList().ForEach(x => properties.Add(x));
           }
-        }
-        else if (goo.Value is SpeckleStream speckleStream)
-        {
-          var stream = speckleStream;
-          dict = stream.ToDictionary();
-        }
-        else
-          dict = new Dictionary<string, object>();
-
-
-        if (dict != null)
-        {
-          foreach (var key in dict.Keys)
+          else if (obj is GH_SpeckleObject wtf)
           {
-            if ((first))
-            {
-              global.Add(key, new List<object>());
-              global[key].Add(dict[key]);
-            }
+            goo = new GH_ObjectWrapper(wtf.Value);
+          }
+          else if (obj is GH_ObjectWrapper wrapper)
+          {
+            goo = wrapper;
+          }
+          else if (obj is GH_SpeckleStream speckleStream)
+          {
+            goo = new GH_ObjectWrapper(speckleStream.Value);
+          }
 
-            else if (!global.Keys.Contains(key))
+          if (goo == null)
+          {
+            this.AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "We don't like nulls.");
+            return;
+          }
+
+          Dictionary<string, object> dict = null;
+
+          if (goo.Value is SpeckleObject)
+          {
+            dict = ((SpeckleObject)goo.Value).Properties;
+          }
+          else if (goo.Value is Dictionary<string, object>)
+          {
+            dict = goo.Value as Dictionary<string, object>;
+          }
+          else if (goo.Value is Dictionary<string, IEnumerable<object>>)
+          {
+            //For inputs that came from a DataTree
+            dict = new Dictionary<string, object>();//goo.Value as Dictionary<string, object>;
+            var dict2 = goo.Value as Dictionary<string, IEnumerable<object>>;
+
+            foreach (var item in dict2)
             {
-              this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Object dictionaries do not match.");
-              return;
-            }
-            else
-            {
-              global[key].Add(dict[key]);
+              dict.Add(item.Key, item.Value.ToList());
             }
           }
+          else if (goo.Value is SpeckleStream speckleStream)
+          {
+            var stream = speckleStream;
+            dict = stream.ToDictionary();
+          }
+          else
+            dict = new Dictionary<string, object>();
+
+
+          if (dict != null)
+          {
+            foreach (var key in dict.Keys)
+            {
+              if ((first))
+              {
+                global.Add(key, new List<object>());
+                global[key].Add(dict[key]);
+                //properties.Add(key);
+              }
+
+              else if (!global.Keys.Contains(key))
+              {
+                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Object dictionaries do not match.");
+                return;
+              }
+              else
+              {
+                global[key].Add(dict[key]);
+              }
+            }
+          }
+          first = false;
         }
-        first = false;
       }
 
       if (global.Keys.Count == 0)
@@ -189,20 +200,28 @@ namespace SpeckleGrasshopper
         return;
       }
 
-      var changed = false;
-
-      if (Params.Output.Count != global.Keys.Count)
+      if (OutputMismatch() && DA.Iteration == 0)
       {
-        changed = true;
+        OnPingDocument().ScheduleSolution(5, d =>
+        {
+          AutoCreateOutputs(false);
+        });
       }
 
-      Debug.WriteLine("changed:" + changed);
+      //var changed = false;
 
-      if (changed)
-      {
-        Rhino.RhinoApp.MainApplicationWindow.Invoke(setInputsAndExpireComponent);
-      }
-      else
+      //else if (Params.Output.Count != global.Keys.Count)
+      //{
+      //  changed = true;
+      //}
+
+      //Debug.WriteLine("changed:" + changed);
+
+      //if (changed)
+      //{
+      //  Rhino.RhinoApp.MainApplicationWindow.Invoke(setInputsAndExpireComponent);
+      //}
+      else if(!OutputMismatch())
       {
         int k = 0;
         foreach (var key in global.Keys)
@@ -315,25 +334,90 @@ namespace SpeckleGrasshopper
       return newParam;
     }
 
-    bool IGH_VariableParameterComponent.CanInsertParameter(GH_ParameterSide side, Int32 index)
+    private bool OutputMismatch()
+    {
+      var countMatch = global.Count() == Params.Output.Count;
+      if (!countMatch) return true;
+
+      var list = global.Keys.ToList();
+      for (int i = 0; i < global.Count; i++)
+      {
+        if (!(Params.Output[i].NickName == list[i]))
+        {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    private void AutoCreateOutputs(bool recompute)
+    {
+
+      var tokenCount = global.Count();
+      if (tokenCount == 0) return;
+
+      if (OutputMismatch())
+      {
+        RecordUndoEvent("Creating Outputs");
+        if (Params.Output.Count < tokenCount)
+        {
+          while (Params.Output.Count < tokenCount)
+          {
+            var new_param = CreateParameter(GH_ParameterSide.Output, Params.Output.Count);
+            Params.RegisterOutputParam(new_param);
+          }
+        }
+        else if (Params.Output.Count > tokenCount)
+        {
+          while (Params.Output.Count > tokenCount)
+          {
+            Params.UnregisterOutputParameter(Params.Output[Params.Output.Count - 1]);
+          }
+        }
+        Params.OnParametersChanged();
+        VariableParameterMaintenance();
+        ExpireSolution(recompute);
+      }
+    }
+
+    public bool CanInsertParameter(GH_ParameterSide side, int index)
     {
       return false;
     }
-    bool IGH_VariableParameterComponent.CanRemoveParameter(GH_ParameterSide side, Int32 index)
+    public bool CanRemoveParameter(GH_ParameterSide side, int index)
     {
       return false;
     }
-    bool IGH_VariableParameterComponent.DestroyParameter(GH_ParameterSide side, Int32 index)
+    public bool DestroyParameter(GH_ParameterSide side, int index)
     {
       return false;
     }
-    IGH_Param IGH_VariableParameterComponent.CreateParameter(GH_ParameterSide side, Int32 index)
+
+    public IGH_Param CreateParameter(GH_ParameterSide side, int index)
     {
-      return null;
+      return new Param_GenericObject();
     }
 
     public void VariableParameterMaintenance()
     {
+      if (global == null)
+        return;
+      var tokens = global.Keys.ToList();
+      if (tokens == null) 
+        return;
+      var names = tokens.ToList();
+      for (var i = 0; i < Params.Output.Count; i++)
+      {
+        if (i > names.Count - 1) return;
+        var name = names[i];
+
+        Params.Output[i].Name = $"{name}";
+        Params.Output[i].NickName = $"{name}";
+        Params.Output[i].Description = $"Data from property: {name}";
+        Params.Output[i].MutableNickName = false;
+        Params.Output[i].Access = GH_ParamAccess.list;
+      }
     }
 
     /// <summary>

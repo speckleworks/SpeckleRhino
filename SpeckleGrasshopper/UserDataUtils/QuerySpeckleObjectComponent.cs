@@ -17,7 +17,6 @@ namespace SpeckleGrasshopper
 {
   public class QuerySpeckleObjectComponent : GH_Component, IGH_VariableParameterComponent
   {
-    string serialisedUDs;
     HashSet<string> properties;
     /// <summary>
     /// Initializes a new instance of the MyComponent1 class.
@@ -64,7 +63,6 @@ namespace SpeckleGrasshopper
       var dict = GHspeckleObject.Value.Properties;
 
       //First Pass on Iteration 0
-
       if (DA.Iteration == 0)
       {
         //Get All the Paths, even if on a tree
