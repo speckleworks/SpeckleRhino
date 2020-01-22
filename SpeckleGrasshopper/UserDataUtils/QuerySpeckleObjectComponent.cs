@@ -64,7 +64,6 @@ namespace SpeckleGrasshopper
       var dict = GHspeckleObject.Value.Properties;
 
       //First Pass on Iteration 0
-      int o = 0;
 
       if (DA.Iteration == 0)
       {
@@ -94,7 +93,7 @@ namespace SpeckleGrasshopper
       }
       else if(!OutputMismatch())
       {
-        o = 0;
+        int o = 0;
         foreach (var p in properties)
         {
 
@@ -112,7 +111,7 @@ namespace SpeckleGrasshopper
               else
               {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Parameter {o + 1} is missing data at [{i}]{keys[i]}");
-                continue;
+                break;
               }
             else
             {
@@ -127,7 +126,7 @@ namespace SpeckleGrasshopper
               else
               {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Parameter {o + 1} is missing data at {keys[i]}");
-                continue;
+                break;
               }
             }
           }
