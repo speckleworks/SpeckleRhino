@@ -96,10 +96,18 @@ namespace SpeckleGrasshopper
       {
         //First pass get children
         var data = new Dictionary<string, object>();
+        var nicknames = Params.Output.Select(x => x.NickName).ToList();
 
         if (!GetDictionary(myObject, out data))
         {
           AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "No Valid Format");
+          return;
+        }
+
+        var notMatching = data.Keys.Where(x => !nicknames.Contains(x)).Any();
+        if(notMatching)
+        {
+          AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Item is not matching the rest. Ignoring");
           return;
         }
 
