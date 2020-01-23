@@ -105,7 +105,7 @@ namespace SpeckleGrasshopper
         }
 
         var notMatching = data.Keys.Where(x => !nicknames.Contains(x)).Any();
-        if(notMatching)
+        if (notMatching)
         {
           AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Item is not matching the rest. Ignoring");
           return;
@@ -329,6 +329,10 @@ namespace SpeckleGrasshopper
     public bool GetDictionary(object myObject, out Dictionary<string, object> data)
     {
       data = new Dictionary<string, object>();
+
+      if (myObject is GH_ObjectWrapper ow)
+        myObject = ow.Value;
+
       if (myObject is GH_SpeckleStream gH_SpeckleStream)
       {
         data = gH_SpeckleStream.Value.ToDictionary();
@@ -339,42 +343,37 @@ namespace SpeckleGrasshopper
       }
       else if (myObject is SpeckleObject speckleObject)
       {
-        data = speckleObject.Properties;
+        ConvertFromSpeckleObject(ref data, speckleObject);
       }
-      else if (myObject is GH_SpeckleObject gH_SpeckleObject1)
+      else if (myObject is GH_SpeckleObject gH_SpeckleObject)
       {
-        data = gH_SpeckleObject1.Value.Properties;
+        ConvertFromSpeckleObject(ref data, gH_SpeckleObject.Value);
       }
-      else if (myObject is GH_ObjectWrapper ow)
+      else if (myObject is Dictionary<string, object> dictObject)
       {
-        if (ow.Value is Dictionary<string, object> dictObject)
-          data = dictObject;
-        else if (ow.Value is Dictionary<string, IEnumerable<object>> dictList)
+        data = dictObject;
+      }
+      else if (myObject is Dictionary<string, IEnumerable<object>> dictList)
+      {
+        foreach (var item in dictList)
         {
-          foreach (var item in dictList)
-          {
-            data.Add(item.Key, item.Value);
-          }
-        }
-        else if (ow.Value is GH_SpeckleStream os)
-        {
-          data = os.Value.ToDictionary();
-        }
-        else if (ow.Value is SpeckleStream ss)
-        {
-          data = ss.ToDictionary();
-        }
-        else if (ow.Value is SpeckleObject so)
-        {
-          data = so.Properties;
-        }
-        else if (ow.Value is GH_SpeckleObject ghSO)
-        {
-          data = ghSO.Value.Properties;
+          data.Add(item.Key, item.Value);
         }
       }
+
       return data.Any();
     }
 
+    private static void ConvertFromSpeckleObject(ref Dictionary<string, object> data, SpeckleObject speckleObject)
+    {
+      if (speckleObject.Properties == null)
+      {
+        var converted = Converter.Deserialise(speckleObject);
+        if (converted != null)
+          data.Add("D", converted);
+      }
+      else
+        data = speckleObject.Properties;
+    }
   }
 }
