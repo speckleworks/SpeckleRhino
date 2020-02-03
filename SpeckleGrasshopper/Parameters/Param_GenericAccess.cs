@@ -18,8 +18,8 @@ public class Param_GenericAccess : Param_GenericObject, IDisposable
       item0.ToolTipText = "Make this parameter an Item";
       var item1 = Menu_AppendItem(menu, "Array", Menu_Clicked, true, Access == GH_ParamAccess.list);
       item1.ToolTipText = "Make this parameters an Array";
-      var item2 = Menu_AppendItem(menu, "Tree", Menu_Clicked, true, Access == GH_ParamAccess.tree);
-      item2.ToolTipText = "Make this parameter a Tree";
+      //var item2 = Menu_AppendItem(menu, "Tree", Menu_Clicked, true, Access == GH_ParamAccess.tree);
+      //item2.ToolTipText = "Make this parameter a Tree";
     }
   }
 
