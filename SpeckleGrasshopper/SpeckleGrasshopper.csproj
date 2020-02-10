@@ -40,7 +40,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\AppData\Roaming\McNeel\Rhinoceros\6.0\Plug-ins\Speckle Rhino Plugin %28512d9705-6f92-49ca-a606-d6d5c1ac6aa2%29\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -72,7 +72,7 @@
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
     <Compile Include="Parameters\Param_SpeckleStreams.cs" />
-    <Compile Include="UserDataUtils\DiffingTest.cs" />
+    <Compile Include="UserDataUtils\DiffingStreams.cs" />
     <Compile Include="UserDataUtils\QuerySpeckleObjectComponent.cs" />
     <Compile Include="Utilities\CollectionExtentions.cs" />
     <Compile Include="Utilities\SpecklStreamExtentions.cs" />
