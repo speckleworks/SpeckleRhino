@@ -89,7 +89,7 @@ namespace SpeckleGrasshopper
           AutoCreateOutputs(false);
         });
       }
-      else if(!OutputMismatch())
+      else if (!OutputMismatch())
       {
         int o = 0;
         foreach (var p in properties)
@@ -101,16 +101,99 @@ namespace SpeckleGrasshopper
 
           for (int i = 0; i < keys.Length; i++)
           {
+            //Get Real Key / Operation
+
+            //Do comparison
+
             if (i == keys.Length - 1)
-              if (temp.ContainsKey(keys[i]))
+            {
+              ProcessKey(keys[i], out Comparison comparison, out string RealKey, out string compareValue);
+
+              if (temp.ContainsKey(RealKey))
               {
-                target = temp[keys[i]];
+                var value = temp[RealKey];
+                target = value;
+                if (target is List<object> list)
+                {
+                  var newData = new List<object>();
+                  foreach (var item in list)
+                  {
+                    if (double.TryParse(compareValue, out double val) && item is double valA)
+                      switch (comparison)
+                      {
+                        case Comparison.Equality:
+                          if (item.ToString().Equals(compareValue))
+                            newData.Add(item);
+                          break;
+                        case Comparison.Less:
+                          if (valA < val)
+                            newData.Add(item);
+                          break;
+                        case Comparison.LessOrEqual:
+                          if (valA <= val)
+                            newData.Add(item);
+                          break;
+                        case Comparison.More:
+                          if (valA > val)
+                            newData.Add(item);
+                          break;
+                        case Comparison.MoreOrEqual:
+                          if (valA >= val)
+                            newData.Add(item);
+                          break;
+                        default:
+                          break;
+                      }
+                    else
+                    {
+                      if (comparison == Comparison.Equality && item.ToString().Equals(compareValue))
+                        newData.Add(item);
+                    }
+                  }
+                  target = newData;
+                }
+                else if (target is object obj)
+                {
+                  target = null;
+                  if (double.TryParse(compareValue, out double val) && value is double valA)
+                    switch (comparison)
+                    {
+                      case Comparison.Equality:
+                        if (temp[RealKey].ToString().Equals(compareValue))
+                          target = value;
+                        break;
+                      case Comparison.Less:
+                        if (valA < val)
+                          target = value;
+                        break;
+                      case Comparison.LessOrEqual:
+                        if (valA <= val)
+                          target = value;
+                        break;
+                      case Comparison.More:
+                        if (valA > val)
+                          target = value;
+                        break;
+                      case Comparison.MoreOrEqual:
+                        if (valA >= val)
+                          target = value;
+                        break;
+                      default:
+                        break;
+                    }
+                  else
+                  {
+                    if (comparison == Comparison.Equality && value.ToString().Equals(compareValue))
+                      target = value;
+                  }
+                }
               }
               else
               {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Parameter {o + 1} is missing data at [{i}]{keys[i]}");
                 break;
               }
+            }
             else
             {
               if (temp.ContainsKey(keys[i]))
@@ -140,8 +223,59 @@ namespace SpeckleGrasshopper
           o++;
         }
       }
-
     }
+
+    private enum Comparison
+    {
+      None,
+      Equality,
+      Less,
+      LessOrEqual,
+      More,
+      MoreOrEqual
+    }
+
+    private static readonly Dictionary<Comparison, string> ComparisonStrings = new Dictionary<Comparison, string>
+      {
+        { Comparison.LessOrEqual, "<=" },
+        { Comparison.MoreOrEqual, ">=" },
+        { Comparison.Less, "<" },
+        { Comparison.More, ">" },
+        { Comparison.Equality, "=" },
+      };
+
+    private void ProcessKey(string key, out Comparison comparison, out string RealKey, out string compareValue)
+    {
+      comparison = Comparison.None;
+      RealKey = key;
+      compareValue = "";
+      foreach (var item in ComparisonStrings)
+      {
+        if (SplitKey(key, item.Value, out RealKey, out compareValue))
+        {
+          comparison = item.Key;
+          return;
+        }
+      }
+    }
+
+    private bool SplitKey(string key, string split, out string RealKey, out string compareValue)
+    {
+      RealKey = key;
+      compareValue = "";
+      if (key.Contains(split))
+      {
+        var result = key.Split(new string[] { split }, StringSplitOptions.RemoveEmptyEntries);
+        if (!(result.Length == 2))
+          return false;
+
+        RealKey = result[0];
+        compareValue = result[1];
+        return true;
+      }
+      return false;
+    }
+
     private void AutoCreateOutputs(bool recompute)
     {
 
