@@ -71,6 +71,10 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="Parameters\Param_SpeckleStreams.cs" />
+    <Compile Include="UserDataUtils\QuerySpeckleObjectComponent.cs" />
+    <Compile Include="Utilities\CollectionExtentions.cs" />
+    <Compile Include="Utilities\SpecklStreamExtentions.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Management\AddStreamsToProject.cs" />
     <Compile Include="Management\ListMyProjects.cs" />
@@ -149,6 +153,9 @@
     </PackageReference>
     <PackageReference Include="sqlite-net-pcl">
       <Version>1.5.231</Version>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.5.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
