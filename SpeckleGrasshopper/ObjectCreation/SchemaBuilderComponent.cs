@@ -11,6 +11,8 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Collections;
 using GH_IO.Serialization;
+using Grasshopper.Kernel.Special;
+using System.Drawing;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
@@ -25,6 +27,8 @@ namespace SpeckleGrasshopper.UserDataUtils
     public Dictionary<string, bool> OptionalPropsMask;
     public List<ToolStripItem> OptionalPropsItems;
     public bool CheckItAll = false;
+
+    private GH_Document _document;
 
     public SchemaBuilderComponent( )
       : base( "Schema Builder Component", "SBC",
@@ -175,6 +179,21 @@ namespace SpeckleGrasshopper.UserDataUtils
         newInputParam.Access = GH_ParamAccess.item;
       }
       Params.RegisterInputParam( newInputParam, index );
+
+
+      //add dropdown
+      if (propType.IsEnum)
+      {
+        //expire solution so that node gets proper size
+        ExpireSolution(true);
+
+        var instance = Activator.CreateInstance(propType);
+        
+        var vals = Enum.GetValues(propType).Cast<Enum>().Select(x => x.ToString()).ToList();
+        var options = CreateDropDown(propName, vals, Attributes.Bounds.X, Params.Input[index].Attributes.Bounds.Y);
+        _document.AddObject(options, false);
+        Params.Input[index].AddSource(options);
+      }
     }
 
     public void UnregisterPropertyInput( PropertyInfo myProp )
@@ -388,7 +407,13 @@ namespace SpeckleGrasshopper.UserDataUtils
       DA.SetData( 0, outputObject );
     }
 
-    public bool CanInsertParameter( GH_ParameterSide side, int index )
+    public override void AddedToDocument(GH_Document document)
+    {
+      _document = document;
+      base.AddedToDocument(document);
+    }
+
+      public bool CanInsertParameter( GH_ParameterSide side, int index )
     {
       return false;
     }
@@ -431,6 +456,26 @@ namespace SpeckleGrasshopper.UserDataUtils
     public override Guid ComponentGuid
     {
       get { return new Guid( "970d1754-b192-405f-a78b-98afb74ee6ca" ); }
+    }
+
+    public static GH_ValueList CreateDropDown(string name, List<string> values, float x, float y)
+    {
+      var vallist = new GH_ValueList();
+      vallist.CreateAttributes();
+      vallist.Name = name;
+      vallist.NickName = name + ":";
+      vallist.Description = "Select an option...";
+      vallist.ListMode = GH_ValueListMode.DropDown;
+      vallist.ListItems.Clear();
+
+      for (int i = 0; i < values.Count; i++)
+      {
+        vallist.ListItems.Add(new GH_ValueListItem(values[i], i.ToString()));
+      }
+
+      vallist.Attributes.Pivot = new PointF(x - 200, y -10);
+
+      return vallist;
     }
   }
 }
