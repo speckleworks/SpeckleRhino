@@ -40,7 +40,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\AppData\Roaming\McNeel\Rhinoceros\6.0\Plug-ins\Speckle Rhino Plugin %28512d9705-6f92-49ca-a606-d6d5c1ac6aa2%29\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -72,6 +72,8 @@
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
     <Compile Include="Parameters\Param_SpeckleStreams.cs" />
+    <Compile Include="UserDataUtils\DiffingStreamsDelta.cs" />
+    <Compile Include="UserDataUtils\DiffingStreams.cs" />
     <Compile Include="UserDataUtils\QuerySpeckleObjectComponent.cs" />
     <Compile Include="Utilities\CollectionExtentions.cs" />
     <Compile Include="Utilities\SpecklStreamExtentions.cs" />
@@ -145,9 +147,6 @@
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
       <Version>6.1.18037.13441</Version>
     </PackageReference>
-    <PackageReference Include="SpeckleCore">
-      <Version>1.6.9</Version>
-    </PackageReference>
     <PackageReference Include="SpecklePopup">
       <Version>1.6.13</Version>
     </PackageReference>
@@ -157,6 +156,12 @@
     <PackageReference Include="System.ValueTuple">
       <Version>4.5.0</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SpeckleCore\SpeckleCore\SpeckleCore.csproj">
+      <Project>{70b151eb-3d3e-47f6-bb5f-039e3d40bf53}</Project>
+      <Name>SpeckleCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
