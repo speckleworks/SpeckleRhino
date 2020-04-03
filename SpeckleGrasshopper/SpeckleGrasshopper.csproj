@@ -184,7 +184,4 @@
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)*" "%25APPDATA%25\McNeel\Rhinoceros\6.0\Plug-ins\Speckle Rhino Plugin (512d9705-6f92-49ca-a606-d6d5c1ac6aa2)"</PostBuildEvent>
-  </PropertyGroup>
 </Project>
