@@ -174,7 +174,22 @@ namespace SpeckleRhino
 
     public string GetDocumentGuid( )
     {
-      return Rhino.RhinoDoc.ActiveDoc.DocumentId.ToString();
+      string KEY = "DocumentId";
+      var doc_id = Rhino.RhinoDoc.ActiveDoc.Strings.GetValue(KEY);
+
+      if (string.IsNullOrEmpty(doc_id))
+      {
+        string docCreatedAt = Rhino.RhinoDoc.ActiveDoc.DateCreated.ToBinary().ToString();
+        string docName = Rhino.RhinoDoc.ActiveDoc.Name;
+        string docGuid = Guid.NewGuid().ToString();
+
+        Rhino.RhinoDoc.ActiveDoc.Strings.SetString(KEY, String.Concat(docGuid, "_", docName, "_", docCreatedAt));
+        return Rhino.RhinoDoc.ActiveDoc.Strings.GetValue(KEY);
+      }
+      else
+      {
+        return Rhino.RhinoDoc.ActiveDoc.Strings.GetValue(KEY);
+      }
     }
 
     public string GetHostApplicationType( )
