@@ -60,7 +60,7 @@ namespace SpeckleGrasshopper.Management
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
       pManager.AddGenericParameter("Projects", "Ps", "Projects you own or have write access to", GH_ParamAccess.list);
-      pManager.AddGenericParameter("Selected Project", "P", "Double click this component to select one project", GH_ParamAccess.item);
+      pManager.AddGenericParameter("Selected Project", "P", "Right click on this component to select one project", GH_ParamAccess.item);
     }
 
     public override void AddedToDocument(GH_Document document)
