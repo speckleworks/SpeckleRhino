@@ -73,6 +73,8 @@
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
     <Compile Include="Parameters\Param_SpeckleStreams.cs" />
     <Compile Include="UserDataUtils\QuerySpeckleObjectComponent.cs" />
+    <Compile Include="UserDataUtils\StreamApplyDelta.cs" />
+    <Compile Include="UserDataUtils\StreamGetDelta.cs" />
     <Compile Include="Utilities\CollectionExtentions.cs" />
     <Compile Include="Utilities\SpecklStreamExtentions.cs" />
     <Compile Include="Loader.cs" />
