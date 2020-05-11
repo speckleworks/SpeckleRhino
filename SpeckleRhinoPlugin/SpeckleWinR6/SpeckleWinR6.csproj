@@ -61,6 +61,13 @@
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Rhinoceros_Engine">
+      <HintPath>..\..\..\Rhinoceros_Toolkit\Build\Rhinoceros_Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="Speckle_Engine">
+      <HintPath>..\..\..\Speckle_Toolkit\Build\Speckle_Engine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -120,6 +127,12 @@
     <None Include="Resources\Speckle.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BHoM">
+      <Version>2.3.0-beta</Version>
+    </PackageReference>
+    <PackageReference Include="BHoM.Engine">
+      <Version>2.3.0-beta</Version>
+    </PackageReference>
     <PackageReference Include="CefSharp.WinForms">
       <Version>71.0.0</Version>
     </PackageReference>
