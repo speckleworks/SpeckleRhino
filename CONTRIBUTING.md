@@ -23,7 +23,7 @@ Adding a project number to `SpeckleProjects`: this is a minor change in Speckle'
 You fixed something!
 
 - If the bug was logged previously as an issue, do reference that issue! 
-- If it's a previously unreported bug, do describe it and the resolution you implmemented. 
+- If it's a previously unreported bug, do describe it and the resolution you implemented. 
 
 > Make sure though that you've covered the lateral thinking needed for a bug report, as described above, also in your implementation!
 
@@ -39,9 +39,9 @@ Discuss first!
 
 Changes that are cosmetic in nature and do not add anything substantial to the stability or functionality of Speckle **will generally not be accepted**. 
 
-Why? However trivial the changes might seem, there might be subtle reasons for the original code to be as it is. Furthermore, there are a lot of potential hidden costs (that even maintainers themselves are not aware of fully!) and they eat up review time unncessarily.
+Why? However trivial the changes might seem, there might be subtle reasons for the original code to be as it is. Furthermore, there are a lot of potential hidden costs (that even maintainers themselves are not aware of fully!) and they eat up review time unnecessarily.
 
-> **Examples**: modifying the colour of an UI element in one client may have a big hidden cost and need propagation in several other clients that implement a similar ui element. Changing the default port or specifiying `localhost` instead of `0.0.0.0` breaks cross-vm debugging and developing. 
+> **Examples**: modifying the colour of an UI element in one client may have a big hidden cost and need propagation in several other clients that implement a similar ui element. Changing the default port or specifying `localhost` instead of `0.0.0.0` breaks cross-vm debugging and developing. 
 
 
 ## Wrap up
@@ -55,4 +55,4 @@ Don't worry if you get things wrong. We all do, including project owners: this d
 
 **That source of truth is (should be!) the SpeckleSpecs**, the OpenApi 2 specification document that describes the REST api as well as the models (schemas) speckle operates with. This is the document that all speckle clients rely on to be able to talk with the server and each other.
 
-**The clients** all talk to the server via the REST api and optionally to each other via WS messages (that the server relays, and their only bounding box is the `streamId` room). Example client apps include SpeckleRhino (Rhino and Grasshopper components), SpeckleAdmin and the SpeckleViewer. Speckle Rhino depends on SpeckleCore, the .NET Speckle SDK (which is also dependend upon by SpeckleDynamo and other future .net bound clients) and SpeckleView, the UI frontend. 
+**The clients** all talk to the server via the REST api and optionally to each other via WS messages (that the server relays, and their only bounding box is the `streamId` room). Example client apps include SpeckleRhino (Rhino and Grasshopper components), SpeckleAdmin and the SpeckleViewer. Speckle Rhino depends on SpeckleCore, the .NET Speckle SDK (which is also depending upon by SpeckleDynamo and other future .net bound clients) and SpeckleView, the UI frontend. 
