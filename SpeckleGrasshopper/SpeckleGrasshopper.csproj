@@ -159,20 +159,32 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>  -->
+  
   <Target Name="AfterBuild">
-    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
-    <Delete Files="$(TargetPath)" />
-    <ItemGroup>
-      <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
-      <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
-    </Copy>
-  </Target>
+  <CallTarget Condition="'$(Configuration)' == 'Debug'" Targets="AfterBuildDebug"/>
+  <CallTarget Condition="'$(Configuration)' == 'Release'" Targets="AfterBuildRelease"/>
+</Target>
+<Target Name="AfterBuildDebug">
+  <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
+  <Delete Files="$(TargetPath)" />
+  <ItemGroup>
+    <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+  </ItemGroup>
+  <Copy SourceFiles="@(MySourceFiles)" DestinationFolder="$(AppData)\McNeel\Rhinoceros\6.0\Plug-ins\Speckle Rhino Plugin (512d9705-6f92-49ca-a606-d6d5c1ac6aa2)">
+    <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
+  </Copy>
+</Target>
+<Target Name="AfterBuildRelease">
+  <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)\$(ProjectName).gha" />
+  <Delete Files="$(TargetPath)" />
+  <ItemGroup>
+    <MySourceFiles Include="$(ProjectDir)bin\$(ConfigurationName)\**\*.*" />
+  </ItemGroup>
+  <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)\$(ConfigurationName)\%(RecursiveDir)%(Filename)%(Extension)')">
+    <Output TaskParameter="CopiedFiles" ItemName="SuccessfullyCopiedFiles" />
+  </Copy>
+</Target>
+
   <PropertyGroup>
     <FallbackCulture>en-US</FallbackCulture>
   </PropertyGroup>
