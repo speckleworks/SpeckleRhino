@@ -58,7 +58,7 @@ namespace SpeckleGrasshopper.UserDataUtils
       
       try
       {
-        var dict = ((GH_ObjectWrapper)dictObject).Value as Dictionary<string,object>;
+        var dict = ((GH_ObjectWrapper)dictObject).Value as IDictionary<string,object>;
         if(dict ==null)
         {
           throw new Exception( "Cannot set non-dictionary type on speckle object." );
