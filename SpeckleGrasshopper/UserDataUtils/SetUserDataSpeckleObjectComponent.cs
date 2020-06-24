@@ -50,25 +50,42 @@ namespace SpeckleGrasshopper.UserDataUtils
       if (!DA.GetData(0, ref GHSpeckleObject))
         return;
 
-      dynamic dictObject = null;
-      DA.GetData(1, ref dictObject);
-
       var copy = GHSpeckleObject.Duplicate() as GH_SpeckleObject;
       var speckleObject = copy.Value;
       
+      dynamic dictObject = null;
+      DA.GetData(1, ref dictObject);
+      if (dictObject is null)
+      {
+        DA.SetData(0, speckleObject); // pass through the SpeckleObject if no data is added
+        return;
+      }
+
       try
       {
-        var dict = ((GH_ObjectWrapper)dictObject).Value as IDictionary<string,object>;
-        if(dict ==null)
+        var dict = ((GH_ObjectWrapper)dictObject).Value as object;
+        if (!(dict is IDictionary<string, object>))
         {
-          throw new Exception( "Cannot set non-dictionary type on speckle object." );
+          throw new Exception( "Input object is not an IDictionary<string, Object>" );
         }
-        speckleObject.Properties = dict;
+
+        if (speckleObject.Properties is null)
+        {
+          speckleObject.Properties = new Dictionary<string, object>((IDictionary<string, object>)dict);
+        }
+        else
+        {
+          foreach (var item in (IDictionary<string, object>)dict)
+          {
+            speckleObject.Properties[item.Key] = item.Value;
+          }
+        }
       }
       catch
       {
-        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Cannot set non-dictionary type on speckle object.");
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Input object is not a dictionary. (IDictionary<string, object>)");
       }
+
 
       DA.SetData(0, speckleObject);
     }
