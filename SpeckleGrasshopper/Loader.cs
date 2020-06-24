@@ -21,6 +21,7 @@ namespace SpeckleGrasshopper
     public override GH_LoadingInstruction PriorityLoad( )
     {
       loadTimer = new System.Timers.Timer( 500 );
+      loadTimer.AutoReset = false;
       loadTimer.Start();
       loadTimer.Elapsed += AddSpeckleMenu;
       return GH_LoadingInstruction.Proceed;
