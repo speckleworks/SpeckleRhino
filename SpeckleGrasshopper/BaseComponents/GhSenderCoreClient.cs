@@ -839,7 +839,7 @@ namespace SpeckleGrasshopper
 
           try
           {
-            var objResponse = Client.ObjectCreateAsync( payload ).Result;
+            var objResponse = Client.ObjectCreateAsync( payload , 60000).Result;
             responses.Add( objResponse );
             persistedObjects.AddRange( objResponse.Resources );
 

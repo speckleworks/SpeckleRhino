@@ -366,7 +366,7 @@ namespace SpeckleRhino
           Context.NotifySpeckleFrame( "client-progress-message", StreamId, String.Format( "Sending payload {0} out of {1}", k++, objectUpdatePayloads.Count ) );
           try
           {
-            var objResponse = await Client.ObjectCreateAsync( payload );
+            var objResponse = await Client.ObjectCreateAsync( payload , 60000);
             responses.Add( objResponse );
             persistedObjects.AddRange( objResponse.Resources );
 
