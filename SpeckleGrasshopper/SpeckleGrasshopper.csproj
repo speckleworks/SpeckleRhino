@@ -146,7 +146,7 @@
       <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="SpeckleCore">
-      <Version>1.8.3.463</Version>
+      <Version>1.6.17-wip</Version>
     </PackageReference>
     <PackageReference Include="SpecklePopup">
       <Version>1.6.13</Version>
