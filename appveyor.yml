@@ -67,26 +67,26 @@ artifacts:
 - path: SpeckleRhino-%APPVEYOR_BUILD_VERSION%.rhi
   name: release
 
-# deploy:
-#   - release: SpeckleRhino-$(APPVEYOR_BUILD_VERSION)
-#     tag: $(APPVEYOR_REPO_TAG_NAME)
-#     #description: ''
-#     provider: GitHub
-#     auth_token:
-#       secure: D5tPFvdQMg9sIe0sSvQjEWw4KAdOk1jyxNwiH5qP5DpDmUH6n6NgTdA+56vXS1Pe # your encrypted token from GitHub
-#     artifact: SpeckleRhino-$(APPVEYOR_BUILD_VERSION).rhi
-#     #draft: false
-#     #prerelease: false
-#     force_update: true
-#     on:              # release from master branch only
-#       appveyor_repo_tag: true        # deploy on tag push only
+deploy:
+  - release: SpeckleRhino-$(APPVEYOR_BUILD_VERSION)
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    #description: ''
+    provider: GitHub
+    auth_token:
+      secure: D5tPFvdQMg9sIe0sSvQjEWw4KAdOk1jyxNwiH5qP5DpDmUH6n6NgTdA+56vXS1Pe # your encrypted token from GitHub
+    artifact: SpeckleRhino-$(APPVEYOR_BUILD_VERSION).rhi
+    #draft: false
+    #prerelease: false
+    force_update: true
+    on:              # release from master branch only
+      appveyor_repo_tag: true        # deploy on tag push only
 
-# notifications:
-# - provider: Slack
-#   incoming_webhook: 
-#     secure: 9Kt/ImvGdsQ/dzmRdSaMIG+BO0R29MOJC7eZZnK5m5TyWwE+4nofEcYlb/r4lh9Z1Dx/bR+7oQtgAYO3W5s+qJshkT6Is9irYw3TfMZX7/M=
-#   channel: '#devtalk'
-#   template: Build <{{buildUrl}}|#{{buildVersion}}> (<{{commitUrl}}|{{commitId}}>) of {{repositoryName}}@{{branch}}) by {{commitAuthor}} {{status}} in {{duration}}
-#   on_build_success: false
-#   on_build_failure: true
-#   on_build_status_changed: true
+notifications:
+- provider: Slack
+  incoming_webhook: 
+    secure: 9Kt/ImvGdsQ/dzmRdSaMIG+BO0R29MOJC7eZZnK5m5TyWwE+4nofEcYlb/r4lh9Z1Dx/bR+7oQtgAYO3W5s+qJshkT6Is9irYw3TfMZX7/M=
+  channel: '#devtalk'
+  template: Build <{{buildUrl}}|#{{buildVersion}}> (<{{commitUrl}}|{{commitId}}>) of {{repositoryName}}@{{branch}}) by {{commitAuthor}} {{status}} in {{duration}}
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: true
