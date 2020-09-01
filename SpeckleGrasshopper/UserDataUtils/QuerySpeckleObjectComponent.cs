@@ -89,7 +89,7 @@ namespace SpeckleGrasshopper
           AutoCreateOutputs(false);
         });
       }
-      else if(!OutputMismatch())
+      else if (!OutputMismatch())
       {
         int o = 0;
         foreach (var p in properties)
