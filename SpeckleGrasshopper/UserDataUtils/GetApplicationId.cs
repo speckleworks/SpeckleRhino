@@ -22,7 +22,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     public GetSpeckleObjectApplicationIdComponent()
       : base("Get ApplicationId", "GNV",
-          "Gets a value from a speckle object and returns the ApplicationId. \n For example, 'prop.subprop.subsubprop'.",
+          "Gets a speckle object and returns the ApplicationId. \n For example, 'prop.subprop.subsubprop'.",
           "Speckle", "Special")
     {
     }
@@ -33,8 +33,8 @@ namespace SpeckleGrasshopper
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
       // would i check the user's input here?
-      pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to query", GH_ParamAccess.item);
-      pManager.AddTextParameter("Path", "P", "Path of desired property, separated by dots.\nExample:'turtle.smallerTurtle.microTurtle'", GH_ParamAccess.item);
+      pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to get the ApplicationId of", GH_ParamAccess.item);
+      pManager.AddTextParameter("Path", "P", "Path of desired property (Should be ApplicationId).\nExample:'ApplicationId'", GH_ParamAccess.item);
     }
 
     /// <summary>

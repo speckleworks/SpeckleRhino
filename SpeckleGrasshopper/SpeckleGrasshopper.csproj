@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="BaseComponents\GhReceiverCoreClient.cs" />
     <Compile Include="BaseComponents\GhSenderCoreClient.cs" />
+    <Compile Include="UserDataUtils\GetApplicationId.cs" />
     <Compile Include="Parameters\Param_SpeckleStreams.cs" />
     <Compile Include="UserDataUtils\QuerySpeckleObjectComponent.cs" />
     <Compile Include="Utilities\CollectionExtentions.cs" />
