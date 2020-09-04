@@ -22,7 +22,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     public GetSpeckleObjectApplicationIdComponent()
       : base("Get ApplicationId", "GNV",
-          "Gets a speckle object and returns the ApplicationId. \n For example, 'prop.subprop.subsubprop'.",
+          "Gets a speckle object and returns the ApplicationId.",
           "Speckle", "Special")
     {
     }
