@@ -32,7 +32,6 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
-      // would i check the user's input here?
       pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to get the ApplicationId of", GH_ParamAccess.item);
       pManager.AddTextParameter("Path", "P", "Path of desired property (Should be ApplicationId).\nExample:'ApplicationId'", GH_ParamAccess.item);
     }
@@ -42,7 +41,6 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
-      // how to add an output
       pManager.AddGenericParameter("Output", "O", "Output value.", GH_ParamAccess.list);
     }
 
