@@ -40,7 +40,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
-      pManager.AddGenericParameter("Output", "O", "Output value.", GH_ParamAccess.list);
+      pManager.AddGenericParameter("Output", "O", "Output value.", GH_ParamAccess.item);
     }
 
     /// <summary>
