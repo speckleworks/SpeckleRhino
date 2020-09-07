@@ -33,7 +33,6 @@ namespace SpeckleGrasshopper
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
       pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to get the ApplicationId of", GH_ParamAccess.item);
-      pManager.AddTextParameter("Path", "P", "Path of desired property (Should be ApplicationId).\nExample:'ApplicationId'", GH_ParamAccess.item);
     }
 
     /// <summary>
@@ -56,13 +55,8 @@ namespace SpeckleGrasshopper
 
       var speckleObject = GHspeckleObject.Value;
 
-      string key = null;
-      if (!DA.GetData(1, ref key))
-        return;
+      string key = "ApplicationId";
 
-      // check user input - to see if the property they want is in properties
-      // if not then loop through the speckle object and then return the value
-      // user will give us a property and a name
       var propertyDict = speckleObject.Properties;
 
       if (propertyDict.ContainsKey(key))
