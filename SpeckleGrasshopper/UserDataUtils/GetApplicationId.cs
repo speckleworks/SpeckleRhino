@@ -21,7 +21,7 @@ namespace SpeckleGrasshopper
     /// Initializes a new instance of the MyComponent1 class.
     /// </summary>
     public GetSpeckleObjectApplicationIdComponent()
-      : base("Get ApplicationId", "GNV",
+      : base("GetId", "GNV",
           "Gets a speckle object and returns the ApplicationId.",
           "Speckle", "Special")
     {
