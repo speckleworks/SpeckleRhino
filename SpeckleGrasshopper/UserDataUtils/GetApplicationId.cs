@@ -76,7 +76,7 @@ namespace SpeckleGrasshopper
     {
       get
       {
-        return Properties.Resources.json;
+        return Properties.Resources.GetApplicationID;
       }
     }
 
