@@ -144,7 +144,7 @@
       <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon" IncludeAssets="compile; build">
-      <Version>6.28.20199.17141</Version>
+      <Version>6.1.18037.13441</Version>
     </PackageReference>
     <PackageReference Include="SpeckleCore">
       <Version>1.8.3.463</Version>
