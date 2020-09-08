@@ -126,6 +126,7 @@
     <None Include="Resources\sender_2.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\GetApplicationID.png" />
     <None Include="Resources\SetUserData.png" />
     <None Include="Resources\json.png" />
     <None Include="Resources\GetUserData.png" />

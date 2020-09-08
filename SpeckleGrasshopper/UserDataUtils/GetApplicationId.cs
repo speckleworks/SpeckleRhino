@@ -21,7 +21,7 @@ namespace SpeckleGrasshopper
     /// Initializes a new instance of the MyComponent1 class.
     /// </summary>
     public GetSpeckleObjectApplicationIdComponent()
-      : base("GetId", "GNV",
+      : base("Get ApplicationId", "GAID",
           "Gets a speckle object and returns the ApplicationId.",
           "Speckle", "Special")
     {
@@ -32,7 +32,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
     {
-      pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object you want to get the ApplicationId of", GH_ParamAccess.item);
+      pManager.AddParameter(new SpeckleObjectParameter(), "Speckle Object", "SO", "The Speckle Object whose ApplicationId you want", GH_ParamAccess.item);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ namespace SpeckleGrasshopper
     /// </summary>
     protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
     {
-      pManager.AddGenericParameter("Output", "O", "Output value.", GH_ParamAccess.item);
+      pManager.AddGenericParameter("ApplicationID", "AID", "The input object's Application ID.", GH_ParamAccess.item);
     }
 
     /// <summary>
