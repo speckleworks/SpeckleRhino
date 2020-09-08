@@ -57,24 +57,14 @@ namespace SpeckleGrasshopper
 
       string key = "ApplicationId";
 
-      var propertyDict = speckleObject.Properties;
-
-      if (propertyDict.ContainsKey(key))
+      try
       {
-        DA.SetData(0, propertyDict[key]);
-        return;
-      }
-      else
+        var output = speckleObject.GetType().GetProperty(key).GetValue(speckleObject, null);
+        DA.SetData(0, output);
+      } 
+      catch (System.NullReferenceException e)
       {
-        try
-        {
-          var output = speckleObject.GetType().GetProperty(key).GetValue(speckleObject, null);
-          DA.SetData(0, output);
-        } 
-        catch (System.NullReferenceException e)
-        {
-          AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not find a parameter with that key on the input object");
-        }
+        AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Could not find a parameter with that key on the input object");
       }
 
     }
