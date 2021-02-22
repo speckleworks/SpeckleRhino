@@ -7,6 +7,12 @@ While [SpeckleCore](https://github.com/speckleworks/SpeckleCore) (the .net speck
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mtfs3owdpy72yuh3/branch/master?svg=true)](https://ci.appveyor.com/project/SpeckleWorks/specklerhino/branch/master)
 
+## ⚠️ IMPORTANT ⚠️
+
+Speckle v1 has reached EOL and is no longer mainatined. Check out our brand new 👉 [Speckle v2](https://github.com/specklesystems)!
+Read more about the announcemnt [here](https://speckle.systems/blog/speckle2-vision-and-faq) and check out or new [website](https://speckle.systems).
+
+
 ## Download
 
 > The [latest build is here](https://github.com/speckleworks/SpeckleInstaller/releases/latest). Be sure to check out the [getting started guide](https://speckle.works/log/speckle-guide/) to get up to speed with some basics.
