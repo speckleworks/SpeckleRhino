@@ -13,6 +13,8 @@ using System.Collections;
 using GH_IO.Serialization;
 using Grasshopper.Kernel.Special;
 using System.Drawing;
+using System.Linq.Expressions;
+using System.CodeDom;
 
 namespace SpeckleGrasshopper.UserDataUtils
 {
@@ -120,7 +122,7 @@ namespace SpeckleGrasshopper.UserDataUtils
         {
           subMenus[type.Assembly].Items.Add(type.Name, null, (sender, e) => SwitchToType(type));
         }
-          
+
       }
       catch (Exception e)
       {
@@ -391,6 +393,35 @@ namespace SpeckleGrasshopper.UserDataUtils
               var conv = SNJ.JsonConvert.DeserializeObject((string)innerValue, prop.PropertyType);
               prop.SetValue(outputObject, conv);
               continue;
+            }
+            catch { }
+
+            try
+            {
+              var conv = Convert.ChangeType(innerValue, prop.PropertyType);
+              prop.SetValue(outputObject, conv);
+              continue;
+            }
+            catch { }
+
+            //issues with nullable types, lazy solution below
+            try
+            {
+              if (prop.PropertyType == typeof(int?)){
+                prop.SetValue(outputObject, (int?)innerValue);
+                continue;
+              }
+              else if (prop.PropertyType == typeof(double?) && innerValue.GetType() == typeof(int))
+              {
+                prop.SetValue(outputObject, (double?)(int)innerValue);
+                continue;
+              }
+              else if (prop.PropertyType == typeof(double?))
+              {
+                prop.SetValue(outputObject, (double?)innerValue);
+                continue;
+              }
+
             }
             catch { }
 
